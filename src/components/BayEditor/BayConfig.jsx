@@ -210,7 +210,7 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
   };
 
   const handleLevelsChange = (delta) => {
-    const newLevels = Math.max(1, Math.min(10, editLevels + delta));
+    const newLevels = Math.max(1, Math.min(20, editLevels + delta));
     setEditLevels(newLevels);
 
     // Recompute elevations from interaxis
@@ -562,7 +562,7 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
           <label className="text-sm text-slate-400 w-28">Number of Levels</label>
           <Button variant="secondary" size="sm" icon={Minus} onClick={() => handleLevelsChange(-1)} disabled={editLevels <= 1} />
           <span className="text-lg font-bold text-white w-8 text-center">{editLevels}</span>
-          <Button variant="secondary" size="sm" icon={Plus} onClick={() => handleLevelsChange(1)} disabled={editLevels >= 10} />
+          <Button variant="secondary" size="sm" icon={Plus} onClick={() => handleLevelsChange(1)} disabled={editLevels >= 20} />
         </div>
 
         {/* Column headers */}

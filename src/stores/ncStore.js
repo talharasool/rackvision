@@ -25,6 +25,9 @@ const useNCStore = create(
           face: data.face || '',
           quantity: data.quantity || 1,
           photos: data.photos || [],
+          // Custom marker position on layout canvas (null = auto-placement)
+          markerX: data.markerX ?? null,
+          markerY: data.markerY ?? null,
           createdAt: new Date().toISOString(),
           ...data,
         };

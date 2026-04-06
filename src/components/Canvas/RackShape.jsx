@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import { Group, Rect, Text } from 'react-konva';
 import FrameShape from './FrameShape';
 import BayShape from './BayShape';
@@ -6,20 +7,27 @@ import NCMarker from './NCMarker';
 // 1mm = 0.1px at scale 1
 const MM_TO_PX = 0.1;
 
-export default function RackShape({
-  rack,
-  scale = 1,
-  editMode = false,
-  isSelected = false,
-  onBayClick,
-  onFrameClick,
-  onDragEnd,
-  ncData = [],
-  supplierColor,
-  markerScale = 1,
-  onNCTap,
-  onNCLongPress,
-}) {
+const RackShape = forwardRef(function RackShape(
+  {
+    rack,
+    scale = 1,
+    editMode = false,
+    isSelected = false,
+    onBayClick,
+    onFrameClick,
+    onDragEnd,
+    onDragMove,
+    onClick,
+    ncData = [],
+    supplierColor,
+    markerScale = 1,
+    onNCTap,
+    onNCLongPress,
+    onNCDragEnd,
+    snapSize = 0,
+  },
+  ref
+) {
   const {
     id,
     name,
@@ -78,16 +86,25 @@ export default function RackShape({
 
     // NC markers on frames
     (ncByFrame[frame.id] || []).forEach((nc, ncIdx) => {
+      const markerX =
+        nc.markerX != null
+          ? nc.markerX
+          : xOffset + scaledUprightWidth / 2;
+      const markerY =
+        nc.markerY != null ? nc.markerY : -12 - ncIdx * 14;
+
       elements.push(
         <NCMarker
           key={`fnc-${nc.id || ncIdx}`}
-          x={xOffset + scaledUprightWidth / 2}
-          y={-12 - ncIdx * 14}
+          x={markerX}
+          y={markerY}
           severity={nc.severity}
           size={5}
           markerScale={markerScale}
+          draggable={editMode}
           onTap={() => onNCTap?.(nc)}
           onLongPress={() => onNCLongPress?.(nc)}
+          onDragEnd={(pos) => onNCDragEnd?.(nc.id, pos)}
         />
       );
     });
@@ -112,6 +129,7 @@ export default function RackShape({
           ncMarkers={ncByBay[bay.id] || []}
           onNCTap={onNCTap}
           onNCLongPress={onNCLongPress}
+          onNCDragEnd={onNCDragEnd}
           onClick={() => onBayClick?.(id, bay.id)}
         />
       );
@@ -125,13 +143,41 @@ export default function RackShape({
     onDragEnd?.(id, { x: node.x(), y: node.y() });
   };
 
+  const handleDragMove = (e) => {
+    if (!editMode) return;
+    const node = e.target;
+
+    // Snap to grid during drag
+    if (snapSize > 0) {
+      const x = Math.round(node.x() / snapSize) * snapSize;
+      const y = Math.round(node.y() / snapSize) * snapSize;
+      node.x(x);
+      node.y(y);
+    }
+
+    onDragMove?.(id, { x: node.x(), y: node.y() }, {
+      width: totalWidth,
+      height: scaledFrameDepth,
+    });
+  };
+
+  const handleClick = (e) => {
+    // Only fire if clicking the group itself (background), not children
+    onClick?.(id, e);
+  };
+
   return (
     <Group
+      ref={ref}
+      id={id}
       x={position.x}
       y={position.y}
       rotation={rotation}
       draggable={editMode}
       onDragEnd={handleDragEnd}
+      onDragMove={handleDragMove}
+      onClick={handleClick}
+      onTap={handleClick}
     >
       {/* Selection highlight */}
       {isSelected && (
@@ -169,4 +215,6 @@ export default function RackShape({
       {elements}
     </Group>
   );
-}
+});
+
+export default RackShape;

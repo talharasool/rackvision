@@ -60,13 +60,55 @@ function ensureBayConfig(bay) {
   return bay;
 }
 
+const MAX_HISTORY = 50;
+
 const useRackStore = create(
   persist(
     (set, get) => ({
       racks: [],
       currentRack: null,
 
+      // Undo/redo history (session only, excluded from persistence)
+      _history: [],
+      _historyIndex: -1,
+
+      _pushHistory: () => {
+        const { racks, _history, _historyIndex } = get();
+        // Truncate any future states if we branched
+        const trimmed = _history.slice(0, _historyIndex + 1);
+        const snapshot = JSON.parse(JSON.stringify(racks));
+        trimmed.push(snapshot);
+        if (trimmed.length > MAX_HISTORY) trimmed.shift();
+        set({ _history: trimmed, _historyIndex: trimmed.length - 1 });
+      },
+
+      undo: () => {
+        const { _history, _historyIndex } = get();
+        if (_historyIndex <= 0) return;
+        const newIndex = _historyIndex - 1;
+        const racks = JSON.parse(JSON.stringify(_history[newIndex]));
+        const currentRack = get().currentRack
+          ? racks.find((r) => r.id === get().currentRack.id) || null
+          : null;
+        set({ racks, currentRack, _historyIndex: newIndex });
+      },
+
+      redo: () => {
+        const { _history, _historyIndex } = get();
+        if (_historyIndex >= _history.length - 1) return;
+        const newIndex = _historyIndex + 1;
+        const racks = JSON.parse(JSON.stringify(_history[newIndex]));
+        const currentRack = get().currentRack
+          ? racks.find((r) => r.id === get().currentRack.id) || null
+          : null;
+        set({ racks, currentRack, _historyIndex: newIndex });
+      },
+
+      canUndo: () => get()._historyIndex > 0,
+      canRedo: () => get()._historyIndex < get()._history.length - 1,
+
       createRack: (areaId, rackData) => {
+        get()._pushHistory();
         const rackId = generateId();
         const numberOfBays = rackData.numberOfBays || 1;
         const { bays, frames } = generateBaysAndFrames(numberOfBays, rackId);
@@ -117,6 +159,7 @@ const useRackStore = create(
       },
 
       updateRack: (id, data) => {
+        get()._pushHistory();
         set((state) => {
           let updatedRack = null;
 
@@ -152,6 +195,7 @@ const useRackStore = create(
       },
 
       deleteRack: (id) => {
+        get()._pushHistory();
         set((state) => ({
           racks: state.racks.filter((r) => r.id !== id),
           currentRack:
@@ -160,6 +204,7 @@ const useRackStore = create(
       },
 
       duplicateRack: (id) => {
+        get()._pushHistory();
         const rack = get().racks.find((r) => r.id === id);
         if (!rack) return null;
 
@@ -275,7 +320,13 @@ const useRackStore = create(
         });
       },
     }),
-    { name: 'rackvision-racks' }
+    {
+      name: 'rackvision-racks',
+      partialize: (state) => {
+        const { _history, _historyIndex, ...rest } = state;
+        return rest;
+      },
+    }
   )
 );
 

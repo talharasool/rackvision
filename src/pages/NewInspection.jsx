@@ -8,6 +8,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import Input from '../components/ui/Input';
+import PhoneInput from '../components/ui/PhoneInput';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
 import useInspectionStore from '../stores/inspectionStore';
@@ -22,6 +23,42 @@ const INITIAL_CLIENT = {
   contactEmail: '',
 };
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function validateStep1(data) {
+  const errors = {};
+
+  if (!data.endCustomer.trim()) {
+    errors.endCustomer = 'End customer name is required';
+  } else if (data.endCustomer.trim().length < 2) {
+    errors.endCustomer = 'Name must be at least 2 characters';
+  }
+
+  if (data.contactEmail && !EMAIL_REGEX.test(data.contactEmail)) {
+    errors.contactEmail = 'Please enter a valid email address';
+  }
+
+  if (data.contactPhone) {
+    // Strip country code prefix and spaces/dashes, check remaining digits
+    const digits = data.contactPhone.replace(/[\s\-+]/g, '');
+    if (digits.length < 7) {
+      errors.contactPhone = 'Phone number must have at least 7 digits';
+    } else if (digits.length > 15) {
+      errors.contactPhone = 'Phone number is too long';
+    }
+  }
+
+  if (data.contactName && data.contactName.trim().length < 2) {
+    errors.contactName = 'Name must be at least 2 characters';
+  }
+
+  if (data.city && data.city.trim().length < 2) {
+    errors.city = 'City must be at least 2 characters';
+  }
+
+  return errors;
+}
+
 export default function NewInspection() {
   const navigate = useNavigate();
   const { createInspection, addWorkingArea } = useInspectionStore();
@@ -31,9 +68,14 @@ export default function NewInspection() {
   const [areas, setAreas] = useState([]);
   const [areaName, setAreaName] = useState('');
   const [areaDescription, setAreaDescription] = useState('');
+  const [errors, setErrors] = useState({});
 
   const handleClientChange = (field) => (e) => {
     setClientData((prev) => ({ ...prev, [field]: e.target.value }));
+    // Clear error on change
+    if (errors[field]) {
+      setErrors((prev) => ({ ...prev, [field]: '' }));
+    }
   };
 
   const handleAddArea = () => {
@@ -48,6 +90,16 @@ export default function NewInspection() {
 
   const handleRemoveArea = (tempId) => {
     setAreas((prev) => prev.filter((a) => a.tempId !== tempId));
+  };
+
+  const handleNextStep1 = () => {
+    const stepErrors = validateStep1(clientData);
+    if (Object.keys(stepErrors).length > 0) {
+      setErrors(stepErrors);
+      return;
+    }
+    setErrors({});
+    setStep(2);
   };
 
   const handleCreate = () => {
@@ -119,6 +171,7 @@ export default function NewInspection() {
                 onChange={handleClientChange('endCustomer')}
                 placeholder="End customer name"
                 required
+                error={errors.endCustomer}
               />
               <Input
                 label="Site Address"
@@ -132,19 +185,20 @@ export default function NewInspection() {
                 value={clientData.city}
                 onChange={handleClientChange('city')}
                 placeholder="City"
+                error={errors.city}
               />
               <Input
                 label="Contact Name"
                 value={clientData.contactName}
                 onChange={handleClientChange('contactName')}
                 placeholder="Contact person"
+                error={errors.contactName}
               />
-              <Input
+              <PhoneInput
                 label="Phone"
                 value={clientData.contactPhone}
                 onChange={handleClientChange('contactPhone')}
-                placeholder="+44 ..."
-                type="tel"
+                error={errors.contactPhone}
               />
               <Input
                 label="Email"
@@ -152,11 +206,12 @@ export default function NewInspection() {
                 onChange={handleClientChange('contactEmail')}
                 placeholder="email@example.com"
                 type="email"
+                error={errors.contactEmail}
               />
             </div>
 
             <div className="flex justify-end mt-6">
-              <Button onClick={() => setStep(2)} icon={ArrowRight}>
+              <Button onClick={handleNextStep1} icon={ArrowRight}>
                 Next
               </Button>
             </div>

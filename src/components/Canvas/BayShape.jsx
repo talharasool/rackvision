@@ -35,6 +35,7 @@ export default function BayShape({
   markerScale = 1,
   onNCTap,
   onNCLongPress,
+  onNCDragEnd,
 }) {
   // Derive fill and stroke from supplierColor when provided.
   // Fill uses ~30% opacity variant; stroke uses full color.
@@ -76,9 +77,13 @@ export default function BayShape({
         listening={false}
       />
       {ncMarkers.map((nc, i) => {
-        // Distribute NC markers evenly across the bay width
-        const markerX = ((i + 1) / (ncMarkers.length + 1)) * width;
-        const markerY = depth / 2 + 12;
+        // Use custom position if set, otherwise distribute evenly
+        const markerX =
+          nc.markerX != null
+            ? nc.markerX
+            : ((i + 1) / (ncMarkers.length + 1)) * width;
+        const markerY =
+          nc.markerY != null ? nc.markerY : depth / 2 + 12;
         return (
           <NCMarker
             key={nc.id || i}
@@ -87,9 +92,10 @@ export default function BayShape({
             severity={nc.severity}
             size={6}
             markerScale={markerScale}
+            draggable={editMode}
             onTap={() => onNCTap?.(nc)}
             onLongPress={() => onNCLongPress?.(nc)}
-            onClick={() => nc.onClick?.(nc)}
+            onDragEnd={(pos) => onNCDragEnd?.(nc.id, pos)}
           />
         );
       })}

@@ -17,6 +17,8 @@ export default function NCMarker({
   onClick,
   onTap,
   onLongPress,
+  onDragEnd,
+  draggable = false,
   label,
   markerScale = 1,
 }) {
@@ -51,7 +53,6 @@ export default function NCMarker({
   const handleTouchEnd = useCallback(() => {
     cancelTimer();
     if (!longPressedRef.current) {
-      // Short tap
       if (onTap) {
         onTap();
       } else if (onClick) {
@@ -76,29 +77,56 @@ export default function NCMarker({
     }
   }, [cancelTimer, onTap, onClick]);
 
+  const handleDragEnd = useCallback(
+    (e) => {
+      if (!onDragEnd) return;
+      const node = e.target;
+      // Report position relative to parent group
+      onDragEnd({ x: node.x(), y: node.y() });
+    },
+    [onDragEnd]
+  );
+
+  const circleProps = {
+    radius,
+    fill: colors.fill,
+    stroke: colors.stroke,
+    strokeWidth: 2,
+    shadowColor: colors.fill,
+    shadowBlur: 6,
+    shadowOpacity: 0.5,
+    shadowOffsetX: 0,
+    shadowOffsetY: 2,
+    hitStrokeWidth: 6,
+    onTouchStart: handleTouchStart,
+    onTouchEnd: handleTouchEnd,
+    onMouseDown: handleMouseDown,
+    onMouseUp: handleMouseUp,
+  };
+
   // If there is a label, render a Group with circle + text.
-  // Otherwise just render a Circle.
   if (label) {
     return (
-      <Group x={x} y={y}>
-        <Circle
-          x={0}
-          y={0}
-          radius={radius}
-          fill={colors.fill}
-          stroke={colors.stroke}
-          strokeWidth={2}
-          shadowColor={colors.fill}
-          shadowBlur={6}
-          shadowOpacity={0.5}
-          shadowOffsetX={0}
-          shadowOffsetY={2}
-          hitStrokeWidth={6}
-          onTouchStart={handleTouchStart}
-          onTouchEnd={handleTouchEnd}
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
-        />
+      <Group
+        x={x}
+        y={y}
+        draggable={draggable}
+        onDragEnd={draggable ? handleDragEnd : undefined}
+      >
+        <Circle x={0} y={0} {...circleProps} />
+        {/* Drag handle indicator */}
+        {draggable && (
+          <Circle
+            x={0}
+            y={0}
+            radius={radius + 3}
+            stroke="#3b82f6"
+            strokeWidth={1}
+            dash={[2, 2]}
+            listening={false}
+            opacity={0.5}
+          />
+        )}
         <Text
           x={-radius}
           y={-radius / 2}
@@ -116,24 +144,35 @@ export default function NCMarker({
     );
   }
 
+  if (draggable) {
+    return (
+      <Group
+        x={x}
+        y={y}
+        draggable={true}
+        onDragEnd={handleDragEnd}
+      >
+        <Circle x={0} y={0} {...circleProps} />
+        {/* Drag handle indicator */}
+        <Circle
+          x={0}
+          y={0}
+          radius={radius + 3}
+          stroke="#3b82f6"
+          strokeWidth={1}
+          dash={[2, 2]}
+          listening={false}
+          opacity={0.5}
+        />
+      </Group>
+    );
+  }
+
   return (
     <Circle
       x={x}
       y={y}
-      radius={radius}
-      fill={colors.fill}
-      stroke={colors.stroke}
-      strokeWidth={2}
-      shadowColor={colors.fill}
-      shadowBlur={6}
-      shadowOpacity={0.5}
-      shadowOffsetX={0}
-      shadowOffsetY={2}
-      hitStrokeWidth={6}
-      onTouchStart={handleTouchStart}
-      onTouchEnd={handleTouchEnd}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
+      {...circleProps}
     />
   );
 }

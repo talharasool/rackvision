@@ -35,9 +35,13 @@ export default function FrameDatabaseEditorPage() {
   const [form, setForm] = useState(emptyForm);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState('');
+  const [formErrors, setFormErrors] = useState({});
 
   const setField = (field, value) => {
     setForm((f) => ({ ...f, [field]: value }));
+    if (formErrors[field]) {
+      setFormErrors((prev) => ({ ...prev, [field]: '' }));
+    }
   };
 
   const resetForm = () => {
@@ -78,7 +82,48 @@ export default function FrameDatabaseEditorPage() {
     if (dup) handleEdit(dup);
   };
 
+  const validateFrameForm = () => {
+    const errs = {};
+    const uprightHeight = Number(form.uprightHeight);
+    const uprightWidth = Number(form.uprightWidth);
+    const depth = Number(form.depth);
+    const diagonalQty = Number(form.diagonalQty);
+    const crossMemberQty = Number(form.crossMemberQty);
+
+    if (!form.uprightHeight || uprightHeight <= 0) {
+      errs.uprightHeight = 'Upright height is required and must be > 0';
+    } else if (uprightHeight > 20000) {
+      errs.uprightHeight = 'Height cannot exceed 20000mm';
+    }
+
+    if (form.uprightWidth && (uprightWidth <= 0 || uprightWidth > 500)) {
+      errs.uprightWidth = 'Width must be between 1 and 500mm';
+    }
+
+    if (!form.depth || depth <= 0) {
+      errs.depth = 'Depth is required and must be > 0';
+    } else if (depth > 5000) {
+      errs.depth = 'Depth cannot exceed 5000mm';
+    }
+
+    if (form.diagonalQty && (diagonalQty < 0 || !Number.isInteger(diagonalQty))) {
+      errs.diagonalQty = 'Must be a whole number >= 0';
+    }
+
+    if (form.crossMemberQty && (crossMemberQty < 0 || !Number.isInteger(crossMemberQty))) {
+      errs.crossMemberQty = 'Must be a whole number >= 0';
+    }
+
+    return errs;
+  };
+
   const handleSave = () => {
+    const errs = validateFrameForm();
+    if (Object.keys(errs).length > 0) {
+      setFormErrors(errs);
+      return;
+    }
+
     const data = {
       ...form,
       uprightHeight: Number(form.uprightHeight) || 0,
@@ -169,6 +214,9 @@ export default function FrameDatabaseEditorPage() {
                 onChange={(e) => setField('uprightHeight', e.target.value)}
                 placeholder="e.g. 6000"
                 required
+                min={1}
+                max={20000}
+                error={formErrors.uprightHeight}
               />
               <Input
                 label="Width (mm)"
@@ -176,6 +224,9 @@ export default function FrameDatabaseEditorPage() {
                 value={form.uprightWidth}
                 onChange={(e) => setField('uprightWidth', e.target.value)}
                 placeholder="e.g. 100"
+                min={1}
+                max={500}
+                error={formErrors.uprightWidth}
               />
 
               {/* Frame dimensions */}
@@ -195,6 +246,9 @@ export default function FrameDatabaseEditorPage() {
                 onChange={(e) => setField('depth', e.target.value)}
                 placeholder="e.g. 1000"
                 required
+                min={1}
+                max={5000}
+                error={formErrors.depth}
               />
 
               <Select
@@ -222,6 +276,8 @@ export default function FrameDatabaseEditorPage() {
                 value={form.diagonalQty}
                 onChange={(e) => setField('diagonalQty', e.target.value)}
                 placeholder="e.g. 5"
+                min={0}
+                error={formErrors.diagonalQty}
               />
               <Input
                 label="Diagonal Details"
@@ -235,6 +291,8 @@ export default function FrameDatabaseEditorPage() {
                 value={form.crossMemberQty}
                 onChange={(e) => setField('crossMemberQty', e.target.value)}
                 placeholder="e.g. 3"
+                min={0}
+                error={formErrors.crossMemberQty}
               />
               <Input
                 label="Cross Member Details"

@@ -41,7 +41,7 @@ export default function FrameEditorPage() {
   };
 
   return (
-    <div className="h-screen bg-slate-950 flex flex-col overflow-hidden">
+    <div className="h-[calc(100vh-4rem)] bg-slate-950 flex flex-col overflow-hidden">
       {/* Top Bar */}
       <div className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-700 shrink-0">
         <div className="flex items-center gap-4">

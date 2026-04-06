@@ -46,13 +46,24 @@ export default function BayFrontView({
     const useIndividual =
       rack.useIndividualHeights && individualHeights.length === levels;
 
+    // Compute the highest beam elevation to ensure all levels fit
+    let maxElevation = frameHeight;
+    for (let i = 0; i < levels; i++) {
+      const elev = useIndividual
+        ? individualHeights[i]
+        : firstElevation + levelSpacing * i;
+      if (elev > maxElevation) maxElevation = elev;
+    }
+    // Add 10% padding above the highest element so beams aren't at the very edge
+    const effectiveHeight = maxElevation * 1.08;
+
     // Drawing area dimensions
     const drawW = SVG_WIDTH - SVG_PADDING.left - SVG_PADDING.right;
     const drawH = SVG_HEIGHT - SVG_PADDING.top - SVG_PADDING.bottom;
 
-    // Scale: mm -> px
+    // Scale: mm -> px (use effectiveHeight to fit all beams)
     const scaleX = drawW / (bayLength + uprightWidth * 2);
-    const scaleY = drawH / frameHeight;
+    const scaleY = drawH / effectiveHeight;
 
     const uprightPxW = Math.max(uprightWidth * scaleX, 12);
     const beamH = 10;
@@ -62,8 +73,9 @@ export default function BayFrontView({
     // Upright positions
     const leftUprightX = SVG_PADDING.left;
     const rightUprightX = SVG_PADDING.left + drawW - uprightPxW;
-    const uprightPxH = drawH;
-    const uprightTopY = SVG_PADDING.top;
+    // Uprights cover the frame height, scaled to the effective height
+    const uprightPxH = frameHeight * scaleY;
+    const uprightTopY = SVG_PADDING.top + drawH - uprightPxH;
 
     // Floor Y
     const floorY = SVG_PADDING.top + drawH;
@@ -458,7 +470,7 @@ export default function BayFrontView({
               y={midY + 3}
               textAnchor="start"
               fill={LABEL_COLOR}
-              fontSize={8}
+              fontSize={beamPositions.length > 8 ? 6.5 : 8}
             >
               {interaxis} mm
             </text>

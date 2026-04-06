@@ -33,9 +33,13 @@ export default function BeamEditorPage() {
   const [form, setForm] = useState(emptyForm);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState('');
+  const [formErrors, setFormErrors] = useState({});
 
   const setField = (field, value) => {
     setForm((f) => ({ ...f, [field]: value }));
+    if (formErrors[field]) {
+      setFormErrors((prev) => ({ ...prev, [field]: '' }));
+    }
   };
 
   const resetForm = () => {
@@ -75,7 +79,41 @@ export default function BeamEditorPage() {
     if (dup) handleEdit(dup);
   };
 
+  const validateBeamForm = () => {
+    const errs = {};
+    const length = Number(form.length);
+    const height = Number(form.height);
+    const depth = Number(form.depth);
+    const thickness = Number(form.thickness);
+
+    if (!form.length || length <= 0) {
+      errs.length = 'Length is required and must be > 0';
+    } else if (length > 10000) {
+      errs.length = 'Length cannot exceed 10000mm';
+    }
+
+    if (form.height && (height <= 0 || height > 500)) {
+      errs.height = 'Height must be between 1 and 500mm';
+    }
+
+    if (form.depth && (depth <= 0 || depth > 500)) {
+      errs.depth = 'Depth must be between 1 and 500mm';
+    }
+
+    if (form.thickness && (thickness <= 0 || thickness > 50)) {
+      errs.thickness = 'Thickness must be between 0.1 and 50mm';
+    }
+
+    return errs;
+  };
+
   const handleSave = () => {
+    const errs = validateBeamForm();
+    if (Object.keys(errs).length > 0) {
+      setFormErrors(errs);
+      return;
+    }
+
     const data = {
       ...form,
       length: Number(form.length) || 0,
@@ -153,6 +191,9 @@ export default function BeamEditorPage() {
                 onChange={(e) => setField('length', e.target.value)}
                 placeholder="e.g. 2700"
                 required
+                min={1}
+                max={10000}
+                error={formErrors.length}
               />
               <Input
                 label="Height (mm)"
@@ -160,6 +201,9 @@ export default function BeamEditorPage() {
                 value={form.height}
                 onChange={(e) => setField('height', e.target.value)}
                 placeholder="e.g. 50"
+                min={1}
+                max={500}
+                error={formErrors.height}
               />
               <Input
                 label="Depth (mm)"
@@ -167,6 +211,9 @@ export default function BeamEditorPage() {
                 value={form.depth}
                 onChange={(e) => setField('depth', e.target.value)}
                 placeholder="e.g. 40"
+                min={1}
+                max={500}
+                error={formErrors.depth}
               />
               <Input
                 label="Thickness (mm)"
@@ -174,6 +221,10 @@ export default function BeamEditorPage() {
                 value={form.thickness}
                 onChange={(e) => setField('thickness', e.target.value)}
                 placeholder="e.g. 1.5"
+                min={0.1}
+                max={50}
+                step={0.1}
+                error={formErrors.thickness}
               />
 
               <Select

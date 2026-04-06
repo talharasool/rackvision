@@ -70,6 +70,159 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
 
 ---
 
+## Latest Changes
+
+### Canva-Like Layout Editor (Canvas Upgrade)
+
+The 2D layout editor has been upgraded to a full interactive canvas editor with the following features:
+
+- **Selection system** — Click to select rack, Shift+click for multi-select, drag on empty area to draw selection box
+- **Transform handles** — Konva Transformer with rotation, resize (corner handles), and move on selected racks
+- **Snap-to-grid** — Configurable grid snap (Off / 10px / 25px / 50px) during rack dragging
+- **Alignment guides** — Cyan (vertical) and green (horizontal) guide lines when racks align edges/centers with other racks
+- **Keyboard shortcuts**:
+  - `Delete` / `Backspace` — delete selected racks (with confirmation)
+  - `Ctrl+D` — duplicate selected racks (offset +50, +50)
+  - `Ctrl+Z` — undo, `Ctrl+Shift+Z` / `Ctrl+Y` — redo
+  - `Ctrl+A` — select all, `Escape` — deselect all
+  - Arrow keys — nudge 1px (Shift+Arrow = 10px)
+  - `R` — rotate 90deg, `V` — flip vertical, `H` — flip horizontal
+- **Right-click context menu** — Edit Properties, Duplicate, Rotate 90deg, Delete
+- **Properties panel** — Side panel for editing selected rack name, X/Y position, rotation; multi-select shows alignment and distribute buttons
+- **Undo/Redo** — Full undo/redo history (max 50 snapshots, session-only) with toolbar buttons
+- **Enhanced toolbar** — Tool selector (Select/Pan), edit mode toggle, grid snap dropdown, NC marker size controls, zoom controls, undo/redo buttons
+- **Draggable NC markers** — NC markers can be repositioned in edit mode; positions persist via `markerX`/`markerY` fields in ncStore
+
+#### New Canvas Components
+- `SelectionTransformer.jsx` — Konva Transformer wrapper for selected rack nodes
+- `SnapGuides.jsx` — Alignment guide line rendering + snap calculation utility
+- `CanvasToolbar.jsx` — Extracted toolbar with all canvas controls
+- `PropertiesPanel.jsx` — Side panel for selected rack/NC properties
+
+### Bay Editor Improvements
+
+- **Bay navigation** — Previous/Next buttons, dropdown selector, and counter (e.g. "13 / 15") for navigating between bays in BayEditorPage
+- **SVG beam clipping fix** — BayFrontView now computes `effectiveHeight = max(frameHeight, maxBeamElevation) * 1.08` so beams above frame height are visible
+- **Level count cap raised** — Maximum levels increased from 10 to 20 in both BayConfig and RackWizard
+
+### Form Validations
+
+- **New Inspection form** (Client Info step):
+  - End Customer name is required (min 2 characters)
+  - Email validation with proper regex
+  - Phone input with country code picker (23 countries: GB, FR, ES, IT, DE, US, NL, BE, CH, AT, DK, SE, NO, PL, PT, IE, FI, AU, JP, CN, IN, AE, SA)
+  - Phone number length validation (7-15 digits)
+  - Contact name and city min-length validation
+  - Inline error messages that clear on field change
+- **Beam Editor** — Length required (1-10000mm), Height (1-500mm), Depth (1-500mm), Thickness (0.1-50mm) with inline errors
+- **Frame Editor** — Upright height required (1-20000mm), Width (1-500mm), Depth required (1-5000mm), diagonal/cross member quantity must be whole numbers
+- **Input component enhanced** — New `min`, `max`, `step`, `prefix`, `inputClassName` props for numeric constraints and prefix addon support
+
+#### New UI Components
+- `PhoneInput.jsx` — Phone number input with country code dropdown picker
+
+### Bug Fixes
+
+- **Page height overflow** — LayoutEditor, BayEditorPage, and FrameEditorPage now use `h-[calc(100vh-4rem)]` to account for the 64px Header
+- **Selection vs navigation conflict** — In edit mode with select tool, clicking bays/frames selects the parent rack instead of navigating away
+- **Background click detection** — Fixed by walking up the Konva node tree to properly detect rack clicks
+
+---
+
+## Implementation Status vs Client Document
+
+Summary of all client-requested changes and their current implementation status.
+
+### Section 1: Editor & Database Management — FULLY IMPLEMENTED
+
+| Feature | Status |
+|---------|--------|
+| Beam Editor — full CRUD with supplier, type, dimensions, finish, features, supplier code | Done |
+| Frame Editor — full CRUD with supplier, type, upright specs, depth, bracing quantities, finish | Done |
+| Supplier Editor — name + color assignment for layout visual distinction | Done |
+| Beam/Frame name auto-generation from entered data | Done |
+| Duplicate & Edit for beams and frames | Done |
+| Editor panel on Home Screen with navigation to all editors | Done |
+| Form validations on all dimension fields (length, height, depth, thickness, quantities) | Done |
+| Accessories Editor | Deferred (Phase 5, per client) |
+| Import DB (CSV bulk upload) | Deferred (Phase 5, per client) |
+
+### Section 2: Layout — FULLY IMPLEMENTED
+
+| Feature | Status |
+|---------|--------|
+| Supplier color-coding on racks in 2D layout | Done |
+| Legend showing supplier colors + names | Done |
+| Canva-like construction guidelines (snap-to-grid, alignment guides) | Done |
+| Rack selection, multi-select, drag selection box | Done |
+| Transform handles (move, rotate, resize) | Done |
+| Keyboard shortcuts (Delete, Ctrl+D/Z/Y/A, arrows, R, V, H, Escape) | Done |
+| Right-click context menu | Done |
+| Properties panel for selected rack editing | Done |
+| Undo/Redo (max 50 snapshots, session-only) | Done |
+| Import building floor plan (vector PDF) | Not in scope (future) |
+| Editable distances between specific points | Not in scope (future) |
+
+### Section 3: Bay View & Configuration — FULLY IMPLEMENTED
+
+| Feature | Status |
+|---------|--------|
+| Bay width label at bottom | Done |
+| Beam name from database (not L1/L2/L3) | Done |
+| Interaxis dimensions (center-to-center) + "From ground" read-only column | Done |
+| Bay Information: Bay Number, Rack, Supplier field, Bay Length as filter | Done |
+| Per-level beam panels (collapsible) with filtered beam dropdown (supplier + length) | Done |
+| "New Beam" button opens Beam Editor if no match | Done |
+| "Apply to all levels" scoped to current bay only (bug fixed) | Done |
+| Per-level accessories (free-text + notes until Accessories Editor is built) | Done (interim) |
+| Frame selection: Left + Right independently, filtered by supplier/depth/height | Done |
+| "New Frame" button opens Frame Editor | Done |
+| Duplicate Configuration with bay checkboxes + save button | Done |
+| Level count raised from 10 to 20 | Done |
+
+### Section 4: Inspection Functionality — FULLY IMPLEMENTED
+
+| Feature | Status |
+|---------|--------|
+| NC on beams/levels: tap level → element buttons → FRONT/REAR → NC type → severity → photos → save | Done |
+| Quick NC buttons ("Damaged", "Missing safety lock", "Unhooked") + "Other" dropdown | Done |
+| NC on level accessories: same flow as beams | Done |
+| NC on frames: click frame area → Diagonal/Cross Member/Load Sign/Protections | Done |
+| NC on uprights: click upright → Upright/Footplate/Top Tie Beam/Front Guard/Corner Guard | Done |
+| Diagonals/cross members: numbered selection (1 = bottom, increasing upward) | Done |
+| Uprights: FRONT/REAR selection | Done |
+| Severity picker (green/yellow/red) per allowed severities | Done |
+| Photo capture: up to 3 photos per NC via file input (camera/gallery) | Done |
+| Quantity field: default 1, editable | Done |
+| Notes field: optional text observations | Done |
+| Colored NC markers on 2D layout (severity-colored, with glow) | Done |
+| NC markers: global size setting (increase/decrease) | Done |
+| NC markers: tap → view description | Done |
+| NC markers: long-press → context menu (Edit/Delete) | Done |
+| NC markers: draggable in edit mode, position persists | Done |
+| NC marker placement rules file | Pending (client to provide, see Q12) |
+| New NC types: Load Sign, Top Tie Beam, Footplate, Front Guard, Corner Guard | Done |
+
+### Client Questions — Cross-Check Status
+
+| Question | Status | Notes |
+|----------|--------|-------|
+| Q1. Beam name auto-generation format | **Implemented with default** | Uses `"{Type} {Length}x{Height} - {Supplier}"` format. Client may want to customize. |
+| Q2. Frame name auto-generation format | **Implemented with default** | Uses `"{FrameType} {Height}x{Depth} - {Supplier}"` format. Client may want to customize. |
+| Q3. Finish color input — free text or predefined? | **Implemented as free text** | Currently a text input (e.g. "RAL 5010 Blue"). Client to confirm if RAL picker preferred. |
+| Q4. Shared supplier list across beams/frames? | **Yes, shared** | Single `supplierStore` feeds all editors. Client to confirm this is correct. |
+| Q5. Beam filter by bay length — exact match? | **Exact match** | Currently filters `beam.length === bayLength`. Client to confirm if tolerance needed. |
+| Q6. Accessories before Accessories Editor? | **Free-text name + notes** | Per-level accessories use free-text until Phase 5. Client to confirm this interim approach. |
+| Q7. What does "Duplicate Configuration" copy? | **Beams + accessories** | Copies beam selections and accessories to target bays. Client to confirm scope. |
+| Q8. Rack depth for frame filtering? | **Uses `rack.frameDepth`** | Existing field on rack. Client to confirm or if separate field needed. |
+| Q9. NC types for new elements? | **Implemented with reasonable defaults** | See `ncTypes.js` — loadSign (4 types), topTieBeam (5), footplate (4), frontGuard (5), cornerGuard (5). Client to review and adjust. |
+| Q10. Common vs "Other" NCs per element? | **Implemented** | Beams: 3 quick buttons + Other. Other elements: first 3 as quick + rest as Other. Client to provide preferred split per element. |
+| Q11. Photo capture — camera or file upload? | **Both** | Uses `<input accept="image/*">` which opens camera or gallery on tablet. |
+| Q12. NC marker placement rules file? | **STILL PENDING** | Client has not provided this file. Currently markers use auto-placement or manual drag positioning. |
+| Q13. FRONT/REAR tracked in reports? | **Stored in NC data** | `face` field saved with each NC. Export/report feature not yet built. Client to confirm if needed in reports. |
+
+---
+
 ## Client Analysis — Requested Changes (April 2026)
 
 Full breakdown of changes requested by the client, organized by area.

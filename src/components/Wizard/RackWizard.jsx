@@ -119,7 +119,7 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
 
   // Handle level count change and sync individual heights array
   const handleLevelsChange = (newLevels) => {
-    const clamped = Math.max(1, Math.min(10, newLevels));
+    const clamped = Math.max(1, Math.min(20, newLevels));
     updateField('levels', clamped);
 
     setRackData((prev) => {
@@ -144,7 +144,7 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
       case 4:
         return !!rackData.beamId;
       case 5:
-        return rackData.levels >= 1 && rackData.levels <= 10;
+        return rackData.levels >= 1 && rackData.levels <= 20;
       case 6:
         return !!rackData.frameId;
       case 7:
@@ -401,7 +401,7 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
             size="sm"
             icon={Plus}
             onClick={() => handleLevelsChange(rackData.levels + 1)}
-            disabled={rackData.levels >= 10}
+            disabled={rackData.levels >= 20}
           />
         </div>
 

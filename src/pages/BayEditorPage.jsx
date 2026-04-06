@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Settings, ClipboardCheck } from 'lucide-react';
+import {
+  ArrowLeft,
+  Settings,
+  ClipboardCheck,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
 import Button from '../components/ui/Button';
 import useInspectionStore from '../stores/inspectionStore';
 import useRackStore from '../stores/rackStore';
@@ -22,6 +28,19 @@ export default function BayEditorPage() {
   const rack = racks.find((r) => r.id === rackId);
   const bayIndex = rack?.bays?.findIndex((b) => b.id === bayId) ?? -1;
   const bay = bayIndex >= 0 ? rack.bays[bayIndex] : null;
+
+  // Bay navigation
+  const totalBays = rack?.bays?.length || 0;
+  const hasPrev = bayIndex > 0;
+  const hasNext = bayIndex < totalBays - 1;
+
+  const navigateToBay = (index) => {
+    if (!rack?.bays?.[index]) return;
+    navigate(
+      `/inspection/${inspectionId}/area/${areaId}/rack/${rackId}/bay/${rack.bays[index].id}`,
+      { replace: true }
+    );
+  };
 
   if (!inspection || !rack || !bay) {
     return (
@@ -45,7 +64,7 @@ export default function BayEditorPage() {
   };
 
   return (
-    <div className="h-screen bg-slate-950 flex flex-col overflow-hidden">
+    <div className="h-[calc(100vh-4rem)] bg-slate-950 flex flex-col overflow-hidden">
       {/* Top Bar */}
       <div className="flex items-center justify-between px-4 py-3 bg-slate-900 border-b border-slate-700 shrink-0">
         <div className="flex items-center gap-4">
@@ -65,11 +84,62 @@ export default function BayEditorPage() {
           </div>
         </div>
 
-        {bayNCs.length > 0 && (
-          <span className="bg-red-500/20 text-red-400 text-xs font-medium px-3 py-1 rounded-full">
-            {bayNCs.length} NC{bayNCs.length !== 1 && 's'}
+        {/* Bay Navigator */}
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => navigateToBay(bayIndex - 1)}
+            disabled={!hasPrev}
+            className={`p-1.5 rounded-lg transition-colors ${
+              hasPrev
+                ? 'text-slate-400 hover:text-white hover:bg-slate-700'
+                : 'text-slate-600 cursor-not-allowed'
+            }`}
+            title="Previous bay"
+          >
+            <ChevronLeft size={18} />
+          </button>
+
+          <select
+            value={bayId}
+            onChange={(e) => {
+              const idx = rack.bays.findIndex((b) => b.id === e.target.value);
+              if (idx >= 0) navigateToBay(idx);
+            }}
+            className="bg-slate-800 border border-slate-600 rounded-lg px-3 py-1.5 text-sm text-white outline-none focus:border-blue-500 cursor-pointer min-w-[120px]"
+          >
+            {rack.bays.map((b, i) => (
+              <option key={b.id} value={b.id}>
+                {b.name || `Bay ${i + 1}`}
+              </option>
+            ))}
+          </select>
+
+          <button
+            onClick={() => navigateToBay(bayIndex + 1)}
+            disabled={!hasNext}
+            className={`p-1.5 rounded-lg transition-colors ${
+              hasNext
+                ? 'text-slate-400 hover:text-white hover:bg-slate-700'
+                : 'text-slate-600 cursor-not-allowed'
+            }`}
+            title="Next bay"
+          >
+            <ChevronRight size={18} />
+          </button>
+
+          <span className="text-xs text-slate-500 ml-1">
+            {bayIndex + 1} / {totalBays}
           </span>
-        )}
+        </div>
+
+        {/* NC Badge */}
+        <div className="flex items-center">
+          {bayNCs.length > 0 && (
+            <span className="bg-red-500/20 text-red-400 text-xs font-medium px-3 py-1 rounded-full">
+              {bayNCs.length} NC{bayNCs.length !== 1 && 's'}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Split View */}
