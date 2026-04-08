@@ -50,17 +50,20 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
 - Frame configuration display (read-only specs + connected bays)
 - Record non-conformities per frame via multi-step form
 
-### Non-Conformity (NC) Tracking
+### Non-Conformity (NC) Tracking — Doc 2 Aligned
 
-- Comprehensive NC type catalog covering:
-  - **Beams**: bent/twisted, damaged, missing safety connector, overloaded, corrosion, weld failure, wrong type, excessive deflection
-  - **Uprights**: bent/twisted, damaged, corrosion, out of plumb, damaged perforations, incorrect splice
-  - **Frames**: out of plumb, damaged, overloaded, wrong type, missing, corrosion
-  - **Braces**: bent/twisted, damaged, missing, loose/detached, corrosion, weld failure
-  - **Base Plates**: missing, damaged, not fixed to floor, corrosion, wrong type, shim issues
-  - **Guardrails**: missing, damaged, incorrect height, not fixed properly, corrosion
+- **22 element categories** with 89 NC types matching Doc 2's exact names:
+  - **Bay per-level** (5): Beam (7 NCs), Pallet Support Bar (3), Rear Pallet Stop Beam (4), Decking Panels (3), Pallet (7)
+  - **Bay/rack-level** (7): Rear Safety Mesh (5), Underpass Protection (2), Horizontal Bracing (2), Vertical Bracing (2), Bay (5), Aisle (2), Entire Racking System (6)
+  - **Frame elements** (6): Upright (6), Frame (2), Brace (2), Base Plate (6), Front Impact Guard (5), Corner Impact Guard (5)
+  - **Other frame** (4): Guardrail (6), Load Sign (4), Top Tie Beam (5), Footplate (4)
+- **Pie-chart severity markers** — multiple NCs on the same element render as a single pie-chart marker (both on 2D canvas and SVG views)
+- **Marker placement engine** — 18 element-type position rules for auto-placing NC markers on the 2D layout
+- **NC grouping** — NCs grouped by element for consolidated marker display
+- **Inspection mode toggle** — Bay inspection splits into "Per Level" (beam, pallet support bar, etc.) and "Bay/Rack Level" (aisle, entire racking system, etc.)
+- **Store migration** — Old NC IDs and element types auto-migrate on app load via `onRehydrateStorage`
 - Traffic-light severity system (green / yellow / red) per NC type
-- Notes support per NC
+- Notes, photos (up to 3), quantity, and FRONT/REAR face per NC
 
 ### Reference Data
 
@@ -71,6 +74,20 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
 ---
 
 ## Latest Changes
+
+### NC Alignment — Doc 2 Implementation (Week 1 Milestone)
+
+Complete rewrite of the NC system to match Doc 2's exact specifications:
+
+- **22 element categories, 89 NC types** — all NC names match Doc 2 exactly
+- **Bay inspection mode toggle** — "Per Level" (beam, pallet support bar, rear pallet stop beam, decking panels, pallet) vs "Bay/Rack Level" (rear safety mesh, underpass protection, horizontal/vertical bracing, bay, aisle, entire racking system)
+- **Pie-chart severity markers** — multiple NCs on the same element show as a single pie chart with colored arcs (Konva Arc on canvas, SVG path in views)
+- **Marker placement engine** — 18 element-type rules for default NC marker positions (inside bay, center, rear, frame, guards, edge, aisle)
+- **NC grouping** — NCs grouped by element key for consolidated display
+- **Store migration** — old NC IDs and element types (e.g. `frontGuard` → `frontImpactGuard`) auto-migrate on app load
+- **Shared helpers** — `getNCTypeName()`, `resolveNcTypeId()`, `resolveElementType()` in `src/utils/ncHelpers.js`
+- **Guard renaming** — `frontGuard` → `frontImpactGuard`, `cornerGuard` → `cornerImpactGuard` everywhere
+- **FRONT/REAR only for beam & upright** — other elements skip the face selection step
 
 ### Canva-Like Layout Editor (Canvas Upgrade)
 
@@ -93,12 +110,6 @@ The 2D layout editor has been upgraded to a full interactive canvas editor with 
 - **Enhanced toolbar** — Tool selector (Select/Pan), edit mode toggle, grid snap dropdown, NC marker size controls, zoom controls, undo/redo buttons
 - **Draggable NC markers** — NC markers can be repositioned in edit mode; positions persist via `markerX`/`markerY` fields in ncStore
 
-#### New Canvas Components
-- `SelectionTransformer.jsx` — Konva Transformer wrapper for selected rack nodes
-- `SnapGuides.jsx` — Alignment guide line rendering + snap calculation utility
-- `CanvasToolbar.jsx` — Extracted toolbar with all canvas controls
-- `PropertiesPanel.jsx` — Side panel for selected rack/NC properties
-
 ### Bay Editor Improvements
 
 - **Bay navigation** — Previous/Next buttons, dropdown selector, and counter (e.g. "13 / 15") for navigating between bays in BayEditorPage
@@ -107,446 +118,308 @@ The 2D layout editor has been upgraded to a full interactive canvas editor with 
 
 ### Form Validations
 
-- **New Inspection form** (Client Info step):
-  - End Customer name is required (min 2 characters)
-  - Email validation with proper regex
-  - Phone input with country code picker (23 countries: GB, FR, ES, IT, DE, US, NL, BE, CH, AT, DK, SE, NO, PL, PT, IE, FI, AU, JP, CN, IN, AE, SA)
-  - Phone number length validation (7-15 digits)
-  - Contact name and city min-length validation
-  - Inline error messages that clear on field change
-- **Beam Editor** — Length required (1-10000mm), Height (1-500mm), Depth (1-500mm), Thickness (0.1-50mm) with inline errors
-- **Frame Editor** — Upright height required (1-20000mm), Width (1-500mm), Depth required (1-5000mm), diagonal/cross member quantity must be whole numbers
-- **Input component enhanced** — New `min`, `max`, `step`, `prefix`, `inputClassName` props for numeric constraints and prefix addon support
-
-#### New UI Components
-- `PhoneInput.jsx` — Phone number input with country code dropdown picker
+- **New Inspection form** (Client Info step): End Customer required, email regex, phone input with country code picker (23 countries), inline error messages
+- **Beam Editor** — Length (1-10000mm), Height (1-500mm), Depth (1-500mm), Thickness (0.1-50mm) with inline errors
+- **Frame Editor** — Upright height (1-20000mm), Width (1-500mm), Depth (1-5000mm), whole-number bracing quantities
 
 ### Bug Fixes
 
-- **Page height overflow** — LayoutEditor, BayEditorPage, and FrameEditorPage now use `h-[calc(100vh-4rem)]` to account for the 64px Header
-- **Selection vs navigation conflict** — In edit mode with select tool, clicking bays/frames selects the parent rack instead of navigating away
-- **Background click detection** — Fixed by walking up the Konva node tree to properly detect rack clicks
+- **Page height overflow** — LayoutEditor, BayEditorPage, FrameEditorPage use `h-[calc(100vh-4rem)]`
+- **Selection vs navigation conflict** — Edit mode click selects parent rack instead of navigating
+- **"Apply to all levels" bug** — Now correctly scoped to current bay only (was affecting all bays)
 
 ---
 
-## Implementation Status vs Client Document
+## Progress Overview
 
-Summary of all client-requested changes and their current implementation status.
+**Overall completion: ~80% of total client scope across 3 client documents + developer clarifications.**
 
-### Section 1: Editor & Database Management — FULLY IMPLEMENTED
+| Document | Coverage | Status |
+|----------|----------|--------|
+| Doc 1: Specification List for Phase 1 (initial) | ~75% | Ch 1-5 mostly done. Ch 6 (Data Export) 0%. Missing: bay description field, frame compatibility check, layout PDF export |
+| Doc 2: NC Marker Rules & NC List for Elements (initial) | ~90% | All 22 element categories with exact Doc 2 NC names. Placement engine done. Pie-chart markers done. Remaining: Scope Table categories |
+| Doc 3: App Analysis (20260403 — first client review) | ~90% | Sections 2-4 complete. Section 1 at 60% (Accessories Editor + Import DB deferred by client) |
+| Clarification Questions (developer-raised, Q1-Q13) | ~90% | Q1-Q11 implemented, Q12 (placement rules) now implemented, Q13 pending |
 
-| Feature | Status |
-|---------|--------|
-| Beam Editor — full CRUD with supplier, type, dimensions, finish, features, supplier code | Done |
-| Frame Editor — full CRUD with supplier, type, upright specs, depth, bracing quantities, finish | Done |
-| Supplier Editor — name + color assignment for layout visual distinction | Done |
-| Beam/Frame name auto-generation from entered data | Done |
-| Duplicate & Edit for beams and frames | Done |
-| Editor panel on Home Screen with navigation to all editors | Done |
-| Form validations on all dimension fields (length, height, depth, thickness, quantities) | Done |
-| Accessories Editor | Deferred (Phase 5, per client) |
-| Import DB (CSV bulk upload) | Deferred (Phase 5, per client) |
+---
 
-### Section 2: Layout — FULLY IMPLEMENTED
+## Storage & Database
 
-| Feature | Status |
-|---------|--------|
-| Supplier color-coding on racks in 2D layout | Done |
-| Legend showing supplier colors + names | Done |
-| Canva-like construction guidelines (snap-to-grid, alignment guides) | Done |
-| Rack selection, multi-select, drag selection box | Done |
-| Transform handles (move, rotate, resize) | Done |
-| Keyboard shortcuts (Delete, Ctrl+D/Z/Y/A, arrows, R, V, H, Escape) | Done |
-| Right-click context menu | Done |
-| Properties panel for selected rack editing | Done |
-| Undo/Redo (max 50 snapshots, session-only) | Done |
-| Import building floor plan (vector PDF) | Not in scope (future) |
-| Editable distances between specific points | Not in scope (future) |
+- **Engine:** All data persisted to browser `localStorage` via Zustand persist middleware
+- **Backend:** None — the app runs entirely in the browser with no server or cloud database
+- **Stores:** `inspectionStore`, `rackStore`, `ncStore`, `beamDatabaseStore`, `frameDatabaseStore`, `supplierStore`
+- **Photos:** Stored as base64 strings in localStorage. Large inspections with many photos may approach browser limits (~5-10MB)
+- **Portability:** Data lives on the device's browser only. Clearing browser data erases all inspections
 
-### Section 3: Bay View & Configuration — FULLY IMPLEMENTED
+---
 
-| Feature | Status |
-|---------|--------|
-| Bay width label at bottom | Done |
-| Beam name from database (not L1/L2/L3) | Done |
-| Interaxis dimensions (center-to-center) + "From ground" read-only column | Done |
-| Bay Information: Bay Number, Rack, Supplier field, Bay Length as filter | Done |
-| Per-level beam panels (collapsible) with filtered beam dropdown (supplier + length) | Done |
-| "New Beam" button opens Beam Editor if no match | Done |
-| "Apply to all levels" scoped to current bay only (bug fixed) | Done |
-| Per-level accessories (free-text + notes until Accessories Editor is built) | Done (interim) |
-| Frame selection: Left + Right independently, filtered by supplier/depth/height | Done |
-| "New Frame" button opens Frame Editor | Done |
-| Duplicate Configuration with bay checkboxes + save button | Done |
-| Level count raised from 10 to 20 | Done |
+## Document Compliance Audit
 
-### Section 4: Inspection Functionality — FULLY IMPLEMENTED
+### Doc 1 (Specification List for Phase 1) — ~75% Complete
 
-| Feature | Status |
-|---------|--------|
-| NC on beams/levels: tap level → element buttons → FRONT/REAR → NC type → severity → photos → save | Done |
-| Quick NC buttons ("Damaged", "Missing safety lock", "Unhooked") + "Other" dropdown | Done |
-| NC on level accessories: same flow as beams | Done |
-| NC on frames: click frame area → Diagonal/Cross Member/Load Sign/Protections | Done |
-| NC on uprights: click upright → Upright/Footplate/Top Tie Beam/Front Guard/Corner Guard | Done |
-| Diagonals/cross members: numbered selection (1 = bottom, increasing upward) | Done |
-| Uprights: FRONT/REAR selection | Done |
-| Severity picker (green/yellow/red) per allowed severities | Done |
-| Photo capture: up to 3 photos per NC via file input (camera/gallery) | Done |
-| Quantity field: default 1, editable | Done |
-| Notes field: optional text observations | Done |
-| Colored NC markers on 2D layout (severity-colored, with glow) | Done |
-| NC markers: global size setting (increase/decrease) | Done |
-| NC markers: tap → view description | Done |
-| NC markers: long-press → context menu (Edit/Delete) | Done |
-| NC markers: draggable in edit mode, position persists | Done |
-| NC marker placement rules file | Pending (client to provide, see Q12) |
-| New NC types: Load Sign, Top Tie Beam, Footplate, Front Guard, Corner Guard | Done |
+**7-chapter specification document (43 pages) — the most comprehensive Phase 1 spec.**
 
-### Client Questions — Cross-Check Status
+#### Ch 1: Initial Structure — 90% Complete
+
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| New inspection creation with client details | Done | |
+| Renewal inspections workflow | Done | |
+| Client data entry (reseller, end customer, address, contacts) | Done | |
+| Working areas management | Done | |
+| Status badges (draft/completed) | Done | |
+
+#### Ch 2: Rack Creation Wizard — 85% Complete
+
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| Simplified wizard (manufacturer, bays, bay length, levels, elevations, frame) | Done | |
+| Manufacturer selection from database | Done | |
+| Frame database with filtered suggestions (same manufacturer, depth, height) | Done | |
+| Automatic frame compatibility check (height > highest elevation) | Not done | Doc specifies validation warning |
+| Final summary before creation confirmation | Not done | Wizard creates directly without summary step |
+| Auto-generation in 2D layout on creation | Done | |
+
+#### Ch 3: Rack List Management — 80% Complete
+
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| Table view with rack name, manufacturer, total bays | Done | |
+| "Bay Description" field (e.g. "3x2700+1x1800+1x2700") | Not done | Doc specifies synthetic format showing bay lengths and sequence |
+| Rack orientation (left-to-right numbering from front) | Done | |
+| Create new rack (wizard + duplicate) | Done | |
+| Duplicate naming ("Copy of (1)", "Copy of (1) (2)") | Partial | Duplicates exist but naming format may differ |
+| Edit rack (re-open wizard pre-filled) | Done | |
+| Delete with confirmation | Done | |
+| Action menu (three-dots) per rack row | Done | |
+| Auto-creation in 2D layout | Done | |
+
+#### Ch 4: Rack Editor — Bay & Frame Management — 90% Complete
+
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| Bay editor: left area (front view SVG) + right area (tabs) | Done | |
+| Bay Configuration tab (frames, levels, beam type, elevation, accessories) | Done | |
+| Bay Inspection tab (NC recording on beams, levels, accessories) | Done | |
+| Touch-first element selection on front drawing | Done | |
+| FRONT/REAR position specification for beams | Done | |
+| Quick NC buttons + "Other" dropdown | Done | |
+| Severity (green/yellow/red) | Done | |
+| Photo attachment (camera + gallery, multiple per NC) | Done | |
+| Save NC button (enabled only when element + NC type + severity selected) | Done | |
+| NC graphical indicator (colored dot) on front view + layout | Done | |
+| Multiple NC entry (fields reset, stay on same screen) | Done | |
+| Return to layout button | Done | |
+| Copy configuration to other bays | Done | |
+| Frame editor: left area (schematic drawing) + right area (tabs) | Done | |
+| Frame Configuration tab (frame modification, accessories) | Done | |
+| Frame Inspection tab (upright front/rear, diagonal numbered, h-brace numbered, base plate, load sign) | Done | |
+| Frame NC recording with same flow as bay | Done | |
+
+#### Ch 5: 2D Layout Editor — 85% Complete
+
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| Unlimited 2D workspace | Done | |
+| Edit Layout mode (padlock icon toggle) | Done | |
+| Move racks by dragging | Done | |
+| Alignment guide lines (Canva-style) | Done | |
+| Rotate racks (90°/180°/270°/360° + manual angle) | Done | |
+| Managing distances between racks (display + editable field) | Not done | Future enhancement |
+| Import external layouts (vector PDF / AutoCAD) | Not done | Future enhancement |
+| Lock layout (prevent movement) | Done | |
+| Zoom (pinch gesture) + Pan (drag) | Done | |
+| Layout export to PDF (vector, plot extents style) | Not done | Future enhancement |
+| Graphical numbering of bays and frames on layout | Done | |
+
+#### Ch 6: Data Extraction (Export to Excel) — 0% Complete
+
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| Export NC data to XLSX (preferred) or CSV | Not done | |
+| Column structure: Lot, Manufacturer, Rack name, Reference, Level, Position, Quantity, Element, Photo, Description, Anomaly, Damage | Not done | |
+| Photo export: clickable links in XLSX, filenames in CSV | Not done | |
+| ZIP bundle (inspection.xlsx + /photos/ folder) | Not done | |
+| Extraction rules (only NCs, one row per NC) | Not done | |
+| Export UI: "Export NC" button, format selection, photo toggle | Not done | |
+| Layout PDF export (vector, per working area) | Not done | |
+| Integration: NC export + layout PDF + photos as complete package | Not done | |
+
+#### Ch 7: Attachments — Reference Only (no implementation needed)
+
+Glossary, MVP purpose, data structure definitions. Used as reference throughout development.
+
+---
+
+### Doc 3 (App Analysis), Section 1: Editors & Database — 60% Complete (3 of 5 items built, 2 deferred by client)
+
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| Beam Editor — full CRUD, supplier link, type, dimensions, finish, features, supplier code | Done | |
+| Frame Editor — full CRUD, supplier link, type, upright specs, depth, bracing qty, finish | Done | |
+| Supplier Editor — name + color | Done | |
+| Beam/Frame auto-naming | Done | Default formats, client may customize |
+| Duplicate & Edit | Done | |
+| Editor panel on Home Screen | Done | |
+| Form validations (all dimension fields) | Done | |
+| Accessories Editor | Deferred | Phase 5 per client |
+| Import DB (CSV bulk upload) | Deferred | Phase 5 per client |
+
+### Doc 3 (App Analysis), Section 2: Layout — 100% Complete
+
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| Supplier color-coding on racks | Done | |
+| Color legend | Done | |
+| Snap-to-grid + alignment guides | Done | |
+| Selection, multi-select, drag select | Done | |
+| Transform handles (move, rotate, resize) | Done | |
+| Keyboard shortcuts (full set) | Done | |
+| Right-click context menu | Done | |
+| Properties panel | Done | |
+| Undo/Redo (50 snapshots) | Done | |
+| Import floor plan (vector PDF) | Future | Client marked as future |
+| Editable distances | Future | Client marked as future |
+
+### Doc 3 (App Analysis), Section 3: Bay View & Configuration — 95% Complete
+
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| Bay width at bottom | Done | |
+| Beam names from DB | Done | |
+| Interaxis dimensions + "From ground" column | Done | |
+| Bay info: number, rack, supplier, bay length filter | Done | |
+| Per-level beam panels with filtered dropdowns | Done | |
+| "New Beam" button | Done | |
+| "Apply to all levels" bug fix | Done | |
+| Per-level accessories | Done (interim) | Free-text until Accessories Editor |
+| Left/Right frame selection (independent, filtered) | Done | |
+| "New Frame" button | Done | |
+| Duplicate Configuration with bay checkboxes | Done | |
+| Level count raised to 20 | Done | |
+
+### Doc 3 (App Analysis), Section 4: Inspection — 95% Complete
+
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| Touch-first NC flow (tap level → element → FRONT/REAR → NC → severity → photos → save) | Done | |
+| Quick NC buttons + "Other" dropdown | Done | Updated with Doc 2 NC names |
+| NC on all 22 element categories | Done | 12 bay elements (5 per-level + 7 bay-level) + 10 frame elements |
+| NC on frames (diagonal, cross member, load sign, protections) | Done | |
+| NC on uprights (upright, footplate, top tie beam, impact guards) | Done | Renamed to Doc 2 names |
+| Numbered diagonal/cross member selection | Done | |
+| Severity picker (green/yellow/red) | Done | |
+| Photo capture (up to 3 per NC) | Done | |
+| Quantity field | Done | |
+| Notes field | Done | |
+| NC markers on 2D layout (colored, sized, tap/long-press) | Done | With placement engine + pie-chart grouping |
+| NC markers draggable | Done | |
+| NC marker placement rules (from Doc 2) | Done | 18 element-type placement rules implemented |
+| Pie-chart severity markers | Done | Konva Arc on canvas, SVG path in views |
+| Bay inspection mode toggle (per-level / bay-level) | Done | |
+
+### Clarification Questions (Developer-Raised) — 90% Complete
 
 | Question | Status | Notes |
 |----------|--------|-------|
-| Q1. Beam name auto-generation format | **Implemented with default** | Uses `"{Type} {Length}x{Height} - {Supplier}"` format. Client may want to customize. |
-| Q2. Frame name auto-generation format | **Implemented with default** | Uses `"{FrameType} {Height}x{Depth} - {Supplier}"` format. Client may want to customize. |
-| Q3. Finish color input — free text or predefined? | **Implemented as free text** | Currently a text input (e.g. "RAL 5010 Blue"). Client to confirm if RAL picker preferred. |
-| Q4. Shared supplier list across beams/frames? | **Yes, shared** | Single `supplierStore` feeds all editors. Client to confirm this is correct. |
-| Q5. Beam filter by bay length — exact match? | **Exact match** | Currently filters `beam.length === bayLength`. Client to confirm if tolerance needed. |
-| Q6. Accessories before Accessories Editor? | **Free-text name + notes** | Per-level accessories use free-text until Phase 5. Client to confirm this interim approach. |
-| Q7. What does "Duplicate Configuration" copy? | **Beams + accessories** | Copies beam selections and accessories to target bays. Client to confirm scope. |
-| Q8. Rack depth for frame filtering? | **Uses `rack.frameDepth`** | Existing field on rack. Client to confirm or if separate field needed. |
-| Q9. NC types for new elements? | **Implemented with reasonable defaults** | See `ncTypes.js` — loadSign (4 types), topTieBeam (5), footplate (4), frontGuard (5), cornerGuard (5). Client to review and adjust. |
-| Q10. Common vs "Other" NCs per element? | **Implemented** | Beams: 3 quick buttons + Other. Other elements: first 3 as quick + rest as Other. Client to provide preferred split per element. |
-| Q11. Photo capture — camera or file upload? | **Both** | Uses `<input accept="image/*">` which opens camera or gallery on tablet. |
-| Q12. NC marker placement rules file? | **STILL PENDING** | Client has not provided this file. Currently markers use auto-placement or manual drag positioning. |
-| Q13. FRONT/REAR tracked in reports? | **Stored in NC data** | `face` field saved with each NC. Export/report feature not yet built. Client to confirm if needed in reports. |
+| Q1. Beam name format | Implemented | Default: `"{Type} {Length}x{Height} - {Supplier}"` |
+| Q2. Frame name format | Implemented | Default: `"{FrameType} {Height}x{Depth} - {Supplier}"` |
+| Q3. Finish color input | Implemented | Free text (e.g. "RAL 5010 Blue") |
+| Q4. Shared supplier list | Implemented | Single `supplierStore` across all editors |
+| Q5. Beam filter exact match | Implemented | Exact match on `beam.length === bayLength` |
+| Q6. Accessories before editor | Implemented | Free-text + notes as interim |
+| Q7. Duplicate config scope | Implemented | Copies beams + accessories |
+| Q8. Rack depth for frame filter | Implemented | Uses `rack.frameDepth` |
+| Q9. NC types for new elements | Implemented | All 22 categories with exact Doc 2 NC names |
+| Q10. Common vs "Other" NCs | Implemented | First 3 as quick buttons, rest as Other |
+| Q11. Photo capture method | Implemented | Both camera and gallery via `accept="image/*"` |
+| Q12. NC marker placement rules | Implemented | 18 element-type placement rules + pie-chart markers |
+| Q13. FRONT/REAR in reports | Stored | `face` field saved; export not yet built |
+
+### Doc 2 (NC Marker Rules & NC List): NC Types & Marker Rules — ~90% Complete
+
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| 18 element types with exact NC lists from Doc 2 | Done | All 18 Doc 2 elements + 4 Doc 3 extras (basePlate, loadSign, topTieBeam, footplate) = 22 total categories, 89 NC types |
+| Marker placement engine (18 position rules) | Done | `computeMarkerPosition()` in `src/utils/markerPlacement.js` — handles inside-bay, center, rear, frame, guards, edge, aisle positions |
+| Pie-chart severity markers | Done | Konva `Arc` slices on 2D canvas (`NCMarker.jsx`), SVG `path` arcs in views (`SVGPieMarker.jsx`) |
+| NC grouping by element | Done | `groupNCsByElement()` in `src/utils/ncGrouping.js` — groups NCs for consolidated pie markers |
+| Old NC migration | Done | `NC_ID_MIGRATION` + `ELEMENT_TYPE_MIGRATION` maps in ncTypes.js, auto-applied via `onRehydrateStorage` in ncStore |
+| Bay inspection mode toggle | Done | Per-level (5 elements) vs Bay/rack-level (7 elements) toggle in BayInspection |
+| Frame guard renaming | Done | `frontGuard` → `frontImpactGuard`, `cornerGuard` → `cornerImpactGuard` |
+| Scope Table categories | Not started | Doc 2 defines: Missing, To be corrected, Obsolete, To be repositioned |
 
 ---
 
-## Client Analysis — Requested Changes (April 2026)
+## Current Milestone Status
 
-Full breakdown of changes requested by the client, organized by area.
-
-### 1. Editor & Database Management
-
-The home screen needs an **Editor panel** with the following sections:
-
-#### Beam Editor
-
-A complete beam database. Each beam entry has:
-
-- **Beam name** — auto-generated from entered data (naming standard TBD)
-- **Supplier** — linked to supplier database
-- **Beam type** — Standard double C (default) / Step beam for shelving / Other
-- **Dimensions** — Length (mm), Height (mm), Depth (mm), Thickness (mm)
-- **Finish** — Painted (+ color field) or Galvanized (Cold-dip default / Hot-dip)
-- **Optional features/accessories** — 3 free-text fields (e.g. shelf support angle, tie rod plate, bracing plate)
-- **Supplier code** — optional
-
-Must support: create from scratch, **Duplicate & Edit** existing beam, Save, Cancel.
-This database feeds all beam dropdowns throughout the app.
-
-#### Frame Editor
-
-A complete frame database. Each frame entry has:
-
-- **Frame name** — auto-generated from entered data (naming standard TBD)
-- **Supplier** — linked to supplier database
-- **Frame type** — Welded / Bolted
-- **Upright** — Description (optional), Height (mm), Width (mm)
-- **Frame dimensions** — Height (= upright height), Depth (mm)
-- **Finish** — same options as beam (Painted+color / Galvanized cold-dip or hot-dip)
-- **Diagonals** — Quantity + text field for details (center distance, length, type, etc.)
-- **Cross members** — Quantity + text field for details
-- **Supplier code** — optional
-
-Must support: create from scratch, **Duplicate & Edit**, Save, Cancel.
-Diagonal and cross member **quantities** are critical — they are used during frame inspection to let the inspector select which specific diagonal/cross member has an issue (numbered from bottom up).
-
-#### Supplier Editor
-
-Simple page to enter supplier info + assign a **color** for visual distinction in the 2D layout.
-
-#### Accessories Editor
-
-Database of shelving accessories (mesh decks, shelves, horizontal bracing, row spacers, etc.).
-**Status: Deferred** to a later stage.
-
-#### Import DB
-
-Bulk upload via CSV for beams, frames, accessories.
-**Status: Deferred** to a later stage.
+| Phase | Description | Status |
+|-------|-------------|--------|
+| Phase 1 | Beam & Frame Database Editors | Done |
+| Phase 2 | Bay Configuration Rework | Done |
+| Phase 3 | Inspection Functionality Rework | Done |
+| Phase 4 | Layout Enhancements | Done |
+| Phase 5a | NC Alignment (Doc 2) | Done |
+| Phase 5b | Accessories + Export | Next |
 
 ---
 
-### 2. Layout Changes
+## Remaining Work — $4,500 Scope
 
-**Client feedback**: "Overall, it is very good."
-
-#### Supplier Color-Coding
-
-- Each supplier gets an assigned color
-- Racks in the 2D layout are colored by their supplier
-- A **legend** showing supplier colors and names
-
-#### Future Layout Features (Not in current scope)
-
-- Import building floor plan (vector PDF) as scaled background
-- Construction guidelines / snap alignment between racks
-- Editable distances between shelving units
+| Week | Milestone | Cost | Status | Deliverables |
+|------|-----------|------|--------|-------------|
+| Week 1 | M1: NC Alignment | $1,500 | **DONE** | 22 NC element types, exact Doc 2 names, placement engine, pie-chart markers, store migration, inspection mode toggle |
+| Week 2 | M2: Clarifications + M3: Export | $700 | **Next** | Finalize Q13 (FRONT/REAR in reports). CSV/XLSX export, summary view by severity/rack, ZIP bundle with photos |
+| Week 3 | M4: Accessories + Import | $800 | Pending | Accessories Editor (full CRUD), replace free-text with DB dropdown, CSV import for beams/frames/accessories |
+| Week 4 | M5: Polish & Testing + Contingency | $1,500 | Pending | Tablet touch optimization, performance pass, edge cases, bug fixes |
+| **Total** | | **$4,500** | **25% done** | |
 
 ---
 
-### 3. Bay View & Configuration Changes
+## What's Next — Prioritized Backlog
 
-**Client feedback on bay front view**: "The front view image of the bay is perfect."
+### Immediate (Week 2 — Export & Clarifications)
 
-#### Bay Front View Drawing Changes
+| # | Task | Priority | Effort | Notes |
+|---|------|----------|--------|-------|
+| 1 | **NC Data Export to CSV/XLSX** | High | 2-3 days | Doc 1 Ch 6: Export button, column structure (Lot, Manufacturer, Rack, Level, Element, Anomaly, Severity, Photo, Notes), one row per NC |
+| 2 | **NC Summary View** | High | 1 day | Summary panel showing NC counts by severity (green/yellow/red) per rack and per area |
+| 3 | **Photo export in ZIP bundle** | Medium | 1 day | ZIP containing inspection.xlsx + /photos/ folder with filenames referenced in XLSX |
+| 4 | **Scope Table categories** | Medium | 0.5 day | Doc 2 defines: Missing, To be corrected, Obsolete, To be repositioned — categorize NCs |
+| 5 | **Q13: FRONT/REAR in export** | Low | 0.5 day | Include face column in export output |
 
-- Bay width label should be at the **bottom** (currently at top)
-- Show **beam name from database** instead of L1, L2, L3
-- Dimensions should show **center-to-center distance between beams** (interaxis), not absolute height from ground. Absolute height is only needed for the top beam and shown separately.
+### Short-term (Week 3 — Accessories & Import)
 
-#### Bay Information Panel
+| # | Task | Priority | Effort | Notes |
+|---|------|----------|--------|-------|
+| 6 | **Accessories Editor** | High | 2 days | Full CRUD for accessories (similar to Beam/Frame editors), with supplier link |
+| 7 | **Replace free-text accessories** | High | 1 day | Bay config: swap free-text accessory fields with DB dropdown from Accessories Editor |
+| 8 | **CSV Import for beams/frames/accessories** | Medium | 1-2 days | Bulk upload from CSV, validate columns, preview before import |
 
-- Add **Supplier** field
-- Move **bay length** (Custom Length) here — it acts as a filter for all beam dropdowns in this bay
+### Medium-term (Week 4 — Polish & Gaps)
 
-#### Beam Configuration Rework
+| # | Task | Priority | Effort | Notes |
+|---|------|----------|--------|-------|
+| 9 | **Tablet touch optimization** | High | 1-2 days | Larger touch targets, swipe gestures, responsive panels |
+| 10 | **Frame compatibility check** | Medium | 0.5 day | Doc 1 Ch 2: Warn if frame height < highest beam elevation |
+| 11 | **Rack wizard summary step** | Low | 0.5 day | Doc 1 Ch 2: Show summary before creation confirmation |
+| 12 | **Bay description field** | Low | 0.5 day | Doc 1 Ch 3: Synthetic format "3x2700+1x1800+1x2700" |
+| 13 | **Performance pass** | Medium | 1 day | Virtual scrolling for large lists, memo optimization, lazy loading |
+| 14 | **Edge case bug fixes** | Medium | 1-2 days | Testing & fixing across all inspection flows |
 
-- One **panel per level** (as many panels as there are levels)
-- Each panel contains:
-  - **Beam dropdown** — filtered by: supplier = rack supplier AND beam length = bay length. If no match, a "New Beam" button opens the Beam Editor.
-  - **Accessories dropdown** — from accessories database, with a **"+"** button to add multiple accessories per level. Each accessory row = dropdown + notes text field.
-- The old standalone Accessories panel is **removed** (replaced by per-level accessories in beam config)
+### Not in Current Scope (Future)
 
-#### Frame Selection Rework
-
-- Left and right frame can be **different** (first/last frames of a rack may be taller)
-- Show **frame name from database** instead of "Frame 1" / "Frame 2"
-- **Dropdown filtered by**: supplier match, frame depth = rack depth, frame height > top beam elevation
-- "New Frame" button → opens Frame Editor
-- Drawing adapts frame height based on selected frame
-
-#### Levels & Elevations Rework
-
-- Change input from absolute height to **interaxis** (distance between levels)
-- Add a **read-only "From ground" column** (auto-calculated cumulative sum)
-- Example: 3 levels → interaxis 1500/1500/1500 → from ground 1500/3000/4500
-
-#### Duplicate Configuration
-
-- New section replacing the old Accessories panel
-- **Checkboxes for each bay** in the rack
-- Copies current bay's full config (beams, levels, accessories) to selected bays
-- Save button in this section
-
-#### Bug Fix: "Apply Beam to All Levels"
-
-- **Current bug**: Changes beams for the entire shelving system (all bays), not just the current bay
-- **Required**: Must only apply to the current bay
+| Task | Notes |
+|------|-------|
+| PDF Report Generation | Branded inspection reports with photos + severity summary |
+| Layout PDF Export | Vector PDF per working area (Doc 1 Ch 5) |
+| Import Floor Plan | Vector PDF/AutoCAD as scaled background in 2D layout |
+| Backend / Cloud Sync | Server-side storage, multi-device sync |
+| Multi-User Auth | Inspector accounts, admin roles |
+| Offline PWA | Service worker for full offline capability |
+| Dashboard & Analytics | NC trends, completion rates, severity distribution |
 
 ---
-
-### 4. Inspection Functionality Changes
-
-**Client feedback**: "This is not very well implemented; I would like to change it."
-
-The app will be used on a **tablet via touch**. The current right-hand menu approach should be replaced with **direct interaction on the drawing**.
-
-#### NC on Beams / Levels (Touch Flow)
-
-Starting from the 2D layout → click bay → bay view opens:
-
-1. **Tap a level** in the bay drawing → a panel appears on the right showing all elements at that level
-2. If no accessories configured: only **BEAM** button appears. If accessories exist: beam + accessory names shown.
-3. Select element (e.g. BEAM) → system asks **FRONT or REAR**
-4. Shows **common NC buttons**: "Damaged", "Missing safety lock", "Unhooked or partially unhooked", **"Other"** (opens dropdown for less frequent NCs)
-5. Select NC → **severity picker** (green / yellow / red)
-6. **Photo capture** — button to take and save up to **3 photos** per NC
-7. **Save** button
-
-#### NC on Level Accessories
-
-Same flow as beams — tap level, see accessory names alongside beam, select accessory, pick NC, severity, photos, save.
-
-#### NC on Frames and Related Elements
-
-Accessible from: 2D layout (click frame) OR bay front view (click upright).
-
-**Click within frame rectangular area** → shows element buttons:
-
-- Diagonal
-- Cross member
-- Load sign
-- Protections (guard rail)
-
-**Click on upright** → shows element buttons:
-
-- Upright
-- Footplate
-- Top tie beam
-- Protections (front guard, corner guard)
-
-**For diagonals and cross members**: system asks which number (starting from 1 = closest to ground, increasing upward). The total count comes from frame configuration (diagonal/cross member quantity set in Frame Editor).
-
-**For uprights**: system also asks FRONT or REAR.
-
-Each element → NC type buttons → severity → optional text notes → photos (up to 3) → save.
-
-#### Colored NC Markers on 2D Layout
-
-- Markers appear on the **2D layout only** (not in bay front view)
-- Placement rules based on detected NC and related element (rules file to be provided by client)
-- Markers must be clearly visible
-- **Global size setting** — increase/decrease all marker sizes at once
-- **Tap** marker → view simple NC description
-- **Long-press** (hold ~2 seconds) → context menu with **EDIT** (modify NC or severity) and **DELETE**
-- Delete is useful for follow-up inspections to remove resolved NCs
-
-#### Quantity Field
-
-- All NC entries get a **quantity** field (number of affected elements)
-- Default: **1** (covers most cases)
-- Editable for cases like: multiple missing safety clips, multiple missing anchor bolts, etc.
-
----
-
-## Implementation Phases
-
-### Phase 1: Beam & Frame Database Editors ← Foundation
-
-> Everything else depends on having proper beam/frame databases with full fields.
-
-
-| Task                                            | Files                                                    |
-| ----------------------------------------------- | -------------------------------------------------------- |
-| Create `beamDatabaseStore` (Zustand + persist)  | `src/stores/beamDatabaseStore.js` (new)                  |
-| Create `frameDatabaseStore` (Zustand + persist) | `src/stores/frameDatabaseStore.js` (new)                 |
-| Create `supplierStore` (Zustand + persist)      | `src/stores/supplierStore.js` (new)                      |
-| Beam Editor page — full CRUD form               | `src/pages/BeamEditorPage.jsx` (new)                     |
-| Frame Database Editor page — full CRUD form     | `src/pages/FrameDatabaseEditorPage.jsx` (new)            |
-| Supplier Editor page — name + color             | `src/pages/SupplierEditorPage.jsx` (new)                 |
-| Add Editor panel to Home Screen                 | `src/pages/HomePage.jsx` (modify)                        |
-| Add new routes                                  | `src/App.jsx` (modify)                                   |
-| Seed existing beam/frame data into stores       | `src/data/beams.js`, `src/data/frames.js` (may refactor) |
-
-
-### Phase 2: Bay Configuration Rework
-
-> Depends on Phase 1.
-
-
-| Task                                                           | Files                                                       |
-| -------------------------------------------------------------- | ----------------------------------------------------------- |
-| Add supplier field + bay length to Bay Information             | `src/components/BayEditor/BayConfig.jsx`                    |
-| Rework beam config to per-level panels with filtered dropdowns | `src/components/BayEditor/BayConfig.jsx`                    |
-| Add per-level accessories (dropdown + notes + "+" button)      | `src/components/BayEditor/BayConfig.jsx`                    |
-| Rework frame selection (filtered dropdowns, left ≠ right)      | `src/components/BayEditor/BayConfig.jsx`                    |
-| Change elevations to interaxis + computed "from ground"        | `src/components/BayEditor/BayConfig.jsx`                    |
-| Add "Duplicate Configuration" section with bay checkboxes      | `src/components/BayEditor/BayConfig.jsx` (or new component) |
-| Fix "Apply to all levels" bug (must scope to current bay only) | `src/components/BayEditor/BayConfig.jsx`                    |
-| Update front view: width at bottom, beam names, interaxis dims | `src/components/BayEditor/BayFrontView.jsx`                 |
-| Update bay/rack data structures for new fields                 | `src/stores/rackStore.js`                                   |
-
-
-### Phase 3: Inspection Functionality Rework
-
-> Depends on Phase 2.
-
-
-| Task                                                                                                        | Files                                            |
-| ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| Rewrite bay inspection: tap level → element buttons → FRONT/REAR → NC → severity → photos → save            | `src/components/BayEditor/BayInspection.jsx`     |
-| Make bay front view levels clickable/tappable                                                               | `src/components/BayEditor/BayFrontView.jsx`      |
-| Rewrite frame inspection: click area → element buttons → numbered selection → NC → severity → photos → save | `src/components/FrameEditor/FrameInspection.jsx` |
-| Make frame view areas clickable (frame body vs uprights)                                                    | `src/components/FrameEditor/FrameView.jsx`       |
-| Add quantity field to NC data model                                                                         | `src/stores/ncStore.js`                          |
-| Add photo array (up to 3) to NC data model                                                                  | `src/stores/ncStore.js`                          |
-| Add new NC types: load sign, top tie beam, footplate, protections (front guard, corner guard)               | `src/data/ncTypes.js`                            |
-| Add FRONT/REAR field to NC data model                                                                       | `src/stores/ncStore.js`                          |
-
-
-### Phase 4: Layout Enhancements
-
-> Can start after Phase 1 (supplier colors), rest after Phase 3 (NC markers).
-
-
-| Task                                                                  | Files                                                                   |
-| --------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| Color racks by supplier in 2D layout                                  | `src/components/Canvas/RackShape.jsx`, `BayShape.jsx`, `FrameShape.jsx` |
-| Add supplier color legend to layout                                   | `src/pages/LayoutEditor.jsx`                                            |
-| NC markers on layout: tap → view, long-press → edit/delete menu       | `src/components/Canvas/NCMarker.jsx`                                    |
-| Global marker size setting in toolbar                                 | `src/pages/LayoutEditor.jsx`                                            |
-| Marker placement based on NC type + element (needs rules from client) | `src/components/Canvas/LayoutCanvas.jsx`                                |
-
-
-### Phase 5: Accessories Editor & Import DB (Deferred)
-
-- Accessories Editor — full CRUD for all shelving accessories
-- Import DB — CSV bulk upload for beams, frames, accessories
-- **Not in current scope** — client will revisit later
-
----
-
-## Client Questions (Must Answer Before/During Development)
-
-### Beam & Frame Editors
-
-**Q1. Beam name auto-generation format?**
-When creating a beam, the name is auto-generated. What format should it follow?
-Example options: `"Double C 2700x50 - Mecalux"`, `"BOX-2700-Mecalux"`, or something else?
-
-**Q2. Frame name auto-generation format?**
-Same question for frames.
-Example: `"Welded 6000x1000 - Mecalux"`, `"W-6000x1000-MEX"`, or something else?
-
-**Q3. Finish color input — free text or predefined list?**
-For "Painted" finish, should color be: (a) free text, (b) a color picker, or (c) a predefined list like RAL codes?
-
-**Q4. Should the supplier list be shared across beams, frames, and accessories?**
-Or can each product type have its own independent suppliers?
-
-### Bay Configuration
-
-**Q5. When filtering beams by bay length — must it be an exact match?**
-Example: if bay length is 2700mm, should we show only beams with length exactly 2700mm? Or also beams within a tolerance (e.g. ±50mm)?
-
-**Q6. How to handle accessories before the Accessories Editor is built?**
-The per-level accessory dropdown needs data, but the Accessories Editor is deferred. Options:
-(a) Hardcode a temporary list of common accessories (mesh deck, shelf, row spacer, horizontal bracing)
-(b) Use a free-text field until the editor is built
-(c) Skip accessories in levels entirely until Phase 5
-
-**Q7. What exactly does "Duplicate Configuration" copy?**
-When copying a bay config to other bays, should it include: (a) only beam selections, (b) beams + level heights, (c) beams + heights + accessories, (d) everything including left/right frame selections?
-
-**Q8. Where is rack depth defined for frame filtering?**
-Frames are filtered by "frame depth = shelving depth". Is this the existing `frameDepth` field on the rack, or should there be a separate rack depth field?
-
-### Inspection
-
-**Q9. NC types and severities for new element types?**
-The document introduces elements not yet in our NC catalog:
-
-- **Load sign** — what NCs apply? (missing, damaged, illegible, wrong position?)
-- **Top tie beam** — what NCs apply?
-- **Footplate** — is this different from the existing "base plate" element?
-- **Protections (front guard, corner guard)** — are these separate from the existing "guardrail" NCs?
-
-Please provide the full NC type list and allowed severities for each new element.
-
-**Q10. What are the common vs "Other" NCs per element?**
-The document says beams show buttons for "Damaged", "Missing safety lock", "Unhooked or partially unhooked" and an "Other" dropdown. Is this split (common buttons vs Other dropdown) the same for all elements, or does each element type have its own set of common NCs? Can you provide the common NCs list per element type?
-
-**Q11. Photo capture — camera or file upload?**
-Should the app open the device camera directly, or allow selecting from gallery? Both? Max file size per photo?
-
-**Q12. NC marker placement rules file?**
-The document says "the rules for placing markers based on the detected NC and related element will be provided in an attached file." We need this file to implement marker positioning on the 2D layout. Can you provide it?
-
-**Q13. Is FRONT/REAR tracked separately in reports?**
-When an NC is recorded as FRONT or REAR (on beams, uprights), does this distinction need to appear in reports/exports? Or is it just for the inspector's reference?
 
 ---
 
@@ -559,11 +432,12 @@ src/
 │   ├── Canvas/           # Konva-based layout: LayoutCanvas, RackShape, BayShape, FrameShape, NCMarker
 │   ├── FrameEditor/      # Frame inspection, config & view
 │   ├── Layout/           # Header & Sidebar
-│   ├── ui/               # Reusable UI: Button, Input, Select, Modal, Card
+│   ├── ui/               # Reusable UI: Button, Input, Select, Modal, Card, PhoneInput
 │   └── Wizard/           # Rack creation wizard
-├── data/                 # Reference data: manufacturers, beams, frames, NC types
-├── pages/                # Route pages: Home, NewInspection, WorkingAreas, RackList, LayoutEditor, BayEditorPage, FrameEditorPage, RenewalsPage
-├── stores/               # Zustand stores: inspectionStore, rackStore, ncStore
+├── data/                 # Reference data: manufacturers, beams, frames, NC types (with migration maps)
+├── pages/                # Route pages: Home, NewInspection, WorkingAreas, RackList, LayoutEditor, BayEditorPage, FrameEditorPage, BeamEditorPage, FrameDatabaseEditorPage, SupplierEditorPage, RenewalsPage
+├── stores/               # Zustand stores: inspectionStore, rackStore, ncStore (with migration), beamDatabaseStore, frameDatabaseStore, supplierStore
+├── utils/                # Shared utilities: ncHelpers, markerPlacement, ncGrouping
 ├── App.jsx               # Router & route definitions
 └── main.jsx              # Entry point
 ```
@@ -577,12 +451,9 @@ npm run dev
 
 ## Scripts
 
-
 | Command           | Description              |
 | ----------------- | ------------------------ |
 | `npm run dev`     | Start dev server         |
 | `npm run build`   | Production build         |
 | `npm run preview` | Preview production build |
 | `npm run lint`    | Run ESLint               |
-
-

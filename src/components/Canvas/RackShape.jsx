@@ -3,6 +3,8 @@ import { Group, Rect, Text } from 'react-konva';
 import FrameShape from './FrameShape';
 import BayShape from './BayShape';
 import NCMarker from './NCMarker';
+import { computeMarkerPosition } from '../../utils/markerPlacement';
+import { groupNCsByElement } from '../../utils/ncGrouping';
 
 // 1mm = 0.1px at scale 1
 const MM_TO_PX = 0.1;
@@ -84,30 +86,39 @@ const RackShape = forwardRef(function RackShape(
       />
     );
 
-    // NC markers on frames
-    (ncByFrame[frame.id] || []).forEach((nc, ncIdx) => {
-      const markerX =
-        nc.markerX != null
-          ? nc.markerX
-          : xOffset + scaledUprightWidth / 2;
-      const markerY =
-        nc.markerY != null ? nc.markerY : -12 - ncIdx * 14;
+    // NC markers on frames — grouped
+    const frameNCs = ncByFrame[frame.id] || [];
+    if (frameNCs.length > 0) {
+      const groups = groupNCsByElement(frameNCs);
+      Object.values(groups).forEach((group) => {
+        const firstNC = group.ncs[0];
+        const hasCustomPos = firstNC.markerX != null;
+        const defaultPos = computeMarkerPosition(
+          group.elementType,
+          { bayWidth: 0, bayDepth: scaledFrameDepth, frameWidth: scaledUprightWidth },
+          0,
+          1
+        );
+        const mx = hasCustomPos ? firstNC.markerX : xOffset + defaultPos.x;
+        const my = hasCustomPos ? firstNC.markerY : defaultPos.y;
 
-      elements.push(
-        <NCMarker
-          key={`fnc-${nc.id || ncIdx}`}
-          x={markerX}
-          y={markerY}
-          severity={nc.severity}
-          size={5}
-          markerScale={markerScale}
-          draggable={editMode}
-          onTap={() => onNCTap?.(nc)}
-          onLongPress={() => onNCLongPress?.(nc)}
-          onDragEnd={(pos) => onNCDragEnd?.(nc.id, pos)}
-        />
-      );
-    });
+        elements.push(
+          <NCMarker
+            key={`fnc-${group.key}`}
+            x={mx}
+            y={my}
+            severity={firstNC.severity}
+            ncGroup={group.ncs.length > 1 ? group.ncs : null}
+            size={5}
+            markerScale={markerScale}
+            draggable={editMode}
+            onTap={() => onNCTap?.(firstNC)}
+            onLongPress={() => onNCLongPress?.(firstNC)}
+            onDragEnd={(pos) => onNCDragEnd?.(firstNC.id, pos)}
+          />
+        );
+      });
+    }
 
     xOffset += scaledUprightWidth;
 

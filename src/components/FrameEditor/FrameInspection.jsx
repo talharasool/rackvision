@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { Trash2, CheckCircle2, PlusCircle, Camera, X, ChevronDown } from 'lucide-react';
 import Button from '../ui/Button';
 import ncTypes from '../../data/ncTypes';
+import { getNCTypeName } from '../../utils/ncHelpers';
 
 const SEVERITY_CONFIG = {
   green: { label: 'Green', color: 'bg-green-500', border: 'border-green-500', text: 'text-green-400', ring: 'ring-green-500/30' },
@@ -26,8 +27,8 @@ const UPRIGHT_ELEMENTS = [
   { id: 'upright', label: 'Upright', ncCategory: 'upright', numbered: false, hasFace: true },
   { id: 'footplate', label: 'Footplate', ncCategory: 'footplate', numbered: false },
   { id: 'topTieBeam', label: 'Top Tie Beam', ncCategory: 'topTieBeam', numbered: false },
-  { id: 'frontGuard', label: 'Front Guard', ncCategory: 'frontGuard', numbered: false },
-  { id: 'cornerGuard', label: 'Corner Guard', ncCategory: 'cornerGuard', numbered: false },
+  { id: 'frontImpactGuard', label: 'Front Impact Guard', ncCategory: 'frontImpactGuard', numbered: false },
+  { id: 'cornerImpactGuard', label: 'Corner Impact Guard', ncCategory: 'cornerImpactGuard', numbered: false },
 ];
 
 export default function FrameInspection({
@@ -224,15 +225,6 @@ export default function FrameInspection({
 
   // Dynamic step numbering
   let stepNum = 1;
-
-  // Look up NC type name by id
-  const getNCTypeName = (ncTypeId) => {
-    for (const category of Object.values(ncTypes)) {
-      const found = category.find((t) => t.id === ncTypeId);
-      if (found) return found.name;
-    }
-    return ncTypeId;
-  };
 
   // Derive element label
   const getElementLabel = (elType, elId) => {

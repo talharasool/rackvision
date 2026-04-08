@@ -1,41 +1,130 @@
 const ncTypes = {
   beam: [
-    { id: 'beam-bent', name: 'Bent / Twisted', severities: ['green', 'yellow', 'red'], description: 'Beam is bent or twisted out of its original profile.' },
-    { id: 'beam-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'], description: 'Visible damage to the beam surface, dents, or tears.' },
-    { id: 'beam-missing-connector', name: 'Missing Safety Connector', severities: ['yellow', 'red'], description: 'Safety pin or locking clip is missing from the beam-to-upright connection.' },
-    { id: 'beam-unhooked', name: 'Unhooked / Partially Unhooked', severities: ['yellow', 'red'], description: 'Beam is not properly hooked into the upright connector slots, partially or fully disengaged.' },
-    { id: 'beam-overloaded', name: 'Overloaded', severities: ['yellow', 'red'], description: 'Beam is loaded beyond its rated capacity.' },
-    { id: 'beam-corrosion', name: 'Corrosion', severities: ['green', 'yellow', 'red'], description: 'Surface rust or corrosion affecting beam integrity.' },
-    { id: 'beam-weld-failure', name: 'Weld Failure', severities: ['red'], description: 'Cracked or failed weld on the beam connector or body.' },
-    { id: 'beam-wrong-type', name: 'Wrong Type', severities: ['yellow', 'red'], description: 'Beam type does not match the specified system or manufacturer.' },
-    { id: 'beam-deflection', name: 'Excessive Deflection', severities: ['green', 'yellow', 'red'], description: 'Beam deflection exceeds acceptable limits under load.' },
+    { id: 'beam-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
+    { id: 'beam-overloaded', name: 'Overloaded', severities: ['yellow', 'red'] },
+    { id: 'beam-missing-safety-lock', name: 'Missing safety lock', severities: ['yellow', 'red'] },
+    { id: 'beam-missing', name: 'Missing', severities: ['red'] },
+    { id: 'beam-wrong-section', name: 'Wrong section (smaller)', severities: ['yellow', 'red'] },
+    { id: 'beam-corrosion', name: 'Corroded/presence of rust', severities: ['green', 'yellow', 'red'] },
+    { id: 'beam-detached', name: 'Detached or partially detached', severities: ['yellow', 'red'] },
   ],
 
   upright: [
-    { id: 'upright-bent', name: 'Bent / Twisted', severities: ['green', 'yellow', 'red'], description: 'Upright is bent or twisted out of plumb.' },
-    { id: 'upright-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'], description: 'Visible damage to the upright such as dents, cuts, or holes.' },
-    { id: 'upright-corrosion', name: 'Corrosion', severities: ['green', 'yellow', 'red'], description: 'Rust or corrosion reducing structural integrity of the upright.' },
-    { id: 'upright-out-of-plumb', name: 'Out of Plumb', severities: ['green', 'yellow', 'red'], description: 'Upright is leaning beyond acceptable tolerances.' },
-    { id: 'upright-perforations', name: 'Damaged Perforations', severities: ['yellow', 'red'], description: 'Connector holes are enlarged, torn, or otherwise damaged.' },
-    { id: 'upright-splice', name: 'Incorrect Splice', severities: ['yellow', 'red'], description: 'Splice connection is missing, loose, or incorrectly installed.' },
+    { id: 'upright-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
+    { id: 'upright-missing-anchor-bolt', name: 'Missing or sheared anchor bolt', severities: ['yellow', 'red'] },
+    { id: 'upright-corrosion', name: 'Corroded/presence of rust', severities: ['green', 'yellow', 'red'] },
+    { id: 'upright-damaged-foot-plate', name: 'Damaged foot plate', severities: ['green', 'yellow', 'red'] },
+    { id: 'upright-twisted', name: 'Twisted', severities: ['green', 'yellow', 'red'] },
+    { id: 'upright-verticality', name: 'Verticality out of tolerance', severities: ['green', 'yellow', 'red'] },
   ],
 
   frame: [
-    { id: 'frame-out-of-plumb', name: 'Out of Plumb', severities: ['green', 'yellow', 'red'], description: 'Frame is leaning beyond acceptable tolerances.' },
-    { id: 'frame-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'], description: 'General damage to the frame assembly.' },
-    { id: 'frame-overloaded', name: 'Overloaded', severities: ['yellow', 'red'], description: 'Frame is loaded beyond its rated capacity.' },
-    { id: 'frame-wrong-type', name: 'Wrong Type', severities: ['yellow', 'red'], description: 'Frame specification does not match the system design.' },
-    { id: 'frame-missing', name: 'Missing', severities: ['red'], description: 'Frame is entirely missing from the installation.' },
-    { id: 'frame-corrosion', name: 'Corrosion', severities: ['green', 'yellow', 'red'], description: 'Corrosion affecting frame structural members.' },
+    { id: 'frame-verticality', name: 'Verticality out of tolerance', severities: ['green', 'yellow', 'red'] },
+    { id: 'frame-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
   ],
 
   brace: [
-    { id: 'brace-bent', name: 'Bent / Twisted', severities: ['green', 'yellow', 'red'], description: 'Brace is bent or deformed out of alignment.' },
-    { id: 'brace-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'], description: 'Visible damage to the horizontal or diagonal brace.' },
-    { id: 'brace-missing', name: 'Missing', severities: ['yellow', 'red'], description: 'Brace is missing from the frame assembly.' },
-    { id: 'brace-loose', name: 'Loose / Detached', severities: ['yellow', 'red'], description: 'Brace is loose or partially detached from the frame.' },
-    { id: 'brace-corrosion', name: 'Corrosion', severities: ['green', 'yellow', 'red'], description: 'Corrosion reducing the structural integrity of the brace.' },
-    { id: 'brace-weld-failure', name: 'Weld Failure', severities: ['red'], description: 'Cracked or failed weld at brace connection points.' },
+    { id: 'brace-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
+    { id: 'brace-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
+  ],
+
+  horizontalBracing: [
+    { id: 'horizontalbracing-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
+    { id: 'horizontalbracing-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
+  ],
+
+  verticalBracing: [
+    { id: 'verticalbracing-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
+    { id: 'verticalbracing-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
+  ],
+
+  frontImpactGuard: [
+    { id: 'frontimpactguard-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
+    { id: 'frontimpactguard-missing', name: 'Missing', severities: ['yellow', 'red'] },
+    { id: 'frontimpactguard-missing-anchor-bolt', name: 'Missing or sheared anchor bolt', severities: ['yellow', 'red'] },
+    { id: 'frontimpactguard-to-be-refixed', name: 'To be refixed', severities: ['yellow', 'red'] },
+    { id: 'frontimpactguard-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
+  ],
+
+  cornerImpactGuard: [
+    { id: 'cornerimpactguard-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
+    { id: 'cornerimpactguard-missing', name: 'Missing', severities: ['yellow', 'red'] },
+    { id: 'cornerimpactguard-missing-anchor-bolt', name: 'Missing or sheared anchor bolt', severities: ['yellow', 'red'] },
+    { id: 'cornerimpactguard-to-be-refixed', name: 'To be refixed', severities: ['yellow', 'red'] },
+    { id: 'cornerimpactguard-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
+  ],
+
+  guardrail: [
+    { id: 'guardrail-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
+    { id: 'guardrail-missing', name: 'Missing', severities: ['yellow', 'red'] },
+    { id: 'guardrail-to-be-refixed', name: 'To be refixed', severities: ['yellow', 'red'] },
+    { id: 'guardrail-missing-anchor-bolt', name: 'Missing or sheared anchor bolt', severities: ['yellow', 'red'] },
+    { id: 'guardrail-missing-central-beam', name: 'Missing central beam', severities: ['yellow', 'red'] },
+    { id: 'guardrail-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
+  ],
+
+  palletSupportBar: [
+    { id: 'palletsupportbar-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
+    { id: 'palletsupportbar-missing', name: 'Missing', severities: ['yellow', 'red'] },
+    { id: 'palletsupportbar-to-be-refixed', name: 'To be refixed', severities: ['yellow', 'red'] },
+  ],
+
+  rearPalletStopBeam: [
+    { id: 'rearpalletstopbeam-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
+    { id: 'rearpalletstopbeam-missing', name: 'Missing', severities: ['yellow', 'red'] },
+    { id: 'rearpalletstopbeam-detached', name: 'Detached or partially detached', severities: ['yellow', 'red'] },
+    { id: 'rearpalletstopbeam-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
+  ],
+
+  underpassProtection: [
+    { id: 'underpassprotection-missing', name: 'Missing', severities: ['yellow', 'red'] },
+    { id: 'underpassprotection-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
+  ],
+
+  rearSafetyMesh: [
+    { id: 'rearsafetymesh-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
+    { id: 'rearsafetymesh-missing', name: 'Missing', severities: ['yellow', 'red'] },
+    { id: 'rearsafetymesh-detached', name: 'Detached or partially detached', severities: ['yellow', 'red'] },
+    { id: 'rearsafetymesh-insufficient-coverage', name: 'Does not cover 2/3 of last pallet', severities: ['yellow', 'red'] },
+    { id: 'rearsafetymesh-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
+  ],
+
+  deckingPanels: [
+    { id: 'deckingpanels-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
+    { id: 'deckingpanels-missing', name: 'Missing', severities: ['yellow', 'red'] },
+    { id: 'deckingpanels-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
+  ],
+
+  pallet: [
+    { id: 'pallet-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
+    { id: 'pallet-to-be-repositioned', name: 'To be repositioned', severities: ['yellow', 'red'] },
+    { id: 'pallet-improperly-supported', name: 'Improperly supported', severities: ['yellow', 'red'] },
+    { id: 'pallet-800x800', name: '800x800 format', severities: ['yellow'] },
+    { id: 'pallet-not-strapped', name: 'Not properly strapped', severities: ['yellow', 'red'] },
+    { id: 'pallet-forked-wrong-side', name: 'Forked wrong side', severities: ['yellow', 'red'] },
+    { id: 'pallet-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
+  ],
+
+  entireRackingSystem: [
+    { id: 'entirerackingsystem-dismantled', name: 'Will be dismantled shortly', severities: ['yellow'] },
+    { id: 'entirerackingsystem-not-inspectable', name: 'Not inspectable', severities: ['yellow'] },
+    { id: 'entirerackingsystem-missing-safety-lock', name: '100% missing safety lock', severities: ['red'] },
+    { id: 'entirerackingsystem-missing-anchor-bolt', name: '100% missing anchor bolt', severities: ['red'] },
+    { id: 'entirerackingsystem-h-frame', name: 'H-frame structure', severities: ['yellow'] },
+    { id: 'entirerackingsystem-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
+  ],
+
+  bay: [
+    { id: 'bay-obstructed', name: 'Obstructed/not accessible', severities: ['yellow'] },
+    { id: 'bay-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
+    { id: 'bay-h-frame', name: 'H-frame structure', severities: ['yellow'] },
+    { id: 'bay-missing-safety-lock', name: '100% missing safety lock', severities: ['red'] },
+    { id: 'bay-missing-anchor-bolt', name: '100% missing anchor bolt', severities: ['red'] },
+  ],
+
+  aisle: [
+    { id: 'aisle-obstructed', name: 'Closed/obstructed/not accessible', severities: ['yellow'] },
+    { id: 'aisle-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
   ],
 
   basePlate: [
@@ -45,14 +134,6 @@ const ncTypes = {
     { id: 'baseplate-corrosion', name: 'Corrosion', severities: ['green', 'yellow', 'red'], description: 'Corrosion on the base plate or anchor bolt area.' },
     { id: 'baseplate-wrong-type', name: 'Wrong Type', severities: ['yellow', 'red'], description: 'Base plate does not match the specified system or upright.' },
     { id: 'baseplate-shim-missing', name: 'Shim Missing / Incorrect', severities: ['green', 'yellow'], description: 'Levelling shim is missing or incorrectly positioned.' },
-  ],
-
-  guardrail: [
-    { id: 'guardrail-missing', name: 'Missing', severities: ['yellow', 'red'], description: 'Guardrail is missing where required by layout or regulation.' },
-    { id: 'guardrail-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'], description: 'Guardrail is bent, broken, or has impact damage.' },
-    { id: 'guardrail-wrong-height', name: 'Incorrect Height', severities: ['yellow', 'red'], description: 'Guardrail height does not meet required specifications.' },
-    { id: 'guardrail-not-fixed', name: 'Not Fixed Properly', severities: ['yellow', 'red'], description: 'Guardrail is not properly anchored to the floor or racking.' },
-    { id: 'guardrail-corrosion', name: 'Corrosion', severities: ['green', 'yellow', 'red'], description: 'Corrosion affecting the guardrail surface or connections.' },
   ],
 
   loadSign: [
@@ -76,22 +157,51 @@ const ncTypes = {
     { id: 'footplate-not-fixed', name: 'Not Fixed to Floor', severities: ['yellow', 'red'], description: 'Footplate is not bolted or anchored to the floor as required.' },
     { id: 'footplate-corrosion', name: 'Corrosion', severities: ['green', 'yellow', 'red'], description: 'Corrosion on the footplate or its anchor bolt area.' },
   ],
+};
 
-  frontGuard: [
-    { id: 'frontguard-missing', name: 'Missing', severities: ['yellow', 'red'], description: 'Front guard is missing where required by layout or regulation.' },
-    { id: 'frontguard-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'], description: 'Front guard is bent, broken, or has impact damage.' },
-    { id: 'frontguard-wrong-height', name: 'Incorrect Height', severities: ['yellow', 'red'], description: 'Front guard height does not meet required specifications.' },
-    { id: 'frontguard-not-fixed', name: 'Not Fixed Properly', severities: ['yellow', 'red'], description: 'Front guard is not properly anchored to the floor or racking.' },
-    { id: 'frontguard-corrosion', name: 'Corrosion', severities: ['green', 'yellow', 'red'], description: 'Corrosion affecting the front guard surface or connections.' },
-  ],
+// Maps old NC type IDs to new ones
+export const NC_ID_MIGRATION = {
+  'beam-bent': 'beam-damaged',
+  'beam-missing-connector': 'beam-missing-safety-lock',
+  'beam-unhooked': 'beam-detached',
+  'beam-weld-failure': 'beam-damaged',
+  'beam-wrong-type': 'beam-wrong-section',
+  'beam-deflection': 'beam-damaged',
+  'upright-bent': 'upright-damaged',
+  'upright-out-of-plumb': 'upright-verticality',
+  'upright-perforations': 'upright-damaged',
+  'upright-splice': 'upright-damaged',
+  'upright-corrosion': 'upright-corrosion',
+  'frame-out-of-plumb': 'frame-verticality',
+  'frame-damaged': 'frame-other',
+  'frame-overloaded': 'frame-other',
+  'frame-wrong-type': 'frame-other',
+  'frame-missing': 'frame-other',
+  'frame-corrosion': 'frame-other',
+  'brace-bent': 'brace-damaged',
+  'brace-missing': 'brace-damaged',
+  'brace-loose': 'brace-damaged',
+  'brace-corrosion': 'brace-damaged',
+  'brace-weld-failure': 'brace-damaged',
+  'guardrail-wrong-height': 'guardrail-other',
+  'guardrail-not-fixed': 'guardrail-to-be-refixed',
+  'guardrail-corrosion': 'guardrail-other',
+  'frontguard-missing': 'frontimpactguard-missing',
+  'frontguard-damaged': 'frontimpactguard-damaged',
+  'frontguard-wrong-height': 'frontimpactguard-other',
+  'frontguard-not-fixed': 'frontimpactguard-to-be-refixed',
+  'frontguard-corrosion': 'frontimpactguard-other',
+  'cornerguard-missing': 'cornerimpactguard-missing',
+  'cornerguard-damaged': 'cornerimpactguard-damaged',
+  'cornerguard-wrong-height': 'cornerimpactguard-other',
+  'cornerguard-not-fixed': 'cornerimpactguard-to-be-refixed',
+  'cornerguard-corrosion': 'cornerimpactguard-other',
+};
 
-  cornerGuard: [
-    { id: 'cornerguard-missing', name: 'Missing', severities: ['yellow', 'red'], description: 'Corner guard is missing where required by layout or regulation.' },
-    { id: 'cornerguard-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'], description: 'Corner guard is bent, broken, or has impact damage.' },
-    { id: 'cornerguard-wrong-height', name: 'Incorrect Height', severities: ['yellow', 'red'], description: 'Corner guard height does not meet required specifications.' },
-    { id: 'cornerguard-not-fixed', name: 'Not Fixed Properly', severities: ['yellow', 'red'], description: 'Corner guard is not properly anchored to the floor or racking.' },
-    { id: 'cornerguard-corrosion', name: 'Corrosion', severities: ['green', 'yellow', 'red'], description: 'Corrosion affecting the corner guard surface or connections.' },
-  ],
+// Maps old elementType keys to new ones
+export const ELEMENT_TYPE_MIGRATION = {
+  'frontGuard': 'frontImpactGuard',
+  'cornerGuard': 'cornerImpactGuard',
 };
 
 export default ncTypes;

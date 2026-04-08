@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { NC_ID_MIGRATION, ELEMENT_TYPE_MIGRATION } from '../data/ncTypes';
 
 const generateId = () =>
   Date.now().toString(36) + Math.random().toString(36).substr(2);
@@ -8,6 +9,7 @@ const useNCStore = create(
   persist(
     (set, get) => ({
       nonConformities: [],
+      _ncMigrationVersion: 2,
 
       addNC: (data) => {
         const nc = {
@@ -81,7 +83,26 @@ const useNCStore = create(
         return get().nonConformities.filter((nc) => nc.frameId === frameId);
       },
     }),
-    { name: 'rackvision-ncs' }
+    {
+      name: 'rackvision-ncs',
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        if (state._ncMigrationVersion >= 2) return;
+
+        // Migrate all NCs
+        const migrated = state.nonConformities.map((nc) => {
+          const newNcTypeId = NC_ID_MIGRATION[nc.ncTypeId] || nc.ncTypeId;
+          const newElementType = ELEMENT_TYPE_MIGRATION[nc.elementType] || nc.elementType;
+          if (newNcTypeId !== nc.ncTypeId || newElementType !== nc.elementType) {
+            return { ...nc, ncTypeId: newNcTypeId, elementType: newElementType };
+          }
+          return nc;
+        });
+
+        state.nonConformities = migrated;
+        state._ncMigrationVersion = 2;
+      },
+    }
   )
 );
 

@@ -1,5 +1,7 @@
 import { Group, Rect, Text } from 'react-konva';
 import NCMarker from './NCMarker';
+import { computeMarkerPosition } from '../../utils/markerPlacement';
+import { groupNCsByElement } from '../../utils/ncGrouping';
 
 /**
  * Convert a hex color to an rgba string with the given alpha.
@@ -76,29 +78,38 @@ export default function BayShape({
         align="center"
         listening={false}
       />
-      {ncMarkers.map((nc, i) => {
-        // Use custom position if set, otherwise distribute evenly
-        const markerX =
-          nc.markerX != null
-            ? nc.markerX
-            : ((i + 1) / (ncMarkers.length + 1)) * width;
-        const markerY =
-          nc.markerY != null ? nc.markerY : depth / 2 + 12;
-        return (
-          <NCMarker
-            key={nc.id || i}
-            x={markerX}
-            y={markerY}
-            severity={nc.severity}
-            size={6}
-            markerScale={markerScale}
-            draggable={editMode}
-            onTap={() => onNCTap?.(nc)}
-            onLongPress={() => onNCLongPress?.(nc)}
-            onDragEnd={(pos) => onNCDragEnd?.(nc.id, pos)}
-          />
-        );
-      })}
+      {(() => {
+        const groups = groupNCsByElement(ncMarkers);
+        return Object.values(groups).map((group) => {
+          // Use custom position from first NC if set, otherwise compute default
+          const firstNC = group.ncs[0];
+          const hasCustomPos = firstNC.markerX != null;
+          const defaultPos = computeMarkerPosition(
+            group.elementType,
+            { bayWidth: width, bayDepth: depth, frameWidth: 0 },
+            0,
+            1
+          );
+          const markerX = hasCustomPos ? firstNC.markerX : defaultPos.x;
+          const markerY = hasCustomPos ? firstNC.markerY : defaultPos.y;
+
+          return (
+            <NCMarker
+              key={group.key}
+              x={markerX}
+              y={markerY}
+              severity={group.ncs[0].severity}
+              ncGroup={group.ncs.length > 1 ? group.ncs : null}
+              size={6}
+              markerScale={markerScale}
+              draggable={editMode}
+              onTap={() => onNCTap?.(firstNC)}
+              onLongPress={() => onNCLongPress?.(firstNC)}
+              onDragEnd={(pos) => onNCDragEnd?.(firstNC.id, pos)}
+            />
+          );
+        });
+      })()}
     </Group>
   );
 }

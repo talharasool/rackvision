@@ -1,5 +1,5 @@
 import { useRef, useCallback } from 'react';
-import { Group, Circle, Text } from 'react-konva';
+import { Group, Circle, Text, Arc } from 'react-konva';
 
 const SEVERITY_COLORS = {
   green: { fill: '#22c55e', stroke: '#15803d' },
@@ -21,6 +21,7 @@ export default function NCMarker({
   draggable = false,
   label,
   markerScale = 1,
+  ncGroup = null,
 }) {
   const timerRef = useRef(null);
   const longPressedRef = useRef(false);
@@ -87,6 +88,90 @@ export default function NCMarker({
     [onDragEnd]
   );
 
+  const interactionProps = {
+    onTouchStart: handleTouchStart,
+    onTouchEnd: handleTouchEnd,
+    onMouseDown: handleMouseDown,
+    onMouseUp: handleMouseUp,
+  };
+
+  // --- Pie-chart mode: multiple NCs grouped ---
+  if (Array.isArray(ncGroup) && ncGroup.length > 1) {
+    const total = ncGroup.length;
+    const sliceAngle = 360 / total;
+
+    return (
+      <Group
+        x={x}
+        y={y}
+        draggable={draggable}
+        onDragEnd={draggable ? handleDragEnd : undefined}
+        {...interactionProps}
+      >
+        {/* Dark background circle for clean edge */}
+        <Circle x={0} y={0} radius={radius} fill="#0f172a" listening={false} />
+        {/* Pie slices */}
+        {ncGroup.map((nc, i) => {
+          const sliceColor = (SEVERITY_COLORS[nc.severity] || SEVERITY_COLORS.green).fill;
+          return (
+            <Arc
+              key={nc.id || i}
+              x={0}
+              y={0}
+              angle={sliceAngle}
+              rotation={i * sliceAngle - 90}
+              innerRadius={0}
+              outerRadius={radius}
+              fill={sliceColor}
+              stroke="#0f172a"
+              strokeWidth={0.5}
+              listening={false}
+            />
+          );
+        })}
+        {/* Outer ring */}
+        <Circle
+          x={0}
+          y={0}
+          radius={radius}
+          fill="transparent"
+          stroke="#0f172a"
+          strokeWidth={1.5}
+          listening={false}
+        />
+        {/* Count label */}
+        <Text
+          x={-radius}
+          y={-radius / 2}
+          width={radius * 2}
+          height={radius}
+          text={String(total)}
+          fontSize={Math.max(8, radius * 0.9)}
+          fill="#fff"
+          fontStyle="bold"
+          align="center"
+          verticalAlign="middle"
+          listening={false}
+        />
+        {/* Drag handle indicator */}
+        {draggable && (
+          <Circle
+            x={0}
+            y={0}
+            radius={radius + 3}
+            stroke="#3b82f6"
+            strokeWidth={1}
+            dash={[2, 2]}
+            listening={false}
+            opacity={0.5}
+          />
+        )}
+      </Group>
+    );
+  }
+
+  // --- Single marker mode (existing behavior) ---
+
   const circleProps = {
     radius,
     fill: colors.fill,
@@ -98,10 +183,7 @@ export default function NCMarker({
     shadowOffsetX: 0,
     shadowOffsetY: 2,
     hitStrokeWidth: 6,
-    onTouchStart: handleTouchStart,
-    onTouchEnd: handleTouchEnd,
-    onMouseDown: handleMouseDown,
-    onMouseUp: handleMouseUp,
+    ...interactionProps,
   };
 
   // If there is a label, render a Group with circle + text.

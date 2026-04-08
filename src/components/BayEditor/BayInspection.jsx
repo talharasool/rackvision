@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { Trash2, CheckCircle2, PlusCircle, Camera, X, ChevronDown } from 'lucide-react';
 import Button from '../ui/Button';
 import ncTypes from '../../data/ncTypes';
+import { getNCTypeName } from '../../utils/ncHelpers';
 
 const SEVERITY_CONFIG = {
   green: { label: 'Green', color: 'bg-green-500', border: 'border-green-500', text: 'text-green-400', ring: 'ring-green-500/30' },
@@ -10,7 +11,27 @@ const SEVERITY_CONFIG = {
 };
 
 // Quick-access NC buttons for beams (most common issues)
-const BEAM_QUICK_NCS = ['beam-damaged', 'beam-missing-connector', 'beam-unhooked'];
+const BEAM_QUICK_NCS = ['beam-damaged', 'beam-missing-safety-lock', 'beam-detached'];
+
+// Per-level elements (shown after level selection)
+const PER_LEVEL_ELEMENTS = [
+  { id: 'beam', label: 'Beam', ncCategory: 'beam' },
+  { id: 'palletSupportBar', label: 'Pallet Support Bar', ncCategory: 'palletSupportBar' },
+  { id: 'rearPalletStopBeam', label: 'Rear Pallet Stop Beam', ncCategory: 'rearPalletStopBeam' },
+  { id: 'deckingPanels', label: 'Decking Panels', ncCategory: 'deckingPanels' },
+  { id: 'pallet', label: 'Pallet', ncCategory: 'pallet' },
+];
+
+// Bay/rack-level elements (no level selection needed)
+const BAY_LEVEL_ELEMENTS = [
+  { id: 'rearSafetyMesh', label: 'Rear Safety Mesh', ncCategory: 'rearSafetyMesh' },
+  { id: 'underpassProtection', label: 'Underpass Protection', ncCategory: 'underpassProtection' },
+  { id: 'horizontalBracing', label: 'Horizontal Bracing', ncCategory: 'horizontalBracing' },
+  { id: 'verticalBracing', label: 'Vertical Bracing', ncCategory: 'verticalBracing' },
+  { id: 'bay', label: 'Bay', ncCategory: 'bay' },
+  { id: 'aisle', label: 'Aisle', ncCategory: 'aisle' },
+  { id: 'entireRackingSystem', label: 'Entire Racking System', ncCategory: 'entireRackingSystem' },
+];
 
 export default function BayInspection({
   rack,
@@ -23,6 +44,7 @@ export default function BayInspection({
   onRemoveNC,
 }) {
   // Selection state
+  const [inspectionMode, setInspectionMode] = useState('level');
   const [selectedLevel, setSelectedLevel] = useState(null);
   const [elementType, setElementType] = useState('');
   const [elementId, setElementId] = useState('');
@@ -38,30 +60,21 @@ export default function BayInspection({
 
   const levels = rack?.levels || bay?.levels || 3;
 
-  // Get accessories for the selected level (future: per-level accessories from bay config)
-  const levelAccessories = useMemo(() => {
-    // For now, return empty. Phase 2 will populate per-level accessories.
-    return [];
-  }, [selectedLevel, bay]);
-
-  // Element buttons for the selected level
+  // Element buttons based on mode and level
   const elementButtons = useMemo(() => {
+    if (inspectionMode === 'bay') return BAY_LEVEL_ELEMENTS;
     if (selectedLevel === null) return [];
-    const buttons = [{ id: 'beam', label: 'Beam', ncCategory: 'beam' }];
-    // Add any accessories at this level
-    levelAccessories.forEach((acc) => {
-      buttons.push({ id: acc.id, label: acc.label, ncCategory: acc.ncCategory || acc.id });
-    });
-    return buttons;
-  }, [selectedLevel, levelAccessories]);
+    return PER_LEVEL_ELEMENTS;
+  }, [inspectionMode, selectedLevel]);
 
   // NC types for the selected element
   const filteredNCTypes = useMemo(() => {
-    if (elementType === 'beam') return ncTypes.beam || [];
-    if (elementType === 'upright') return ncTypes.upright || [];
-    // Look up by element type key in ncTypes
-    if (ncTypes[elementType]) return ncTypes[elementType];
-    return [];
+    if (!elementType) return [];
+    // Find the element definition to get ncCategory
+    const allElements = [...PER_LEVEL_ELEMENTS, ...BAY_LEVEL_ELEMENTS];
+    const elDef = allElements.find(e => e.id === elementType);
+    const category = elDef?.ncCategory || elementType;
+    return ncTypes[category] || [];
   }, [elementType]);
 
   // Selected NC type data
@@ -111,7 +124,11 @@ export default function BayInspection({
 
   const handleSelectElement = (elType) => {
     setElementType(elType);
-    setElementId(`${elType}-level-${selectedLevel}`);
+    if (inspectionMode === 'bay') {
+      setElementId(`${elType}-bay-${bayId || 'unknown'}`);
+    } else {
+      setElementId(`${elType}-level-${selectedLevel}`);
+    }
     setFace('');
     setSelectedNCType('');
     setSeverity('');
@@ -177,15 +194,6 @@ export default function BayInspection({
 
   const canRecord = elementType && elementId && selectedNCType && severity;
 
-  // Look up NC type name by id
-  const getNCTypeName = (ncTypeId) => {
-    for (const category of Object.values(ncTypes)) {
-      const found = category.find((t) => t.id === ncTypeId);
-      if (found) return found.name;
-    }
-    return ncTypeId;
-  };
-
   // Derive element label
   const getElementLabel = (elType, elId) => {
     if (elType === 'beam') {
@@ -196,6 +204,9 @@ export default function BayInspection({
     if (elId === 'right-upright') return 'Right Upright';
     return elId;
   };
+
+  // Dynamic step numbering
+  let stepNum = 1;
 
   return (
     <div className="flex flex-col gap-5">
@@ -208,41 +219,69 @@ export default function BayInspection({
         onChange={handleFileChange}
       />
 
-      {/* Step 1: Level Selection */}
+      {/* Mode Toggle: Per-level vs Bay-level */}
       <div>
-        <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-          1. Select Level
-        </label>
-        <div className="grid grid-cols-4 gap-2">
-          {Array.from({ length: levels }, (_, i) => {
-            const level = i + 1;
-            const isActive = selectedLevel === level;
-            return (
-              <button
-                key={level}
-                onClick={() => handleSelectLevel(level)}
-                className={`
-                  py-3 px-4 rounded-lg border text-sm font-bold
-                  transition-all duration-150
-                  ${
-                    isActive
-                      ? 'bg-blue-600/20 border-blue-500 text-blue-400'
-                      : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white'
-                  }
-                `}
-              >
-                L{level}
-              </button>
-            );
-          })}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => { setInspectionMode('level'); handleReset(); }}
+            className={`py-2.5 px-4 rounded-lg border text-sm font-bold transition-all duration-150 ${
+              inspectionMode === 'level'
+                ? 'bg-blue-600/20 border-blue-500 text-blue-400'
+                : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white'
+            }`}
+          >
+            Per Level
+          </button>
+          <button
+            onClick={() => { setInspectionMode('bay'); handleReset(); }}
+            className={`py-2.5 px-4 rounded-lg border text-sm font-bold transition-all duration-150 ${
+              inspectionMode === 'bay'
+                ? 'bg-blue-600/20 border-blue-500 text-blue-400'
+                : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white'
+            }`}
+          >
+            Bay / Rack Level
+          </button>
         </div>
       </div>
 
-      {/* Step 2: Element Selection */}
-      {selectedLevel !== null && (
+      {/* Level Selection (only in per-level mode) */}
+      {inspectionMode === 'level' && (
         <div>
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-            2. Element
+            {stepNum++}. Select Level
+          </label>
+          <div className="grid grid-cols-4 gap-2">
+            {Array.from({ length: levels }, (_, i) => {
+              const level = i + 1;
+              const isActive = selectedLevel === level;
+              return (
+                <button
+                  key={level}
+                  onClick={() => handleSelectLevel(level)}
+                  className={`
+                    py-3 px-4 rounded-lg border text-sm font-bold
+                    transition-all duration-150
+                    ${
+                      isActive
+                        ? 'bg-blue-600/20 border-blue-500 text-blue-400'
+                        : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white'
+                    }
+                  `}
+                >
+                  L{level}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Element Selection */}
+      {(inspectionMode === 'bay' || selectedLevel !== null) && (
+        <div>
+          <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
+            {stepNum++}. Element
           </label>
           <div className="grid grid-cols-2 gap-2">
             {elementButtons.map((el) => {
@@ -269,11 +308,11 @@ export default function BayInspection({
         </div>
       )}
 
-      {/* Step 3: FRONT / REAR */}
-      {elementType && (
+      {/* FRONT / REAR (only for beam and upright) */}
+      {elementType && (elementType === 'beam' || elementType === 'upright') && (
         <div>
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-            3. Face
+            {stepNum++}. Face
           </label>
           <div className="grid grid-cols-2 gap-2">
             {['front', 'rear'].map((f) => {
@@ -300,11 +339,11 @@ export default function BayInspection({
         </div>
       )}
 
-      {/* Step 4: NC Type - Quick buttons + Other dropdown */}
-      {face && (
+      {/* NC Type - Quick buttons + Other dropdown */}
+      {(face || (elementType && elementType !== 'beam' && elementType !== 'upright')) && (
         <div>
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-            4. Non-Conformity
+            {stepNum++}. Non-Conformity
           </label>
           <div className="flex flex-col gap-2">
             {/* Quick NC buttons */}
@@ -380,11 +419,11 @@ export default function BayInspection({
         </div>
       )}
 
-      {/* Step 5: Severity */}
+      {/* Severity */}
       {selectedNCType && selectedNCData && (
         <div>
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-            5. Severity
+            {stepNum++}. Severity
           </label>
           <div className="grid grid-cols-3 gap-2">
             {['green', 'yellow', 'red'].map((sev) => {
@@ -429,11 +468,11 @@ export default function BayInspection({
         </div>
       )}
 
-      {/* Step 6: Photos */}
+      {/* Photos */}
       {severity && (
         <div>
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-            6. Photos (optional, max 3)
+            {stepNum++}. Photos (optional, max 3)
           </label>
           <div className="flex gap-2 flex-wrap">
             {photos.map((photo, index) => (
@@ -467,13 +506,13 @@ export default function BayInspection({
         </div>
       )}
 
-      {/* Step 7: Quantity + Notes */}
+      {/* Quantity + Notes */}
       {severity && (
         <div className="grid grid-cols-[100px_1fr] gap-3">
           {/* Quantity */}
           <div>
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-              7. Qty
+              {stepNum++}. Qty
             </label>
             <input
               type="number"

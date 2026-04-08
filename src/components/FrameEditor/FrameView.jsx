@@ -1,4 +1,6 @@
 import React, { useMemo, useState } from 'react';
+import SVGPieMarker from '../ui/SVGPieMarker';
+import { groupNCsByElement } from '../../utils/ncGrouping';
 
 const UPRIGHT_COLOR = '#64748b';
 const UPRIGHT_HOVER = '#94a3b8';
@@ -372,17 +374,18 @@ export default function FrameView({
         R
       </text>
 
-      {/* NC dots */}
-      {ncs.map((nc, i) => {
+      {/* NC markers - grouped by element as pie charts */}
+      {Object.values(groupNCsByElement(ncs)).map((group) => {
         let cx, cy;
+        const nc = group.ncs[0];
 
         if (nc.elementType === 'upright') {
-          if (nc.elementId === 'left-upright') {
+          if (nc.elementId === 'left-upright' || nc.elementId?.includes('front')) {
             cx = leftUprightX + uprightPxW / 2;
-            cy = uprightTopY + 35 + i * 14;
+            cy = uprightTopY + 35;
           } else {
             cx = rightUprightX + uprightPxW / 2;
-            cy = uprightTopY + 35 + i * 14;
+            cy = uprightTopY + 35;
           }
         } else if (nc.elementType === 'diagonal') {
           const diagIdx = parseInt(nc.elementId?.replace(/\D/g, '') || '1', 10) - 1;
@@ -392,20 +395,17 @@ export default function FrameView({
             cy = (diag.y1 + diag.y2) / 2 - 8;
           } else {
             cx = SVG_PADDING.left + drawW / 2;
-            cy = SVG_PADDING.top + 20 + i * 14;
+            cy = SVG_PADDING.top + 20;
           }
-        } else if (nc.elementType === 'horizontal') {
+        } else if (nc.elementType === 'horizontal' || nc.elementType === 'crossMember') {
           const hIdx = parseInt(nc.elementId?.replace(/\D/g, '') || '1', 10) - 1;
           const h = horizontals[hIdx];
           if (h) {
-            const elemNcs = ncsByElement[`${nc.elementType}-${nc.elementId}`] || [];
-            const idx = elemNcs.indexOf(nc);
-            const offset = (idx + 1) / (elemNcs.length + 1);
-            cx = h.x1 + (h.x2 - h.x1) * offset;
+            cx = (h.x1 + h.x2) / 2;
             cy = h.y1 - 8;
           } else {
             cx = SVG_PADDING.left + drawW / 2;
-            cy = SVG_PADDING.top + 20 + i * 14;
+            cy = SVG_PADDING.top + 20;
           }
         } else if (nc.elementType === 'basePlate') {
           if (nc.elementId === 'baseplate-left') {
@@ -416,20 +416,18 @@ export default function FrameView({
             cy = floorY - basePlateH - 8;
           }
         } else {
+          // Other frame elements (footplate, frontImpactGuard, cornerImpactGuard, etc.)
           cx = SVG_PADDING.left + drawW / 2;
-          cy = SVG_PADDING.top + 20 + i * 14;
+          cy = SVG_PADDING.top + 20;
         }
 
         return (
-          <circle
-            key={nc.id || `nc-${i}`}
+          <SVGPieMarker
+            key={group.key}
+            ncs={group.ncs}
             cx={cx}
             cy={cy}
-            r={5}
-            fill={NC_COLORS[nc.severity] || NC_COLORS.green}
-            stroke="#0f172a"
-            strokeWidth={1.5}
-            className="pointer-events-none"
+            r={group.ncs.length > 1 ? 12 : 7}
           />
         );
       })}

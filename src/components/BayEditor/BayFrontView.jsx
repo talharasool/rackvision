@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import useBeamDatabaseStore from '../../stores/beamDatabaseStore';
+import SVGPieMarker from '../ui/SVGPieMarker';
+import { groupNCsByElement } from '../../utils/ncGrouping';
 
 const UPRIGHT_COLOR = '#64748b';
 const UPRIGHT_HOVER = '#94a3b8';
@@ -346,46 +348,49 @@ export default function BayFrontView({
         );
       })}
 
-      {/* NC dots */}
-      {ncs.map((nc, i) => {
-        let cx, cy;
-        if (nc.elementType === 'beam') {
-          const level = parseInt(nc.elementId?.replace(/\D/g, '') || '1', 10);
-          const beamPos = beamPositions.find((b) => b.level === level);
-          if (beamPos) {
-            const elemNcs = ncsByElement[`${nc.elementType}-${nc.elementId}`] || [];
-            const idx = elemNcs.indexOf(nc);
-            const offset = (idx + 1) / (elemNcs.length + 1);
-            cx = beamPos.x + beamPos.width * offset;
-            cy = beamPos.y - beamH / 2 - 8;
-          } else {
-            cx = SVG_PADDING.left + drawW / 2;
-            cy = SVG_PADDING.top + 20;
-          }
-        } else if (nc.elementId === 'left-upright') {
-          cx = leftUprightX + uprightPxW / 2;
-          cy = uprightTopY + 30 + i * 14;
-        } else if (nc.elementId === 'right-upright') {
-          cx = rightUprightX + uprightPxW / 2;
-          cy = uprightTopY + 30 + i * 14;
-        } else {
-          cx = SVG_PADDING.left + drawW / 2;
-          cy = SVG_PADDING.top + 20 + i * 14;
-        }
+      {/* NC markers - grouped by element as pie charts */}
+      {(() => {
+        const groups = Object.values(groupNCsByElement(ncs));
+        let fallbackIdx = 0; // counter to spread out non-beam/non-upright markers
+        return groups.map((group) => {
+          let cx, cy;
+          const nc = group.ncs[0];
+          const markerR = group.ncs.length > 1 ? 12 : 7;
 
-        return (
-          <circle
-            key={nc.id || `nc-${i}`}
-            cx={cx}
-            cy={cy}
-            r={5}
-            fill={NC_COLORS[nc.severity] || NC_COLORS.green}
-            stroke="#0f172a"
-            strokeWidth={1.5}
-            className="pointer-events-none"
-          />
-        );
-      })}
+          if (nc.elementType === 'beam') {
+            const level = parseInt(nc.elementId?.replace(/\D/g, '') || '1', 10);
+            const beamPos = beamPositions.find((b) => b.level === level);
+            if (beamPos) {
+              cx = beamPos.x + beamPos.width * 0.85;
+              cy = beamPos.y - beamH / 2 - markerR - 2;
+            } else {
+              cx = SVG_PADDING.left + drawW / 2;
+              cy = SVG_PADDING.top + 20;
+            }
+          } else if (nc.elementId === 'left-upright') {
+            cx = leftUprightX + uprightPxW / 2;
+            cy = uprightTopY + 30;
+          } else if (nc.elementId === 'right-upright') {
+            cx = rightUprightX + uprightPxW / 2;
+            cy = uprightTopY + 30;
+          } else {
+            // Bay-level or other elements: spread horizontally across top
+            cx = SVG_PADDING.left + 40 + fallbackIdx * 30;
+            cy = SVG_PADDING.top + 14;
+            fallbackIdx++;
+          }
+
+          return (
+            <SVGPieMarker
+              key={group.key}
+              ncs={group.ncs}
+              cx={cx}
+              cy={cy}
+              r={markerR}
+            />
+          );
+        });
+      })()}
 
       {/* Dimension: Bay width at BOTTOM (below floor line) */}
       <g>

@@ -15,17 +15,7 @@ import useSupplierStore from '../stores/supplierStore';
 import LayoutCanvas from '../components/Canvas/LayoutCanvas';
 import CanvasToolbar from '../components/Canvas/CanvasToolbar';
 import PropertiesPanel from '../components/Canvas/PropertiesPanel';
-import ncTypes from '../data/ncTypes';
-
-/** Resolve NC type name from ncTypeId */
-function getNCTypeName(ncTypeId) {
-  if (!ncTypeId) return 'Unknown';
-  for (const category of Object.values(ncTypes)) {
-    const found = category.find((t) => t.id === ncTypeId);
-    if (found) return found.name;
-  }
-  return ncTypeId;
-}
+import { getNCTypeName } from '../utils/ncHelpers';
 
 /** Severity label with colored dot */
 function SeverityBadge({ severity }) {
