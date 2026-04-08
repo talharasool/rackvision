@@ -348,8 +348,8 @@ export default function BayFrontView({
         );
       })}
 
-      {/* NC markers - grouped by element as pie charts */}
-      {(() => {
+      {/* NC markers - grouped by element as pie charts (dev only) */}
+      {import.meta.env.DEV && (() => {
         const groups = Object.values(groupNCsByElement(ncs));
         let fallbackIdx = 0; // counter to spread out non-beam/non-upright markers
         return groups.map((group) => {

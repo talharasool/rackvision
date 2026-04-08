@@ -374,8 +374,8 @@ export default function FrameView({
         R
       </text>
 
-      {/* NC markers - grouped by element as pie charts */}
-      {Object.values(groupNCsByElement(ncs)).map((group) => {
+      {/* NC markers - grouped by element as pie charts (dev only) */}
+      {import.meta.env.DEV && Object.values(groupNCsByElement(ncs)).map((group) => {
         let cx, cy;
         const nc = group.ncs[0];
 

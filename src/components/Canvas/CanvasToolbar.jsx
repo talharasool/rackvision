@@ -251,8 +251,8 @@ export default function CanvasToolbar({
         </div>
       </div>
 
-      {/* Right: Export */}
-      <ExportDropdown onExportNCs={onExportNCs} />
+      {/* Right: Export — dev only */}
+      {import.meta.env.DEV && <ExportDropdown onExportNCs={onExportNCs} />}
     </div>
   );
 }

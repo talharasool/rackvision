@@ -140,38 +140,40 @@ export default function WorkingAreas() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="relative" ref={exportMenuRef}>
-              <Button
-                variant="secondary"
-                onClick={() => setShowExportMenu((v) => !v)}
-                icon={Download}
-              >
-                Export All NCs
-                <ChevronDown size={12} className="ml-1" />
-              </Button>
-              {showExportMenu && (
-                <div className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 py-1">
-                  <button
-                    onClick={() => handleExportAllNCs('csv')}
-                    className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
-                  >
-                    Export CSV
-                  </button>
-                  <button
-                    onClick={() => handleExportAllNCs('xlsx')}
-                    className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
-                  >
-                    Export XLSX
-                  </button>
-                  <button
-                    onClick={() => handleExportAllNCs('zip')}
-                    className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
-                  >
-                    Export ZIP (with photos)
-                  </button>
-                </div>
-              )}
-            </div>
+            {import.meta.env.DEV && (
+              <div className="relative" ref={exportMenuRef}>
+                <Button
+                  variant="secondary"
+                  onClick={() => setShowExportMenu((v) => !v)}
+                  icon={Download}
+                >
+                  Export All NCs
+                  <ChevronDown size={12} className="ml-1" />
+                </Button>
+                {showExportMenu && (
+                  <div className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 py-1">
+                    <button
+                      onClick={() => handleExportAllNCs('csv')}
+                      className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                    >
+                      Export CSV
+                    </button>
+                    <button
+                      onClick={() => handleExportAllNCs('xlsx')}
+                      className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                    >
+                      Export XLSX
+                    </button>
+                    <button
+                      onClick={() => handleExportAllNCs('zip')}
+                      className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                    >
+                      Export ZIP (with photos)
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
             <Button onClick={() => setShowForm(!showForm)} icon={Plus}>
               Add Working Area
             </Button>
