@@ -33,77 +33,126 @@ const ELEMENT_DISPLAY_NAMES = {
  * Get display name for an element type, resolving old types.
  */
 function getElementDisplayName(elementType) {
-  if (!elementType) return '-';
+  if (!elementType) return '';
   const resolved = resolveElementType(elementType);
   return ELEMENT_DISPLAY_NAMES[resolved] || resolved;
 }
 
 /**
- * Extract level info from an elementId string.
- * Examples:
- *   "beam-level-3" -> "L3"
- *   "upright-left"  -> "-"
- *   "brace-2"       -> "-"
+ * Extract level/index info from an elementId string.
+ * For bay NCs: level number (e.g., "beam-level-3" -> "3")
+ * For frame NCs: element index (e.g., "diagonal-2" -> "2", "brace-1" -> "1")
  */
-function extractLevel(elementId) {
-  if (!elementId) return '-';
-  const match = elementId.match(/level[- _]?(\d+)/i);
-  if (match) return `L${match[1]}`;
-  return '-';
+function extractLevel(elementId, isFrameNC) {
+  if (!elementId) return '';
+  // Level match
+  const levelMatch = elementId.match(/level[- _]?(\d+)/i);
+  if (levelMatch) return levelMatch[1];
+  // Element index (for frame NCs — diagonal, horizontal brace)
+  if (isFrameNC) {
+    const indexMatch = elementId.match(/(\d+)/);
+    if (indexMatch) return indexMatch[1];
+  }
+  return '';
 }
 
 /**
- * Find the bay or frame label for an NC based on its bayId/frameId
- * and the rack's bays/frames arrays.
+ * Get Reference column: bay number or frame number.
  */
-function getBayFrameLabel(nc, rack) {
-  if (!rack) return '-';
+function getReference(nc, rack) {
+  if (!rack) return '';
 
   if (nc.bayId) {
     const bay = rack.bays?.find((b) => b.id === nc.bayId);
-    if (bay) return bay.name || `Bay ${bay.index + 1}`;
-    return 'Bay ?';
+    if (bay) return bay.name || `Bay ${(bay.index ?? 0) + 1}`;
+    return '';
   }
 
   if (nc.frameId) {
     const frame = rack.frames?.find((f) => f.id === nc.frameId);
-    if (frame) return frame.name || `Frame ${frame.index + 1}`;
-    return 'Frame ?';
+    if (frame) return frame.name || `Frame ${(frame.index ?? 0) + 1}`;
+    return '';
   }
 
-  return '-';
+  return '';
 }
 
 /**
- * Format an ISO date string as YYYY-MM-DD.
+ * Get Description column: element characteristics from beam/frame data.
+ * E.g., "L=1806 Modulblok section 120x45 mm BLUE"
  */
-function formatDate(isoString) {
-  if (!isoString) return '-';
-  try {
-    const d = new Date(isoString);
-    if (isNaN(d.getTime())) return '-';
-    return d.toISOString().slice(0, 10);
-  } catch {
-    return '-';
+function getDescription(nc, rack) {
+  if (!rack) return nc.notes || '';
+
+  const resolved = resolveElementType(nc.elementType);
+
+  // For beam NCs, try to get beam details from the bay's level config
+  if (resolved === 'beam' && nc.bayId) {
+    const bay = rack.bays?.find((b) => b.id === nc.bayId);
+    const levelMatch = nc.elementId?.match(/level[- _]?(\d+)/i);
+    if (bay && levelMatch) {
+      const levelIdx = parseInt(levelMatch[1], 10);
+      const lb = bay.levelBeams?.[levelIdx];
+      if (lb?.beamName) return lb.beamName;
+    }
+    // Fallback to rack-level beam type
+    if (rack.beamType) return rack.beamType;
   }
+
+  // For frame NCs, try to get frame details
+  if (nc.frameId) {
+    const frame = rack.frames?.find((f) => f.id === nc.frameId);
+    if (frame?.name || frame?.model) return frame.name || frame.model;
+    if (rack.frameType) return rack.frameType;
+  }
+
+  // Fallback to notes
+  return nc.notes || '';
 }
 
 /**
- * Count photos attached to an NC.
+ * Get photo filenames/paths separated by ;
+ * In CSV: list of filenames separated by ;
  */
-function countPhotos(nc) {
-  let count = 0;
-  if (Array.isArray(nc.photos)) count += nc.photos.length;
-  if (nc.photo && !nc.photos?.length) count += 1;
-  return count;
+function getPhotoList(nc) {
+  const photos = [];
+  if (Array.isArray(nc.photos) && nc.photos.length > 0) {
+    nc.photos.forEach((p, i) => {
+      if (typeof p === 'string' && p.startsWith('data:')) {
+        photos.push(`Photo ${i + 1}`);
+      } else if (typeof p === 'string') {
+        photos.push(p);
+      } else if (p?.name) {
+        photos.push(p.name);
+      } else {
+        photos.push(`Photo ${i + 1}`);
+      }
+    });
+  } else if (nc.photo) {
+    if (typeof nc.photo === 'string' && nc.photo.startsWith('data:')) {
+      photos.push('Photo 1');
+    } else {
+      photos.push(nc.photo);
+    }
+  }
+  return photos.join('; ');
+}
+
+/**
+ * Format severity as G/Y/R code.
+ */
+function formatDamage(severity) {
+  if (!severity) return '';
+  const map = { green: 'G', yellow: 'Y', red: 'R' };
+  return map[severity.toLowerCase()] || severity;
 }
 
 /**
  * Build export rows from NC data.
+ * Column order per Doc 1 Ch 6.2:
+ *   Lot, Manufacturer, Rack name, Reference, Level, Position, Quantity, Element, Photo, Description, Anomaly, Damage
+ *
  * @param {object} params - { inspection, areas, racks, nonConformities }
- *   areas: array of working area objects (each with id, name)
- *   racks: array of rack objects
- *   nonConformities: array of all NCs
  * @returns {Array<object>} rows with all columns
  */
 export function buildExportRows({ inspection, areas, racks, nonConformities }) {
@@ -113,8 +162,6 @@ export function buildExportRows({ inspection, areas, racks, nonConformities }) {
     rackMap[r.id] = r;
   });
 
-  // Build area lookup: rackId -> area
-  // A rack's areaId links to an area
   const areaMap = {};
   if (Array.isArray(areas)) {
     areas.forEach((a) => {
@@ -136,20 +183,21 @@ export function buildExportRows({ inspection, areas, racks, nonConformities }) {
   const rows = filteredNCs.map((nc) => {
     const rack = rackMap[nc.rackId];
     const area = rack ? areaMap[rack.areaId] : null;
+    const isFrameNC = !!nc.frameId && !nc.bayId;
 
     return {
-      Area: area?.name || '-',
-      Rack: rack?.name || '-',
-      'Bay/Frame': getBayFrameLabel(nc, rack),
-      Level: extractLevel(nc.elementId),
-      Element: getElementDisplayName(nc.elementType),
-      Position: nc.face ? nc.face.toUpperCase() : '-',
+      Lot: area?.name || '',
+      Manufacturer: rack?.manufacturer || rack?.supplierName || '',
+      'Rack name': rack?.name || '',
+      Reference: getReference(nc, rack),
+      Level: extractLevel(nc.elementId, isFrameNC),
+      Position: nc.face ? nc.face.toUpperCase() : '',
       Quantity: nc.quantity || 1,
-      'NC Type': getNCTypeName(nc.ncTypeId),
-      Severity: nc.severity || '-',
-      Notes: nc.notes || '',
-      Photos: countPhotos(nc),
-      Date: formatDate(nc.createdAt),
+      Element: getElementDisplayName(nc.elementType),
+      Photo: getPhotoList(nc),
+      Description: getDescription(nc, rack),
+      Anomaly: getNCTypeName(nc.ncTypeId),
+      Damage: formatDamage(nc.severity),
     };
   });
 
@@ -158,16 +206,32 @@ export function buildExportRows({ inspection, areas, racks, nonConformities }) {
 
 /**
  * Escape a value for CSV (RFC 4180 compliant).
- * Wraps in double quotes if the value contains commas, double quotes, or newlines.
- * Double quotes within are escaped by doubling them.
  */
 function escapeCSVField(value) {
   const str = value == null ? '' : String(value);
-  if (str.includes('"') || str.includes(',') || str.includes('\n') || str.includes('\r')) {
+  if (str.includes('"') || str.includes(',') || str.includes('\n') || str.includes('\r') || str.includes(';')) {
     return '"' + str.replace(/"/g, '""') + '"';
   }
   return str;
 }
+
+/**
+ * Doc 1 Ch 6.2 column order (left to right).
+ */
+const HEADERS = [
+  'Lot',
+  'Manufacturer',
+  'Rack name',
+  'Reference',
+  'Level',
+  'Position',
+  'Quantity',
+  'Element',
+  'Photo',
+  'Description',
+  'Anomaly',
+  'Damage',
+];
 
 /**
  * Convert rows to CSV string (RFC 4180).
@@ -177,25 +241,10 @@ function escapeCSVField(value) {
 export function rowsToCSV(rows) {
   if (!rows || rows.length === 0) return '';
 
-  const headers = [
-    'Area',
-    'Rack',
-    'Bay/Frame',
-    'Level',
-    'Element',
-    'Position',
-    'Quantity',
-    'NC Type',
-    'Severity',
-    'Notes',
-    'Photos',
-    'Date',
-  ];
-
-  const lines = [headers.map(escapeCSVField).join(',')];
+  const lines = [HEADERS.map(escapeCSVField).join(',')];
 
   rows.forEach((row) => {
-    const line = headers.map((h) => escapeCSVField(row[h])).join(',');
+    const line = HEADERS.map((h) => escapeCSVField(row[h])).join(',');
     lines.push(line);
   });
 
@@ -209,7 +258,7 @@ export function rowsToCSV(rows) {
  * @param {string} mimeType
  */
 export function downloadFile(content, filename, mimeType = 'text/csv') {
-  const blob = new Blob([content], { type: mimeType });
+  const blob = new Blob(['\uFEFF' + content], { type: mimeType + ';charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
