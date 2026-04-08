@@ -67,12 +67,15 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
 
 ### NC Export & Summary
 
-- **Export NCs (3 formats)** — CSV, XLSX, or ZIP bundle via dropdown menu on toolbar
+> **Note:** Export dropdowns and pie-chart markers are currently **hidden in production** and only visible in local dev mode (`import.meta.env.DEV`). Remove the guards when ready to ship to client.
+
+- **Export NCs (3 formats)** *(dev only)* — CSV, XLSX, or ZIP bundle via dropdown menu on toolbar
   - **CSV** — RFC 4180 compliant with UTF-8 BOM for Excel compatibility
   - **XLSX** — Native Excel format with proper column widths using SheetJS
   - **ZIP** — Bundle containing `inspection.xlsx` + `/photos/` folder with all NC photos
 - **13 columns per Doc 1 Ch 6.2** — Lot, Manufacturer, Rack name, Reference, Level, Position, Quantity, Element, Photo, Description, Anomaly, Damage, Scope
-- **Export buttons** — "Export NCs" on 2D layout toolbar (per area), "Export All NCs" on Working Areas page (all areas)
+- **Export buttons** *(dev only)* — "Export NCs" on 2D layout toolbar (per area), "Export All NCs" on Working Areas page (all areas)
+- **Pie-chart severity markers** *(dev only)* — multiple NCs on the same element render as a single pie-chart marker (both on 2D canvas and SVG views)
 - **Scope Table categories (Doc 2)** — NCs classified as Missing, To be corrected, To be repositioned, or Other
 - **NC Summary Badge** — compact severity breakdown (red/yellow/green counts + proportional bar) shown on:
   - Rack list (per rack row)
