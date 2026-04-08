@@ -67,13 +67,18 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
 
 ### NC Export & Summary
 
-- **Export NCs to CSV** — RFC 4180 compliant CSV with 12 columns matching Doc 1 Ch 6.2: Lot, Manufacturer, Rack name, Reference, Level, Position, Quantity, Element, Photo, Description, Anomaly, Damage
+- **Export NCs (3 formats)** — CSV, XLSX, or ZIP bundle via dropdown menu on toolbar
+  - **CSV** — RFC 4180 compliant with UTF-8 BOM for Excel compatibility
+  - **XLSX** — Native Excel format with proper column widths using SheetJS
+  - **ZIP** — Bundle containing `inspection.xlsx` + `/photos/` folder with all NC photos
+- **13 columns per Doc 1 Ch 6.2** — Lot, Manufacturer, Rack name, Reference, Level, Position, Quantity, Element, Photo, Description, Anomaly, Damage, Scope
 - **Export buttons** — "Export NCs" on 2D layout toolbar (per area), "Export All NCs" on Working Areas page (all areas)
+- **Scope Table categories (Doc 2)** — NCs classified as Missing, To be corrected, To be repositioned, or Other
 - **NC Summary Badge** — compact severity breakdown (red/yellow/green counts + proportional bar) shown on:
   - Rack list (per rack row)
   - Bay editor (top bar, replaces simple count)
   - Working Areas (per area card)
-- **NC Summary Panel** — detailed collapsible panel in Bay editor with severity bar, percentages, and top 5 element types by NC count
+- **NC Summary Panel** — detailed collapsible panel in Bay editor with severity breakdown, scope breakdown, percentages, and top 5 element types
 
 ### Reference Data
 
@@ -85,13 +90,15 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
 
 ## Latest Changes
 
-### NC Export & Summary Views (Week 2)
+### Export, Scope Categories & Summary (Week 2)
 
-- **CSV Export** — Full NC data export with 12 columns per Doc 1 Ch 6.2 (Lot, Manufacturer, Rack name, Reference, Level, Position, Quantity, Element, Photo, Description, Anomaly, Damage). RFC 4180 compliant with UTF-8 BOM for Excel compatibility
-- **Export NCs button** on 2D layout toolbar — exports NCs for the current area
-- **Export All NCs button** on Working Areas page — exports NCs across all areas in one CSV
-- **NC Summary Badge** — compact inline component (full + compact modes) showing severity breakdown with colored dots and proportional bar. Integrated into Rack list, Bay editor, and Working Areas
-- **NC Summary Panel** — collapsible detailed panel in Bay editor showing severity percentages and top 5 element types by NC count
+- **3-format export** — Export dropdown on toolbar with CSV, XLSX (SheetJS), and ZIP bundle (JSZip + file-saver) options
+- **XLSX export** — Native Excel file with column widths, proper headers, one row per NC
+- **ZIP bundle** — Contains `inspection.xlsx` + `/photos/` folder with all NC photos as image files (NC_00001_1.jpg naming)
+- **13 columns per Doc 1 Ch 6.2** — Lot, Manufacturer, Rack name, Reference, Level, Position, Quantity, Element, Photo, Description, Anomaly, Damage + Scope
+- **Scope Table categories (Doc 2)** — 4 categories (Missing, To be corrected, To be repositioned, Other) auto-derived from NC type names. Added to export + NC Summary Panel
+- **NC Summary Badge** — compact inline severity breakdown integrated into Rack list, Bay editor, and Working Areas
+- **NC Summary Panel** — collapsible detailed panel with severity breakdown, scope breakdown, and top 5 element types
 
 ### NC Alignment — Doc 2 Implementation (Week 1)
 
@@ -150,12 +157,12 @@ The 2D layout editor has been upgraded to a full interactive canvas editor with 
 
 ## Progress Overview
 
-**Overall completion: ~85% of total client scope across 3 client documents + developer clarifications.**
+**Overall completion: ~90% of total client scope across 3 client documents + developer clarifications.**
 
 | Document | Coverage | Status |
 |----------|----------|--------|
-| Doc 1: Specification List for Phase 1 (initial) | ~80% | Ch 1-5 mostly done. Ch 6 (Data Export) 60% — CSV export with Doc 1 Ch 6.2 columns done, XLSX/ZIP/PDF pending. Missing: bay description field, frame compatibility check |
-| Doc 2: NC Marker Rules & NC List for Elements (initial) | ~90% | All 22 element categories with exact Doc 2 NC names. Placement engine done. Pie-chart markers done. Remaining: Scope Table categories |
+| Doc 1: Specification List for Phase 1 (initial) | ~85% | Ch 1-5 mostly done. Ch 6 (Data Export) 80% — CSV/XLSX/ZIP export done with Doc 1 Ch 6.2 columns. Pending: layout PDF. Missing: bay description field, frame compatibility check |
+| Doc 2: NC Marker Rules & NC List for Elements (initial) | ~95% | All 22 element categories with exact Doc 2 NC names. Placement engine done. Pie-chart markers done. Scope Table categories done |
 | Doc 3: App Analysis (20260403 — first client review) | ~90% | Sections 2-4 complete. Section 1 at 60% (Accessories Editor + Import DB deferred by client) |
 | Clarification Questions (developer-raised, Q1-Q13) | ~90% | Q1-Q11 implemented, Q12 (placement rules) now implemented, Q13 pending |
 
@@ -250,23 +257,23 @@ The 2D layout editor has been upgraded to a full interactive canvas editor with 
 | Layout export to PDF (vector, plot extents style) | Not done | Future enhancement |
 | Graphical numbering of bays and frames on layout | Done | |
 
-#### Ch 6: Data Extraction (Export) — 60% Complete
+#### Ch 6: Data Extraction (Export) — 80% Complete
 
 | Requirement | Status | Notes |
 |-------------|--------|-------|
 | Export NC data to CSV | Done | RFC 4180 compliant, UTF-8 BOM, browser download |
-| Column structure per 6.2: Lot, Manufacturer, Rack name, Reference, Level, Position, Quantity, Element, Photo, Description, Anomaly, Damage | Done | Exact Doc 1 Ch 6.2 order and naming |
+| Export NC data to XLSX | Done | SheetJS with proper column widths |
+| Column structure per 6.2: Lot, Manufacturer, Rack name, Reference, Level, Position, Quantity, Element, Photo, Description, Anomaly, Damage | Done | Exact Doc 1 Ch 6.2 order and naming + Scope column |
 | Reference = bay/frame number | Done | Bay NCs → bay name, Frame NCs → frame name |
 | Level = level number (bay) or element index (frame) | Done | |
 | Position = FRONT/REAR, blank if N/A | Done | |
 | Damage = G/Y/R severity coding | Done | |
-| Photo = filenames separated by ; | Done | |
+| Photo = filenames separated by ; (CSV) | Done | |
+| Photo export: images in ZIP /photos/ folder | Done | NC_00001_1.jpg naming convention |
 | Description = element characteristics from beam/frame DB | Done | Falls back to notes |
-| Export UI: "Export NCs" button on layout toolbar + "Export All NCs" on Working Areas | Done | |
+| Export UI: format dropdown (CSV/XLSX/ZIP) on toolbar + Working Areas | Done | |
 | Extraction rules (only NCs, one row per NC) | Done | |
-| Export to XLSX format | Not done | Currently CSV only |
-| Photo export: clickable links in XLSX | Not done | Requires XLSX format |
-| ZIP bundle (inspection.xlsx + /photos/ folder) | Not done | |
+| ZIP bundle (inspection.xlsx + /photos/ folder) | Done | JSZip + file-saver |
 | Layout PDF export (vector, per working area) | Not done | Future enhancement |
 | Integration: NC export + layout PDF + photos as complete package | Not done | Future enhancement |
 
@@ -394,7 +401,7 @@ Glossary, MVP purpose, data structure definitions. Used as reference throughout 
 | Week | Milestone | Cost | Status | Deliverables |
 |------|-----------|------|--------|-------------|
 | Week 1 | M1: NC Alignment | $1,500 | **DONE** | 22 NC element types, exact Doc 2 names, placement engine, pie-chart markers, store migration, inspection mode toggle |
-| Week 2 | M2: Clarifications + M3: Export | $700 | **DONE** | CSV export (12 columns), Export buttons on layout + working areas, NC summary badges + panels across all pages |
+| Week 2 | M2: Clarifications + M3: Export | $700 | **DONE** | CSV/XLSX/ZIP export (13 columns, Doc 1 Ch 6.2), Scope categories, NC summary badges + panels, format dropdown |
 | Week 3 | M4: Accessories + Import | $800 | Pending | Accessories Editor (full CRUD), replace free-text with DB dropdown, CSV import for beams/frames/accessories |
 | Week 4 | M5: Polish & Testing + Contingency | $1,500 | Pending | Tablet touch optimization, performance pass, edge cases, bug fixes |
 | **Total** | | **$4,500** | **50% done** | |
@@ -403,21 +410,16 @@ Glossary, MVP purpose, data structure definitions. Used as reference throughout 
 
 ## What's Next — Prioritized Backlog
 
-### Completed (Week 2 — Export & Clarifications)
+### Completed (Weeks 1-2)
 
 | # | Task | Status | Notes |
 |---|------|--------|-------|
-| 1 | **NC Data Export to CSV** | DONE | Doc 1 Ch 6.2 exact columns: Lot, Manufacturer, Rack name, Reference, Level, Position, Quantity, Element, Photo, Description, Anomaly, Damage |
-| 2 | **NC Summary View** | DONE | Summary badges on Rack list, Bay editor, Working Areas + detailed panel in Bay editor |
-| 5 | **Q13: FRONT/REAR in export** | DONE | Position column shows FRONT/REAR, blank if N/A |
-
-### Immediate (Next Up)
-
-| # | Task | Priority | Effort | Notes |
-|---|------|----------|--------|-------|
-| 3 | **XLSX export format** | High | 1 day | Client prefers XLSX — supports clickable photo links, formatting |
-| 4 | **Photo export in ZIP bundle** | Medium | 1 day | ZIP containing inspection.xlsx + /photos/ folder |
-| 5 | **Scope Table categories** | Medium | 0.5 day | Doc 2: Missing, To be corrected, Obsolete, To be repositioned |
+| 1 | **NC Data Export (CSV/XLSX/ZIP)** | DONE | 3 format options via dropdown. Doc 1 Ch 6.2 columns + Scope |
+| 2 | **NC Summary View** | DONE | Summary badges on Rack list, Bay editor, Working Areas + detailed panel |
+| 3 | **XLSX export format** | DONE | SheetJS with proper column widths |
+| 4 | **Photo export in ZIP bundle** | DONE | ZIP with inspection.xlsx + /photos/ folder |
+| 5 | **Scope Table categories** | DONE | Doc 2: Missing, To be corrected, To be repositioned, Other — auto-derived + in export + summary panel |
+| 6 | **Q13: FRONT/REAR in export** | DONE | Position column shows FRONT/REAR, blank if N/A |
 
 ### Short-term (Week 3 — Accessories & Import)
 
