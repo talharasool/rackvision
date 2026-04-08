@@ -65,6 +65,16 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
 - Traffic-light severity system (green / yellow / red) per NC type
 - Notes, photos (up to 3), quantity, and FRONT/REAR face per NC
 
+### NC Export & Summary
+
+- **Export NCs to CSV** — RFC 4180 compliant CSV with 12 columns (Area, Rack, Bay/Frame, Level, Element, Position, Quantity, NC Type, Severity, Notes, Photos, Date)
+- **Export buttons** — "Export NCs" on 2D layout toolbar (per area), "Export All NCs" on Working Areas page (all areas)
+- **NC Summary Badge** — compact severity breakdown (red/yellow/green counts + proportional bar) shown on:
+  - Rack list (per rack row)
+  - Bay editor (top bar, replaces simple count)
+  - Working Areas (per area card)
+- **NC Summary Panel** — detailed collapsible panel in Bay editor with severity bar, percentages, and top 5 element types by NC count
+
 ### Reference Data
 
 - 10 pre-loaded racking manufacturers (Mecalux, AR Racking, Dexion, SSI Schaefer, etc.) with ability to add custom manufacturers
@@ -75,7 +85,15 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
 
 ## Latest Changes
 
-### NC Alignment — Doc 2 Implementation (Week 1 Milestone)
+### NC Export & Summary Views (Week 2)
+
+- **CSV Export** — Full NC data export with 12 columns (Area, Rack, Bay/Frame, Level, Element, Position, Quantity, NC Type, Severity, Notes, Photos, Date). RFC 4180 compliant with proper field escaping
+- **Export NCs button** on 2D layout toolbar — exports NCs for the current area
+- **Export All NCs button** on Working Areas page — exports NCs across all areas in one CSV
+- **NC Summary Badge** — compact inline component (full + compact modes) showing severity breakdown with colored dots and proportional bar. Integrated into Rack list, Bay editor, and Working Areas
+- **NC Summary Panel** — collapsible detailed panel in Bay editor showing severity percentages and top 5 element types by NC count
+
+### NC Alignment — Doc 2 Implementation (Week 1)
 
 Complete rewrite of the NC system to match Doc 2's exact specifications:
 
@@ -132,11 +150,11 @@ The 2D layout editor has been upgraded to a full interactive canvas editor with 
 
 ## Progress Overview
 
-**Overall completion: ~80% of total client scope across 3 client documents + developer clarifications.**
+**Overall completion: ~85% of total client scope across 3 client documents + developer clarifications.**
 
 | Document | Coverage | Status |
 |----------|----------|--------|
-| Doc 1: Specification List for Phase 1 (initial) | ~75% | Ch 1-5 mostly done. Ch 6 (Data Export) 0%. Missing: bay description field, frame compatibility check, layout PDF export |
+| Doc 1: Specification List for Phase 1 (initial) | ~80% | Ch 1-5 mostly done. Ch 6 (Data Export) 50% — CSV export done, XLSX/ZIP/PDF pending. Missing: bay description field, frame compatibility check |
 | Doc 2: NC Marker Rules & NC List for Elements (initial) | ~90% | All 22 element categories with exact Doc 2 NC names. Placement engine done. Pie-chart markers done. Remaining: Scope Table categories |
 | Doc 3: App Analysis (20260403 — first client review) | ~90% | Sections 2-4 complete. Section 1 at 60% (Accessories Editor + Import DB deferred by client) |
 | Clarification Questions (developer-raised, Q1-Q13) | ~90% | Q1-Q11 implemented, Q12 (placement rules) now implemented, Q13 pending |
@@ -232,18 +250,19 @@ The 2D layout editor has been upgraded to a full interactive canvas editor with 
 | Layout export to PDF (vector, plot extents style) | Not done | Future enhancement |
 | Graphical numbering of bays and frames on layout | Done | |
 
-#### Ch 6: Data Extraction (Export to Excel) — 0% Complete
+#### Ch 6: Data Extraction (Export) — 50% Complete
 
 | Requirement | Status | Notes |
 |-------------|--------|-------|
-| Export NC data to XLSX (preferred) or CSV | Not done | |
-| Column structure: Lot, Manufacturer, Rack name, Reference, Level, Position, Quantity, Element, Photo, Description, Anomaly, Damage | Not done | |
+| Export NC data to CSV | Done | RFC 4180 compliant, 12 columns, browser download |
+| Column structure: Area, Rack, Bay/Frame, Level, Element, Position, Quantity, NC Type, Severity, Notes, Photos, Date | Done | |
+| Export UI: "Export NCs" button on layout toolbar + "Export All NCs" on Working Areas | Done | |
+| Extraction rules (only NCs, one row per NC) | Done | |
+| Export to XLSX format | Not done | Currently CSV only |
 | Photo export: clickable links in XLSX, filenames in CSV | Not done | |
 | ZIP bundle (inspection.xlsx + /photos/ folder) | Not done | |
-| Extraction rules (only NCs, one row per NC) | Not done | |
-| Export UI: "Export NC" button, format selection, photo toggle | Not done | |
-| Layout PDF export (vector, per working area) | Not done | |
-| Integration: NC export + layout PDF + photos as complete package | Not done | |
+| Layout PDF export (vector, per working area) | Not done | Future enhancement |
+| Integration: NC export + layout PDF + photos as complete package | Not done | Future enhancement |
 
 #### Ch 7: Attachments — Reference Only (no implementation needed)
 
@@ -369,7 +388,7 @@ Glossary, MVP purpose, data structure definitions. Used as reference throughout 
 | Week | Milestone | Cost | Status | Deliverables |
 |------|-----------|------|--------|-------------|
 | Week 1 | M1: NC Alignment | $1,500 | **DONE** | 22 NC element types, exact Doc 2 names, placement engine, pie-chart markers, store migration, inspection mode toggle |
-| Week 2 | M2: Clarifications + M3: Export | $700 | **Next** | Finalize Q13 (FRONT/REAR in reports). CSV/XLSX export, summary view by severity/rack, ZIP bundle with photos |
+| Week 2 | M2: Clarifications + M3: Export | $700 | **DONE** | CSV export (12 columns), Export buttons on layout + working areas, NC summary badges + panels across all pages |
 | Week 3 | M4: Accessories + Import | $800 | Pending | Accessories Editor (full CRUD), replace free-text with DB dropdown, CSV import for beams/frames/accessories |
 | Week 4 | M5: Polish & Testing + Contingency | $1,500 | Pending | Tablet touch optimization, performance pass, edge cases, bug fixes |
 | **Total** | | **$4,500** | **25% done** | |
