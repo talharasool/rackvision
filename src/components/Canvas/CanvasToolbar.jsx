@@ -12,6 +12,7 @@ import {
   Redo,
   Grid3x3,
   ArrowLeft,
+  Download,
 } from 'lucide-react';
 
 const SNAP_OPTIONS = [
@@ -60,6 +61,7 @@ export default function CanvasToolbar({
   onRedo,
   onBack,
   areaName,
+  onExportNCs,
 }) {
   return (
     <div className="flex items-center justify-between px-4 py-2 bg-slate-900 border-b border-slate-700 shrink-0">
@@ -192,8 +194,19 @@ export default function CanvasToolbar({
         </div>
       </div>
 
-      {/* Right: spacer */}
-      <div className="w-24" />
+      {/* Right: Export */}
+      <div className="flex items-center">
+        {onExportNCs && (
+          <button
+            onClick={onExportNCs}
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+            title="Export NCs as CSV"
+          >
+            <Download size={14} />
+            Export NCs
+          </button>
+        )}
+      </div>
     </div>
   );
 }

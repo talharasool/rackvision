@@ -11,6 +11,8 @@ import Button from '../components/ui/Button';
 import useInspectionStore from '../stores/inspectionStore';
 import useRackStore from '../stores/rackStore';
 import useNCStore from '../stores/ncStore';
+import NCSummaryBadge from '../components/ui/NCSummaryBadge';
+import NCSummaryPanel from '../components/ui/NCSummaryPanel';
 import BayFrontView from '../components/BayEditor/BayFrontView';
 import BayConfig from '../components/BayEditor/BayConfig';
 import BayInspection from '../components/BayEditor/BayInspection';
@@ -23,6 +25,7 @@ export default function BayEditorPage() {
   const { nonConformities, addNC, removeNC } = useNCStore();
 
   const [activeTab, setActiveTab] = useState('config');
+  const [showNCPanel, setShowNCPanel] = useState(false);
 
   const inspection = inspections.find((i) => i.id === inspectionId);
   const rack = racks.find((r) => r.id === rackId);
@@ -134,11 +137,7 @@ export default function BayEditorPage() {
 
         {/* NC Badge */}
         <div className="flex items-center">
-          {bayNCs.length > 0 && (
-            <span className="bg-red-500/20 text-red-400 text-xs font-medium px-3 py-1 rounded-full">
-              {bayNCs.length} NC{bayNCs.length !== 1 && 's'}
-            </span>
-          )}
+          <NCSummaryBadge ncs={bayNCs} />
         </div>
       </div>
 
@@ -184,6 +183,24 @@ export default function BayEditorPage() {
               Inspection
             </button>
           </div>
+
+          {/* Collapsible NC Summary */}
+          {bayNCs.length > 0 && (
+            <div className="border-b border-slate-700 shrink-0">
+              <button
+                onClick={() => setShowNCPanel(!showNCPanel)}
+                className="w-full flex items-center justify-between px-4 py-2 text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors"
+              >
+                <span>NC Summary</span>
+                <span>{showNCPanel ? '\u25B2' : '\u25BC'}</span>
+              </button>
+              {showNCPanel && (
+                <div className="px-4 pb-3">
+                  <NCSummaryPanel ncs={bayNCs} title={`${bay.name} NCs`} />
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Tab Content */}
           <div className="flex-1 overflow-y-auto p-4">

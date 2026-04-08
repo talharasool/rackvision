@@ -6,6 +6,7 @@ import {
   Trash2,
   Copy,
   RotateCw,
+  Download,
 } from 'lucide-react';
 import Button from '../components/ui/Button';
 import useInspectionStore from '../stores/inspectionStore';
@@ -16,6 +17,7 @@ import LayoutCanvas from '../components/Canvas/LayoutCanvas';
 import CanvasToolbar from '../components/Canvas/CanvasToolbar';
 import PropertiesPanel from '../components/Canvas/PropertiesPanel';
 import { getNCTypeName } from '../utils/ncHelpers';
+import { buildExportRows, rowsToCSV, downloadFile } from '../utils/exportNC';
 
 /** Severity label with colored dot */
 function SeverityBadge({ severity }) {
@@ -449,6 +451,25 @@ export default function LayoutEditor() {
     });
   };
 
+  const handleExportNCs = () => {
+    const rows = buildExportRows({
+      inspection,
+      areas: [area],
+      racks: areaRacks,
+      nonConformities,
+    });
+    if (rows.length === 0) {
+      alert('No non-conformities to export for this area.');
+      return;
+    }
+    const csv = rowsToCSV(rows);
+    const date = new Date().toISOString().slice(0, 10);
+    const customerSlug = (inspection.endCustomer || 'inspection').replace(/\s+/g, '-');
+    const areaSlug = (area.name || 'area').replace(/\s+/g, '-');
+    const filename = `${customerSlug}-${areaSlug}-NCs-${date}.csv`;
+    downloadFile(csv, filename);
+  };
+
   const handleBack = () =>
     navigate(`/inspection/${inspectionId}/area/${areaId}/racks`);
 
@@ -475,6 +496,7 @@ export default function LayoutEditor() {
         onRedo={redo}
         onBack={handleBack}
         areaName={area.name}
+        onExportNCs={handleExportNCs}
       />
 
       {/* Canvas Area */}

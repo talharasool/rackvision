@@ -1,18 +1,53 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, MapPin, Trash2 } from 'lucide-react';
+import { ArrowLeft, Plus, MapPin, Trash2, Download } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import useInspectionStore from '../stores/inspectionStore';
+import useRackStore from '../stores/rackStore';
+import useNCStore from '../stores/ncStore';
+import NCSummaryBadge from '../components/ui/NCSummaryBadge';
+import { buildExportRows, rowsToCSV, downloadFile } from '../utils/exportNC';
 
 export default function WorkingAreas() {
   const { inspectionId } = useParams();
   const navigate = useNavigate();
   const { inspections, setCurrentInspection, addWorkingArea, removeWorkingArea } =
     useInspectionStore();
+  const { racks } = useRackStore();
+  const { nonConformities } = useNCStore();
+
+  // Helper: get NCs for all racks in an area
+  const getAreaNCs = (areaId) => {
+    const areaRackIds = new Set(racks.filter((r) => r.areaId === areaId).map((r) => r.id));
+    return nonConformities.filter((nc) => areaRackIds.has(nc.rackId));
+  };
 
   const inspection = inspections.find((i) => i.id === inspectionId);
+
+  const handleExportAllNCs = () => {
+    if (!inspection) return;
+    const allAreas = inspection.workingAreas || [];
+    const allAreaIds = new Set(allAreas.map((a) => a.id));
+    const allAreaRacks = racks.filter((r) => allAreaIds.has(r.areaId));
+
+    const rows = buildExportRows({
+      inspection,
+      areas: allAreas,
+      racks: allAreaRacks,
+      nonConformities,
+    });
+    if (rows.length === 0) {
+      alert('No non-conformities to export.');
+      return;
+    }
+    const csv = rowsToCSV(rows);
+    const date = new Date().toISOString().slice(0, 10);
+    const customerSlug = (inspection.endCustomer || 'inspection').replace(/\s+/g, '-');
+    const filename = `${customerSlug}-All-NCs-${date}.csv`;
+    downloadFile(csv, filename);
+  };
 
   const [showForm, setShowForm] = useState(false);
   const [areaName, setAreaName] = useState('');
@@ -72,9 +107,14 @@ export default function WorkingAreas() {
               </p>
             </div>
           </div>
-          <Button onClick={() => setShowForm(!showForm)} icon={Plus}>
-            Add Working Area
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="secondary" onClick={handleExportAllNCs} icon={Download}>
+              Export All NCs
+            </Button>
+            <Button onClick={() => setShowForm(!showForm)} icon={Plus}>
+              Add Working Area
+            </Button>
+          </div>
         </div>
 
         {/* Inline Add Form */}
@@ -146,6 +186,9 @@ export default function WorkingAreas() {
                 {area.description && (
                   <p className="text-slate-400 text-sm mt-1">{area.description}</p>
                 )}
+                <div className="mt-3">
+                  <NCSummaryBadge ncs={getAreaNCs(area.id)} compact />
+                </div>
               </Card>
             ))}
           </div>

@@ -14,6 +14,8 @@ import Button from '../components/ui/Button';
 import Modal from '../components/ui/Modal';
 import useInspectionStore from '../stores/inspectionStore';
 import useRackStore from '../stores/rackStore';
+import useNCStore from '../stores/ncStore';
+import NCSummaryBadge from '../components/ui/NCSummaryBadge';
 import RackWizard from '../components/Wizard/RackWizard';
 
 export default function RackList() {
@@ -21,6 +23,7 @@ export default function RackList() {
   const navigate = useNavigate();
   const { inspections } = useInspectionStore();
   const { racks, deleteRack, duplicateRack } = useRackStore();
+  const { nonConformities } = useNCStore();
 
   const [showWizard, setShowWizard] = useState(false);
   const [editingRack, setEditingRack] = useState(null);
@@ -128,6 +131,9 @@ export default function RackList() {
                   <th className="text-center text-sm font-medium text-slate-400 px-6 py-3">
                     Levels
                   </th>
+                  <th className="text-center text-sm font-medium text-slate-400 px-6 py-3">
+                    NCs
+                  </th>
                   <th className="text-right text-sm font-medium text-slate-400 px-6 py-3">
                     Actions
                   </th>
@@ -153,6 +159,12 @@ export default function RackList() {
                     </td>
                     <td className="px-6 py-4 text-slate-300 text-center">
                       {rack.levels}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <NCSummaryBadge
+                        ncs={nonConformities.filter((nc) => nc.rackId === rack.id)}
+                        compact
+                      />
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-2">
