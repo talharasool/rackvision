@@ -1,7 +1,10 @@
 import React from 'react';
+import { SCOPE_CATEGORIES } from '../../data/ncTypes';
+import { getNCTypeById } from '../../utils/ncHelpers';
 
 /**
- * Larger panel showing NC summary with severity breakdown and top element types.
+ * Larger panel showing NC summary with severity breakdown, scope categories,
+ * and top element types.
  *
  * Props:
  *   ncs   - array of NC objects
@@ -42,6 +45,14 @@ export default function NCSummaryPanel({ ncs = [], title = 'NC Summary' }) {
     .sort((a, b) => b[1] - a[1])
     .slice(0, 5);
 
+  // Group by scope category
+  const scopeCounts = { missing: 0, to_be_corrected: 0, to_be_repositioned: 0, other: 0 };
+  ncs.forEach((nc) => {
+    const ncType = getNCTypeById(nc.ncTypeId);
+    const cat = ncType?.scopeCategory || 'other';
+    scopeCounts[cat] = (scopeCounts[cat] || 0) + 1;
+  });
+
   const segments = severityRows.filter((s) => s.count > 0);
 
   return (
@@ -81,6 +92,30 @@ export default function NCSummaryPanel({ ncs = [], title = 'NC Summary' }) {
             </div>
           );
         })}
+      </div>
+
+      {/* Scope category pills */}
+      <div>
+        <h4 className="text-xs font-medium text-slate-400 mb-2">By Scope</h4>
+        <div className="flex flex-wrap gap-2">
+          {Object.entries(SCOPE_CATEGORIES).map(([key, cat]) => {
+            const count = scopeCounts[key] || 0;
+            if (count === 0) return null;
+            return (
+              <span
+                key={key}
+                className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full"
+                style={{ backgroundColor: cat.color + '20', color: cat.color }}
+              >
+                <span
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: cat.color }}
+                />
+                {cat.label}: {count}
+              </span>
+            );
+          })}
+        </div>
       </div>
 
       {/* Top element types */}

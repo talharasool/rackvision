@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, MapPin, Trash2, Download } from 'lucide-react';
+import { ArrowLeft, Plus, MapPin, Trash2, Download, ChevronDown } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -8,7 +8,7 @@ import useInspectionStore from '../stores/inspectionStore';
 import useRackStore from '../stores/rackStore';
 import useNCStore from '../stores/ncStore';
 import NCSummaryBadge from '../components/ui/NCSummaryBadge';
-import { buildExportRows, rowsToCSV, downloadFile } from '../utils/exportNC';
+import { buildExportRows, rowsToCSV, downloadFile, downloadXLSX, downloadZIPBundle } from '../utils/exportNC';
 
 export default function WorkingAreas() {
   const { inspectionId } = useParams();
@@ -26,7 +26,23 @@ export default function WorkingAreas() {
 
   const inspection = inspections.find((i) => i.id === inspectionId);
 
-  const handleExportAllNCs = () => {
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportMenuRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target)) {
+        setShowExportMenu(false);
+      }
+    }
+    if (showExportMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showExportMenu]);
+
+  const handleExportAllNCs = (format = 'csv') => {
+    setShowExportMenu(false);
     if (!inspection) return;
     const allAreas = inspection.workingAreas || [];
     const allAreaIds = new Set(allAreas.map((a) => a.id));
@@ -42,11 +58,27 @@ export default function WorkingAreas() {
       alert('No non-conformities to export.');
       return;
     }
-    const csv = rowsToCSV(rows);
     const date = new Date().toISOString().slice(0, 10);
     const customerSlug = (inspection.endCustomer || 'inspection').replace(/\s+/g, '-');
-    const filename = `${customerSlug}-All-NCs-${date}.csv`;
-    downloadFile(csv, filename);
+    const baseName = `${customerSlug}-All-NCs-${date}`;
+
+    if (format === 'csv') {
+      const csv = rowsToCSV(rows);
+      downloadFile(csv, `${baseName}.csv`);
+    } else if (format === 'xlsx') {
+      downloadXLSX(rows, `${baseName}.xlsx`);
+    } else if (format === 'zip') {
+      const allNCs = nonConformities.filter((nc) =>
+        allAreaRacks.some((r) => r.id === nc.rackId)
+      );
+      const photos = allNCs
+        .filter((nc) => (Array.isArray(nc.photos) && nc.photos.length > 0) || nc.photo)
+        .map((nc) => ({
+          ncId: nc.id,
+          photos: Array.isArray(nc.photos) ? nc.photos : nc.photo ? [nc.photo] : [],
+        }));
+      downloadZIPBundle(rows, photos, `${baseName}.zip`);
+    }
   };
 
   const [showForm, setShowForm] = useState(false);
@@ -108,9 +140,38 @@ export default function WorkingAreas() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="secondary" onClick={handleExportAllNCs} icon={Download}>
-              Export All NCs
-            </Button>
+            <div className="relative" ref={exportMenuRef}>
+              <Button
+                variant="secondary"
+                onClick={() => setShowExportMenu((v) => !v)}
+                icon={Download}
+              >
+                Export All NCs
+                <ChevronDown size={12} className="ml-1" />
+              </Button>
+              {showExportMenu && (
+                <div className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 py-1">
+                  <button
+                    onClick={() => handleExportAllNCs('csv')}
+                    className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                  >
+                    Export CSV
+                  </button>
+                  <button
+                    onClick={() => handleExportAllNCs('xlsx')}
+                    className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                  >
+                    Export XLSX
+                  </button>
+                  <button
+                    onClick={() => handleExportAllNCs('zip')}
+                    className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+                  >
+                    Export ZIP (with photos)
+                  </button>
+                </div>
+              )}
+            </div>
             <Button onClick={() => setShowForm(!showForm)} icon={Plus}>
               Add Working Area
             </Button>

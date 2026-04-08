@@ -1,4 +1,8 @@
-import { getNCTypeName, resolveElementType } from './ncHelpers';
+import * as XLSX from 'xlsx';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
+import { getNCTypeName, getNCTypeById, resolveElementType } from './ncHelpers';
+import { SCOPE_CATEGORIES } from '../data/ncTypes';
 
 // Map element type keys to display names
 const ELEMENT_DISPLAY_NAMES = {
@@ -198,6 +202,11 @@ export function buildExportRows({ inspection, areas, racks, nonConformities }) {
       Description: getDescription(nc, rack),
       Anomaly: getNCTypeName(nc.ncTypeId),
       Damage: formatDamage(nc.severity),
+      Scope: (() => {
+        const ncType = getNCTypeById(nc.ncTypeId);
+        const cat = ncType?.scopeCategory;
+        return SCOPE_CATEGORIES[cat]?.label || 'Other';
+      })(),
     };
   });
 
@@ -231,6 +240,7 @@ const HEADERS = [
   'Description',
   'Anomaly',
   'Damage',
+  'Scope',
 ];
 
 /**
@@ -267,4 +277,112 @@ export function downloadFile(content, filename, mimeType = 'text/csv') {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+/**
+ * Column widths for XLSX export (in characters).
+ */
+const COL_WIDTHS = [
+  { wch: 15 },  // Lot
+  { wch: 20 },  // Manufacturer
+  { wch: 12 },  // Rack name
+  { wch: 12 },  // Reference
+  { wch: 8 },   // Level
+  { wch: 10 },  // Position
+  { wch: 10 },  // Quantity
+  { wch: 20 },  // Element
+  { wch: 30 },  // Photo
+  { wch: 40 },  // Description
+  { wch: 30 },  // Anomaly
+  { wch: 8 },   // Damage
+  { wch: 18 },  // Scope
+];
+
+/**
+ * Create an XLSX workbook buffer from rows.
+ * @param {Array<object>} rows
+ * @returns {ArrayBuffer}
+ */
+function buildXLSXBuffer(rows) {
+  const ws = XLSX.utils.json_to_sheet(rows, { header: HEADERS });
+  ws['!cols'] = COL_WIDTHS;
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Non-Conformities');
+  return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+}
+
+/**
+ * Download rows as an XLSX file.
+ * @param {Array<object>} rows
+ * @param {string} filename - Should end with .xlsx
+ */
+export function downloadXLSX(rows, filename) {
+  const buf = buildXLSXBuffer(rows);
+  const blob = new Blob([buf], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  });
+  saveAs(blob, filename);
+}
+
+/**
+ * Convert a base64 data URI to a Uint8Array.
+ * @param {string} dataUri - e.g. "data:image/jpeg;base64,..."
+ * @returns {Uint8Array}
+ */
+function dataUriToUint8Array(dataUri) {
+  const base64 = dataUri.split(',')[1];
+  const binaryStr = atob(base64);
+  const bytes = new Uint8Array(binaryStr.length);
+  for (let i = 0; i < binaryStr.length; i++) {
+    bytes[i] = binaryStr.charCodeAt(i);
+  }
+  return bytes;
+}
+
+/**
+ * Get file extension from a data URI mime type.
+ * @param {string} dataUri
+ * @returns {string}
+ */
+function getExtensionFromDataUri(dataUri) {
+  const match = dataUri.match(/^data:image\/(\w+)/);
+  if (match) {
+    const type = match[1].toLowerCase();
+    if (type === 'jpeg') return 'jpg';
+    return type;
+  }
+  return 'jpg';
+}
+
+/**
+ * Download a ZIP bundle containing an XLSX file and photos.
+ * @param {Array<object>} rows - Export rows (same as CSV/XLSX)
+ * @param {Array<{ncId: string, photos: string[]}>} photos - NC photos as base64 data URIs
+ * @param {string} filename - Should end with .zip
+ */
+export async function downloadZIPBundle(rows, photos, filename) {
+  const zip = new JSZip();
+
+  // Add the XLSX file
+  const xlsxBuf = buildXLSXBuffer(rows);
+  zip.file('inspection.xlsx', xlsxBuf);
+
+  // Add photos folder
+  const photosFolder = zip.folder('photos');
+  if (Array.isArray(photos)) {
+    photos.forEach((ncEntry, ncIndex) => {
+      if (!ncEntry?.photos || !Array.isArray(ncEntry.photos)) return;
+      const ncNum = String(ncIndex + 1).padStart(5, '0');
+      ncEntry.photos.forEach((photoUri, photoIndex) => {
+        if (typeof photoUri !== 'string' || !photoUri.startsWith('data:')) return;
+        const ext = getExtensionFromDataUri(photoUri);
+        const photoName = `NC_${ncNum}_${photoIndex + 1}.${ext}`;
+        const bytes = dataUriToUint8Array(photoUri);
+        photosFolder.file(photoName, bytes);
+      });
+    });
+  }
+
+  const blob = await zip.generateAsync({ type: 'blob' });
+  saveAs(blob, filename);
 }

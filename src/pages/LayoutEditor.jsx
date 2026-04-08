@@ -17,7 +17,7 @@ import LayoutCanvas from '../components/Canvas/LayoutCanvas';
 import CanvasToolbar from '../components/Canvas/CanvasToolbar';
 import PropertiesPanel from '../components/Canvas/PropertiesPanel';
 import { getNCTypeName } from '../utils/ncHelpers';
-import { buildExportRows, rowsToCSV, downloadFile } from '../utils/exportNC';
+import { buildExportRows, rowsToCSV, downloadFile, downloadXLSX, downloadZIPBundle } from '../utils/exportNC';
 
 /** Severity label with colored dot */
 function SeverityBadge({ severity }) {
@@ -451,7 +451,10 @@ export default function LayoutEditor() {
     });
   };
 
-  const handleExportNCs = () => {
+  const [showExportMenu, setShowExportMenu] = useState(false);
+
+  const handleExportNCs = (format = 'csv') => {
+    setShowExportMenu(false);
     const rows = buildExportRows({
       inspection,
       areas: [area],
@@ -462,12 +465,28 @@ export default function LayoutEditor() {
       alert('No non-conformities to export for this area.');
       return;
     }
-    const csv = rowsToCSV(rows);
     const date = new Date().toISOString().slice(0, 10);
     const customerSlug = (inspection.endCustomer || 'inspection').replace(/\s+/g, '-');
     const areaSlug = (area.name || 'area').replace(/\s+/g, '-');
-    const filename = `${customerSlug}-${areaSlug}-NCs-${date}.csv`;
-    downloadFile(csv, filename);
+    const baseName = `${customerSlug}-${areaSlug}-NCs-${date}`;
+
+    if (format === 'csv') {
+      const csv = rowsToCSV(rows);
+      downloadFile(csv, `${baseName}.csv`);
+    } else if (format === 'xlsx') {
+      downloadXLSX(rows, `${baseName}.xlsx`);
+    } else if (format === 'zip') {
+      // Collect photos from NCs relevant to this area
+      const areaRackIds = new Set(areaRacks.map((r) => r.id));
+      const areaNCs = nonConformities.filter((nc) => areaRackIds.has(nc.rackId));
+      const photos = areaNCs
+        .filter((nc) => (Array.isArray(nc.photos) && nc.photos.length > 0) || nc.photo)
+        .map((nc) => ({
+          ncId: nc.id,
+          photos: Array.isArray(nc.photos) ? nc.photos : nc.photo ? [nc.photo] : [],
+        }));
+      downloadZIPBundle(rows, photos, `${baseName}.zip`);
+    }
   };
 
   const handleBack = () =>

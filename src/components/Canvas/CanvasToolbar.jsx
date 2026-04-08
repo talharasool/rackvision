@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 import {
   MousePointer2,
   Hand,
@@ -13,6 +14,7 @@ import {
   Grid3x3,
   ArrowLeft,
   Download,
+  ChevronDown,
 } from 'lucide-react';
 
 const SNAP_OPTIONS = [
@@ -38,6 +40,61 @@ function ToolButton({ active, onClick, children, title, disabled }) {
     >
       {children}
     </button>
+  );
+}
+
+function ExportDropdown({ onExportNCs }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false);
+      }
+    }
+    if (open) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [open]);
+
+  if (!onExportNCs) return null;
+
+  return (
+    <div className="relative flex items-center" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+        title="Export NCs"
+      >
+        <Download size={14} />
+        Export NCs
+        <ChevronDown size={12} />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-full mt-1 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-50 py-1">
+          <button
+            onClick={() => { setOpen(false); onExportNCs('csv'); }}
+            className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+          >
+            Export CSV
+          </button>
+          <button
+            onClick={() => { setOpen(false); onExportNCs('xlsx'); }}
+            className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+          >
+            Export XLSX
+          </button>
+          <button
+            onClick={() => { setOpen(false); onExportNCs('zip'); }}
+            className="w-full text-left px-3 py-2 text-xs text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
+          >
+            Export ZIP (with photos)
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -195,18 +252,7 @@ export default function CanvasToolbar({
       </div>
 
       {/* Right: Export */}
-      <div className="flex items-center">
-        {onExportNCs && (
-          <button
-            onClick={onExportNCs}
-            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
-            title="Export NCs as CSV"
-          >
-            <Download size={14} />
-            Export NCs
-          </button>
-        )}
-      </div>
+      <ExportDropdown onExportNCs={onExportNCs} />
     </div>
   );
 }

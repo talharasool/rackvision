@@ -1,5 +1,52 @@
+export const SCOPE_CATEGORIES = {
+  missing: { id: 'missing', label: 'Missing', color: '#ef4444' },
+  to_be_corrected: { id: 'to_be_corrected', label: 'To be corrected', color: '#f59e0b' },
+  to_be_repositioned: { id: 'to_be_repositioned', label: 'To be repositioned', color: '#3b82f6' },
+  other: { id: 'other', label: 'Other', color: '#6b7280' },
+};
+
+/**
+ * Derive scopeCategory from NC name.
+ */
+function scope(name) {
+  const n = name.toLowerCase();
+  if (n.includes('missing')) return 'missing';
+  if (
+    n.includes('damaged') ||
+    n.includes('corroded') ||
+    n.includes('corrosion') ||
+    n.includes('twisted') ||
+    n.includes('verticality') ||
+    n.includes('detached') ||
+    n.includes('overloaded') ||
+    n.includes('wrong section') ||
+    n.includes('wrong type') ||
+    n.includes('to be refixed') ||
+    n.includes('not fixed') ||
+    n.includes('illegible') ||
+    n.includes('loose')
+  )
+    return 'to_be_corrected';
+  if (
+    n.includes('to be repositioned') ||
+    n.includes('improperly supported') ||
+    n.includes('forked wrong side') ||
+    n.includes('not properly strapped') ||
+    n.includes('wrong position')
+  )
+    return 'to_be_repositioned';
+  return 'other';
+}
+
+/**
+ * Add scopeCategory to each NC type entry.
+ */
+function withScope(entries) {
+  return entries.map((e) => ({ ...e, scopeCategory: scope(e.name) }));
+}
+
 const ncTypes = {
-  beam: [
+  beam: withScope([
     { id: 'beam-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
     { id: 'beam-overloaded', name: 'Overloaded', severities: ['yellow', 'red'] },
     { id: 'beam-missing-safety-lock', name: 'Missing safety lock', severities: ['yellow', 'red'] },
@@ -7,95 +54,95 @@ const ncTypes = {
     { id: 'beam-wrong-section', name: 'Wrong section (smaller)', severities: ['yellow', 'red'] },
     { id: 'beam-corrosion', name: 'Corroded/presence of rust', severities: ['green', 'yellow', 'red'] },
     { id: 'beam-detached', name: 'Detached or partially detached', severities: ['yellow', 'red'] },
-  ],
+  ]),
 
-  upright: [
+  upright: withScope([
     { id: 'upright-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
     { id: 'upright-missing-anchor-bolt', name: 'Missing or sheared anchor bolt', severities: ['yellow', 'red'] },
     { id: 'upright-corrosion', name: 'Corroded/presence of rust', severities: ['green', 'yellow', 'red'] },
     { id: 'upright-damaged-foot-plate', name: 'Damaged foot plate', severities: ['green', 'yellow', 'red'] },
     { id: 'upright-twisted', name: 'Twisted', severities: ['green', 'yellow', 'red'] },
     { id: 'upright-verticality', name: 'Verticality out of tolerance', severities: ['green', 'yellow', 'red'] },
-  ],
+  ]),
 
-  frame: [
+  frame: withScope([
     { id: 'frame-verticality', name: 'Verticality out of tolerance', severities: ['green', 'yellow', 'red'] },
     { id: 'frame-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
-  ],
+  ]),
 
-  brace: [
+  brace: withScope([
     { id: 'brace-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
     { id: 'brace-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
-  ],
+  ]),
 
-  horizontalBracing: [
+  horizontalBracing: withScope([
     { id: 'horizontalbracing-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
     { id: 'horizontalbracing-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
-  ],
+  ]),
 
-  verticalBracing: [
+  verticalBracing: withScope([
     { id: 'verticalbracing-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
     { id: 'verticalbracing-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
-  ],
+  ]),
 
-  frontImpactGuard: [
+  frontImpactGuard: withScope([
     { id: 'frontimpactguard-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
     { id: 'frontimpactguard-missing', name: 'Missing', severities: ['yellow', 'red'] },
     { id: 'frontimpactguard-missing-anchor-bolt', name: 'Missing or sheared anchor bolt', severities: ['yellow', 'red'] },
     { id: 'frontimpactguard-to-be-refixed', name: 'To be refixed', severities: ['yellow', 'red'] },
     { id: 'frontimpactguard-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
-  ],
+  ]),
 
-  cornerImpactGuard: [
+  cornerImpactGuard: withScope([
     { id: 'cornerimpactguard-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
     { id: 'cornerimpactguard-missing', name: 'Missing', severities: ['yellow', 'red'] },
     { id: 'cornerimpactguard-missing-anchor-bolt', name: 'Missing or sheared anchor bolt', severities: ['yellow', 'red'] },
     { id: 'cornerimpactguard-to-be-refixed', name: 'To be refixed', severities: ['yellow', 'red'] },
     { id: 'cornerimpactguard-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
-  ],
+  ]),
 
-  guardrail: [
+  guardrail: withScope([
     { id: 'guardrail-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
     { id: 'guardrail-missing', name: 'Missing', severities: ['yellow', 'red'] },
     { id: 'guardrail-to-be-refixed', name: 'To be refixed', severities: ['yellow', 'red'] },
     { id: 'guardrail-missing-anchor-bolt', name: 'Missing or sheared anchor bolt', severities: ['yellow', 'red'] },
     { id: 'guardrail-missing-central-beam', name: 'Missing central beam', severities: ['yellow', 'red'] },
     { id: 'guardrail-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
-  ],
+  ]),
 
-  palletSupportBar: [
+  palletSupportBar: withScope([
     { id: 'palletsupportbar-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
     { id: 'palletsupportbar-missing', name: 'Missing', severities: ['yellow', 'red'] },
     { id: 'palletsupportbar-to-be-refixed', name: 'To be refixed', severities: ['yellow', 'red'] },
-  ],
+  ]),
 
-  rearPalletStopBeam: [
+  rearPalletStopBeam: withScope([
     { id: 'rearpalletstopbeam-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
     { id: 'rearpalletstopbeam-missing', name: 'Missing', severities: ['yellow', 'red'] },
     { id: 'rearpalletstopbeam-detached', name: 'Detached or partially detached', severities: ['yellow', 'red'] },
     { id: 'rearpalletstopbeam-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
-  ],
+  ]),
 
-  underpassProtection: [
+  underpassProtection: withScope([
     { id: 'underpassprotection-missing', name: 'Missing', severities: ['yellow', 'red'] },
     { id: 'underpassprotection-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
-  ],
+  ]),
 
-  rearSafetyMesh: [
+  rearSafetyMesh: withScope([
     { id: 'rearsafetymesh-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
     { id: 'rearsafetymesh-missing', name: 'Missing', severities: ['yellow', 'red'] },
     { id: 'rearsafetymesh-detached', name: 'Detached or partially detached', severities: ['yellow', 'red'] },
     { id: 'rearsafetymesh-insufficient-coverage', name: 'Does not cover 2/3 of last pallet', severities: ['yellow', 'red'] },
     { id: 'rearsafetymesh-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
-  ],
+  ]),
 
-  deckingPanels: [
+  deckingPanels: withScope([
     { id: 'deckingpanels-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
     { id: 'deckingpanels-missing', name: 'Missing', severities: ['yellow', 'red'] },
     { id: 'deckingpanels-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
-  ],
+  ]),
 
-  pallet: [
+  pallet: withScope([
     { id: 'pallet-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
     { id: 'pallet-to-be-repositioned', name: 'To be repositioned', severities: ['yellow', 'red'] },
     { id: 'pallet-improperly-supported', name: 'Improperly supported', severities: ['yellow', 'red'] },
@@ -103,60 +150,60 @@ const ncTypes = {
     { id: 'pallet-not-strapped', name: 'Not properly strapped', severities: ['yellow', 'red'] },
     { id: 'pallet-forked-wrong-side', name: 'Forked wrong side', severities: ['yellow', 'red'] },
     { id: 'pallet-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
-  ],
+  ]),
 
-  entireRackingSystem: [
+  entireRackingSystem: withScope([
     { id: 'entirerackingsystem-dismantled', name: 'Will be dismantled shortly', severities: ['yellow'] },
     { id: 'entirerackingsystem-not-inspectable', name: 'Not inspectable', severities: ['yellow'] },
     { id: 'entirerackingsystem-missing-safety-lock', name: '100% missing safety lock', severities: ['red'] },
     { id: 'entirerackingsystem-missing-anchor-bolt', name: '100% missing anchor bolt', severities: ['red'] },
     { id: 'entirerackingsystem-h-frame', name: 'H-frame structure', severities: ['yellow'] },
     { id: 'entirerackingsystem-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
-  ],
+  ]),
 
-  bay: [
+  bay: withScope([
     { id: 'bay-obstructed', name: 'Obstructed/not accessible', severities: ['yellow'] },
     { id: 'bay-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
     { id: 'bay-h-frame', name: 'H-frame structure', severities: ['yellow'] },
     { id: 'bay-missing-safety-lock', name: '100% missing safety lock', severities: ['red'] },
     { id: 'bay-missing-anchor-bolt', name: '100% missing anchor bolt', severities: ['red'] },
-  ],
+  ]),
 
-  aisle: [
+  aisle: withScope([
     { id: 'aisle-obstructed', name: 'Closed/obstructed/not accessible', severities: ['yellow'] },
     { id: 'aisle-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
-  ],
+  ]),
 
-  basePlate: [
+  basePlate: withScope([
     { id: 'baseplate-missing', name: 'Missing', severities: ['red'], description: 'Base plate is missing from the upright foot.' },
     { id: 'baseplate-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'], description: 'Base plate is bent, cracked, or otherwise damaged.' },
     { id: 'baseplate-not-fixed', name: 'Not Fixed to Floor', severities: ['yellow', 'red'], description: 'Base plate is not bolted or anchored to the floor.' },
     { id: 'baseplate-corrosion', name: 'Corrosion', severities: ['green', 'yellow', 'red'], description: 'Corrosion on the base plate or anchor bolt area.' },
     { id: 'baseplate-wrong-type', name: 'Wrong Type', severities: ['yellow', 'red'], description: 'Base plate does not match the specified system or upright.' },
     { id: 'baseplate-shim-missing', name: 'Shim Missing / Incorrect', severities: ['green', 'yellow'], description: 'Levelling shim is missing or incorrectly positioned.' },
-  ],
+  ]),
 
-  loadSign: [
+  loadSign: withScope([
     { id: 'loadsign-missing', name: 'Missing', severities: ['yellow', 'red'], description: 'Load sign is missing from the racking where required.' },
     { id: 'loadsign-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'], description: 'Load sign is physically damaged, torn, or partially detached.' },
     { id: 'loadsign-illegible', name: 'Illegible', severities: ['yellow', 'red'], description: 'Load sign text or figures are faded, obscured, or unreadable.' },
     { id: 'loadsign-wrong-position', name: 'Wrong Position', severities: ['green', 'yellow'], description: 'Load sign is not placed in the correct or visible location.' },
-  ],
+  ]),
 
-  topTieBeam: [
+  topTieBeam: withScope([
     { id: 'toptie-missing', name: 'Missing', severities: ['yellow', 'red'], description: 'Top tie beam is missing where required by design.' },
     { id: 'toptie-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'], description: 'Top tie beam has visible damage such as bends, dents, or deformation.' },
     { id: 'toptie-loose', name: 'Loose / Detached', severities: ['yellow', 'red'], description: 'Top tie beam is loose or partially detached from the frame connections.' },
     { id: 'toptie-corrosion', name: 'Corrosion', severities: ['green', 'yellow', 'red'], description: 'Corrosion affecting the top tie beam surface or connections.' },
     { id: 'toptie-wrong-type', name: 'Wrong Type', severities: ['yellow', 'red'], description: 'Top tie beam type does not match the specified system or design.' },
-  ],
+  ]),
 
-  footplate: [
+  footplate: withScope([
     { id: 'footplate-missing', name: 'Missing', severities: ['red'], description: 'Footplate is missing from the upright base.' },
     { id: 'footplate-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'], description: 'Footplate is bent, cracked, or otherwise damaged.' },
     { id: 'footplate-not-fixed', name: 'Not Fixed to Floor', severities: ['yellow', 'red'], description: 'Footplate is not bolted or anchored to the floor as required.' },
     { id: 'footplate-corrosion', name: 'Corrosion', severities: ['green', 'yellow', 'red'], description: 'Corrosion on the footplate or its anchor bolt area.' },
-  ],
+  ]),
 };
 
 // Maps old NC type IDs to new ones
