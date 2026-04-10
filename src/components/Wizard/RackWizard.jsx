@@ -1,20 +1,27 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Minus, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Plus, Minus, Check, ExternalLink } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import WizardStep from './WizardStep';
-import manufacturers, { addManufacturer } from '../../data/manufacturers';
-import beams from '../../data/beams';
-import frames from '../../data/frames';
 import useRackStore from '../../stores/rackStore';
+import useSupplierStore from '../../stores/supplierStore';
+import useBeamDatabaseStore, { BEAM_TYPES } from '../../stores/beamDatabaseStore';
+import useFrameDatabaseStore from '../../stores/frameDatabaseStore';
 
 const TOTAL_STEPS = 7;
 
+const BEAM_TYPE_LABEL = Object.fromEntries(
+  BEAM_TYPES.map((t) => [t.value, t.label])
+);
+
 const initialRackData = {
-  manufacturer: '',
+  supplierId: '',
+  supplierName: '',
+  manufacturer: '', // kept for backwards compat — mirrors supplierName
   numberOfBays: 1,
   name: '',
   beamId: '',
@@ -32,12 +39,14 @@ const initialRackData = {
 };
 
 export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
+  const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [rackData, setRackData] = useState(initialRackData);
-  const [newManufacturer, setNewManufacturer] = useState('');
-  const [manufacturerList, setManufacturerList] = useState(manufacturers);
 
   const { createRack, updateRack } = useRackStore();
+  const { suppliers } = useSupplierStore();
+  const { beams, getFilteredBeams } = useBeamDatabaseStore();
+  const { frames, getFilteredFrames } = useFrameDatabaseStore();
 
   const isEditing = !!editRack;
 
@@ -45,7 +54,9 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
   useEffect(() => {
     if (editRack && isOpen) {
       setRackData({
-        manufacturer: editRack.manufacturer || '',
+        supplierId: editRack.supplierId || '',
+        supplierName: editRack.supplierName || editRack.manufacturer || '',
+        manufacturer: editRack.supplierName || editRack.manufacturer || '',
         numberOfBays: editRack.numberOfBays || 1,
         name: editRack.name || '',
         beamId: editRack.beamId || '',
@@ -68,11 +79,6 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
     }
   }, [editRack, isOpen]);
 
-  // Keep manufacturer list in sync
-  useEffect(() => {
-    setManufacturerList([...manufacturers]);
-  }, [isOpen]);
-
   // Update field helper
   const updateField = (field, value) => {
     setRackData((prev) => ({ ...prev, [field]: value }));
@@ -80,40 +86,73 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
 
   // Auto-suggest rack name
   const suggestedName = useMemo(() => {
-    const mfr = manufacturerList.find((m) => m.id === rackData.manufacturer);
-    const mfrName = mfr ? mfr.name : '';
+    const supplierName = rackData.supplierName;
     const bays = rackData.numberOfBays;
-    return mfrName ? `${mfrName}-${bays}Bay-001` : '';
-  }, [rackData.manufacturer, rackData.numberOfBays, manufacturerList]);
+    return supplierName ? `${supplierName}-${bays}Bay-001` : '';
+  }, [rackData.supplierName, rackData.numberOfBays]);
 
-  // Handle adding a new manufacturer
-  const handleAddManufacturer = () => {
-    const trimmed = newManufacturer.trim();
-    if (!trimmed) return;
-    const added = addManufacturer(trimmed);
-    setManufacturerList([...manufacturers]);
-    updateField('manufacturer', added.id);
-    setNewManufacturer('');
+  // Filtered beams & frames for the selected supplier
+  const filteredBeams = useMemo(() => {
+    if (!rackData.supplierId) return [];
+    return getFilteredBeams(rackData.supplierId);
+  }, [rackData.supplierId, beams, getFilteredBeams]);
+
+  const filteredFrames = useMemo(() => {
+    if (!rackData.supplierId) return [];
+    return getFilteredFrames(rackData.supplierId);
+  }, [rackData.supplierId, frames, getFilteredFrames]);
+
+  // Group filtered beams by beamType
+  const beamsByType = useMemo(() => {
+    const grouped = {};
+    filteredBeams.forEach((beam) => {
+      const label = BEAM_TYPE_LABEL[beam.beamType] || beam.beamType || 'Other';
+      if (!grouped[label]) grouped[label] = [];
+      grouped[label].push(beam);
+    });
+    return grouped;
+  }, [filteredBeams]);
+
+  // Handle supplier selection — resets beam/frame picks since filters change
+  const handleSupplierSelect = (supplierId) => {
+    const supplier = suppliers.find((s) => s.id === supplierId);
+    setRackData((prev) => ({
+      ...prev,
+      supplierId,
+      supplierName: supplier?.name || '',
+      manufacturer: supplier?.name || '',
+      // Reset downstream picks when supplier changes
+      beamId: '',
+      bayLength: 0,
+      beamType: '',
+      frameId: '',
+      frameHeight: 0,
+      frameDepth: 0,
+      uprightWidth: 0,
+    }));
   };
 
   // Handle beam selection
   const handleBeamSelect = (beamId) => {
-    const beam = beams.find((b) => b.id === beamId);
+    const beam = filteredBeams.find((b) => b.id === beamId);
     if (beam) {
       updateField('beamId', beam.id);
-      updateField('bayLength', beam.length);
-      updateField('beamType', beam.type);
+      updateField('bayLength', beam.length || 0);
+      updateField('beamType', beam.beamType || '');
     }
   };
 
   // Handle frame selection
   const handleFrameSelect = (frameId) => {
-    const frame = frames.find((f) => f.id === frameId);
+    const frame = filteredFrames.find((f) => f.id === frameId);
     if (frame) {
-      updateField('frameId', frame.id);
-      updateField('frameHeight', frame.height);
-      updateField('frameDepth', frame.depth);
-      updateField('uprightWidth', frame.uprightWidth);
+      setRackData((prev) => ({
+        ...prev,
+        frameId: frame.id,
+        frameHeight: frame.uprightHeight || frame.height || 0,
+        frameDepth: frame.depth || 0,
+        uprightWidth: frame.uprightWidth || 0,
+      }));
     }
   };
 
@@ -136,7 +175,7 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
   const isStepValid = (step) => {
     switch (step) {
       case 1:
-        return !!rackData.manufacturer;
+        return !!rackData.supplierId;
       case 2:
         return rackData.numberOfBays >= 1 && rackData.numberOfBays <= 50;
       case 3:
@@ -157,7 +196,6 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
   // Handle confirm
   const handleConfirm = () => {
     const payload = { ...rackData };
-    // Remove wizard-only fields
     delete payload.useIndividualHeights;
 
     if (isEditing) {
@@ -168,7 +206,12 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
     onClose();
   };
 
-  // Navigation
+  // Navigation helper — close wizard and jump to an editor
+  const openEditor = (path) => {
+    onClose();
+    navigate(path);
+  };
+
   const goNext = () => {
     if (currentStep < TOTAL_STEPS && isStepValid(currentStep)) {
       setCurrentStep((s) => s + 1);
@@ -181,20 +224,10 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
     }
   };
 
-  // Group beams by type
-  const beamsByType = useMemo(() => {
-    const grouped = {};
-    beams.forEach((beam) => {
-      if (!grouped[beam.type]) grouped[beam.type] = [];
-      grouped[beam.type].push(beam);
-    });
-    return grouped;
-  }, []);
-
-  // Selected beam/frame for display
-  const selectedBeam = beams.find((b) => b.id === rackData.beamId);
-  const selectedFrame = frames.find((f) => f.id === rackData.frameId);
-  const selectedManufacturer = manufacturerList.find((m) => m.id === rackData.manufacturer);
+  // Selected beam/frame/supplier for display
+  const selectedBeam = filteredBeams.find((b) => b.id === rackData.beamId);
+  const selectedFrame = filteredFrames.find((f) => f.id === rackData.frameId);
+  const selectedSupplier = suppliers.find((s) => s.id === rackData.supplierId);
 
   // ─── Step Renderers ─────────────────────────────────────────────────
 
@@ -202,42 +235,43 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
     <WizardStep
       stepNumber={1}
       totalSteps={TOTAL_STEPS}
-      title="Select Manufacturer"
-      description="Choose the rack manufacturer or add a new one."
+      title="Select Supplier"
+      description="Choose the rack supplier from your supplier database."
     >
       <div className="flex flex-col gap-4">
-        <Select
-          label="Manufacturer"
-          value={rackData.manufacturer}
-          onChange={(e) => updateField('manufacturer', e.target.value)}
-          placeholder="Select a manufacturer..."
-          required
-          options={manufacturerList.map((m) => ({ value: m.id, label: m.name }))}
-        />
-
-        <div className="flex items-center gap-2 pt-2">
-          <p className="text-xs text-slate-500">or</p>
-        </div>
-
-        <div className="flex gap-2">
-          <Input
-            label="Add New Manufacturer"
-            value={newManufacturer}
-            onChange={(e) => setNewManufacturer(e.target.value)}
-            placeholder="Enter manufacturer name..."
-            className="flex-1"
-          />
-          <div className="flex items-end">
+        {suppliers.length === 0 ? (
+          <Card className="!p-4">
+            <p className="text-sm text-slate-300 mb-3">
+              No suppliers in your database yet. Add one in the Supplier Editor first.
+            </p>
             <Button
-              onClick={handleAddManufacturer}
-              disabled={!newManufacturer.trim()}
-              size="md"
-              icon={Plus}
+              size="sm"
+              icon={ExternalLink}
+              onClick={() => openEditor('/editors/suppliers')}
             >
-              Add
+              Open Supplier Editor
             </Button>
-          </div>
-        </div>
+          </Card>
+        ) : (
+          <>
+            <Select
+              label="Supplier"
+              value={rackData.supplierId}
+              onChange={(e) => handleSupplierSelect(e.target.value)}
+              placeholder="Select a supplier..."
+              required
+              options={suppliers.map((s) => ({ value: s.id, label: s.name }))}
+            />
+            <button
+              type="button"
+              className="self-start text-xs text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1"
+              onClick={() => openEditor('/editors/suppliers')}
+            >
+              <ExternalLink size={12} />
+              Manage suppliers
+            </button>
+          </>
+        )}
       </div>
     </WizardStep>
   );
@@ -324,54 +358,67 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
       stepNumber={4}
       totalSteps={TOTAL_STEPS}
       title="Bay Length (Beam Selection)"
-      description="Select a beam type to define the bay length."
+      description={`Pick a beam from ${rackData.supplierName || 'this supplier'}'s database.`}
     >
-      <div className="flex flex-col gap-4 max-h-[300px] overflow-y-auto pr-1">
-        {Object.entries(beamsByType).map(([type, typeBeams]) => (
-          <div key={type}>
-            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
-              {type}
-            </p>
-            <div className="flex flex-col gap-2">
-              {typeBeams.map((beam) => {
-                const isSelected = rackData.beamId === beam.id;
-                return (
-                  <div
-                    key={beam.id}
-                    onClick={() => handleBeamSelect(beam.id)}
-                    className={`
-                      flex items-center justify-between p-3 rounded-lg border cursor-pointer
-                      transition-all duration-150
-                      ${
-                        isSelected
-                          ? 'border-blue-500 bg-blue-500/10'
-                          : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
-                      }
-                    `}
-                  >
-                    <div>
-                      <p className="text-sm font-medium text-white">{beam.name}</p>
-                      <p className="text-xs text-slate-400">
-                        Length: {beam.length}mm
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-xs text-slate-400">
-                        {beam.capacity}kg
-                      </span>
+      {filteredBeams.length === 0 ? (
+        <Card className="!p-4">
+          <p className="text-sm text-slate-300 mb-1">
+            No beams in the database for <span className="font-medium text-white">{rackData.supplierName}</span>.
+          </p>
+          <p className="text-xs text-slate-400 mb-3">
+            Add beams for this supplier in the Beam Editor, then come back to the wizard.
+          </p>
+          <Button
+            size="sm"
+            icon={ExternalLink}
+            onClick={() => openEditor('/editors/beams')}
+          >
+            Open Beam Editor
+          </Button>
+        </Card>
+      ) : (
+        <div className="flex flex-col gap-4 max-h-[300px] overflow-y-auto pr-1">
+          {Object.entries(beamsByType).map(([type, typeBeams]) => (
+            <div key={type}>
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                {type}
+              </p>
+              <div className="flex flex-col gap-2">
+                {typeBeams.map((beam) => {
+                  const isSelected = rackData.beamId === beam.id;
+                  return (
+                    <div
+                      key={beam.id}
+                      onClick={() => handleBeamSelect(beam.id)}
+                      className={`
+                        flex items-center justify-between p-3 rounded-lg border cursor-pointer
+                        transition-all duration-150
+                        ${
+                          isSelected
+                            ? 'border-blue-500 bg-blue-500/10'
+                            : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                        }
+                      `}
+                    >
+                      <div>
+                        <p className="text-sm font-medium text-white">{beam.name}</p>
+                        <p className="text-xs text-slate-400">
+                          L {beam.length}mm · H {beam.height}mm · D {beam.depth}mm
+                        </p>
+                      </div>
                       {isSelected && (
                         <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
                           <Check size={12} className="text-white" />
                         </div>
                       )}
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </WizardStep>
   );
 
@@ -490,43 +537,58 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
       stepNumber={6}
       totalSteps={TOTAL_STEPS}
       title="Frame Selection"
-      description="Select the upright frame specification."
+      description={`Pick a frame from ${rackData.supplierName || 'this supplier'}'s database.`}
     >
-      <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
-        {frames.map((frame) => {
-          const isSelected = rackData.frameId === frame.id;
-          return (
-            <div
-              key={frame.id}
-              onClick={() => handleFrameSelect(frame.id)}
-              className={`
-                flex items-center justify-between p-3 rounded-lg border cursor-pointer
-                transition-all duration-150
-                ${
-                  isSelected
-                    ? 'border-blue-500 bg-blue-500/10'
-                    : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
-                }
-              `}
-            >
-              <div>
-                <p className="text-sm font-medium text-white">{frame.name}</p>
-                <p className="text-xs text-slate-400">
-                  Height: {frame.height}mm | Depth: {frame.depth}mm | Upright: {frame.uprightWidth}mm
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <span className="text-xs text-slate-400">{frame.capacity}kg</span>
+      {filteredFrames.length === 0 ? (
+        <Card className="!p-4">
+          <p className="text-sm text-slate-300 mb-1">
+            No frames in the database for <span className="font-medium text-white">{rackData.supplierName}</span>.
+          </p>
+          <p className="text-xs text-slate-400 mb-3">
+            Add frames for this supplier in the Frame Editor, then come back to the wizard.
+          </p>
+          <Button
+            size="sm"
+            icon={ExternalLink}
+            onClick={() => openEditor('/editors/frames')}
+          >
+            Open Frame Editor
+          </Button>
+        </Card>
+      ) : (
+        <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
+          {filteredFrames.map((frame) => {
+            const isSelected = rackData.frameId === frame.id;
+            return (
+              <div
+                key={frame.id}
+                onClick={() => handleFrameSelect(frame.id)}
+                className={`
+                  flex items-center justify-between p-3 rounded-lg border cursor-pointer
+                  transition-all duration-150
+                  ${
+                    isSelected
+                      ? 'border-blue-500 bg-blue-500/10'
+                      : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                  }
+                `}
+              >
+                <div>
+                  <p className="text-sm font-medium text-white">{frame.name}</p>
+                  <p className="text-xs text-slate-400">
+                    Height: {frame.uprightHeight || frame.height}mm · Depth: {frame.depth}mm · Upright: {frame.uprightWidth}mm
+                  </p>
+                </div>
                 {isSelected && (
                   <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
                     <Check size={12} className="text-white" />
                   </div>
                 )}
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </WizardStep>
   );
 
@@ -540,9 +602,9 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
       <Card className="!p-4">
         <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
           <div>
-            <p className="text-slate-400">Manufacturer</p>
+            <p className="text-slate-400">Supplier</p>
             <p className="text-white font-medium">
-              {selectedManufacturer?.name || rackData.manufacturer}
+              {selectedSupplier?.name || rackData.supplierName || '-'}
             </p>
           </div>
           <div>
@@ -561,7 +623,9 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
           </div>
           <div>
             <p className="text-slate-400">Beam Type</p>
-            <p className="text-white font-medium">{rackData.beamType || '-'}</p>
+            <p className="text-white font-medium">
+              {BEAM_TYPE_LABEL[rackData.beamType] || rackData.beamType || '-'}
+            </p>
           </div>
           <div>
             <p className="text-slate-400">Number of Levels</p>
@@ -587,7 +651,7 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
             <p className="text-slate-400">Frame Dimensions</p>
             <p className="text-white font-medium">
               {selectedFrame
-                ? `${selectedFrame.height}mm H x ${selectedFrame.depth}mm D`
+                ? `${selectedFrame.uprightHeight || selectedFrame.height}mm H x ${selectedFrame.depth}mm D`
                 : '-'}
             </p>
           </div>

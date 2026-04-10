@@ -36,7 +36,8 @@ const useBeamDatabaseStore = create(
       addBeam: (data) => {
         const beam = {
           id: generateId(),
-          name: '', // auto-generated below
+          name: '', // computed below
+          customName: (data.customName || '').trim(),
           supplierId: data.supplierId || '',
           supplierName: data.supplierName || '',
           beamType: data.beamType || 'standard-double-c',
@@ -52,7 +53,7 @@ const useBeamDatabaseStore = create(
           supplierCode: data.supplierCode || '',
           createdAt: new Date().toISOString(),
         };
-        beam.name = generateBeamName(beam);
+        beam.name = beam.customName || generateBeamName(beam);
         set((state) => ({
           beams: [...state.beams, beam],
         }));
@@ -64,7 +65,8 @@ const useBeamDatabaseStore = create(
           beams: state.beams.map((b) => {
             if (b.id !== id) return b;
             const updated = { ...b, ...data };
-            updated.name = generateBeamName(updated);
+            updated.customName = (updated.customName || '').trim();
+            updated.name = updated.customName || generateBeamName(updated);
             return updated;
           }),
         }));
@@ -103,11 +105,12 @@ const useBeamDatabaseStore = create(
         return get().beams.filter((b) => b.length === length);
       },
 
-      getFilteredBeams: (supplierId, length) => {
+      // Supplier-only strict filter. Length is no longer used as a filter —
+      // it's used by the caller for sort order / display only. Selecting a
+      // beam in BayConfig drives the bay length, not the other way around.
+      getFilteredBeams: (supplierId) => {
         return get().beams.filter(
-          (b) =>
-            (!supplierId || b.supplierId === supplierId) &&
-            (!length || b.length === length)
+          (b) => !supplierId || b.supplierId === supplierId
         );
       },
     }),

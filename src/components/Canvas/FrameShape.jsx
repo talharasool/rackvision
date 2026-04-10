@@ -20,6 +20,7 @@ export default function FrameShape({
   onClick,
   editMode,
   supplierColor,
+  labelFontSize = 1,
 }) {
   // When supplierColor is provided, use a darker shade for the fill instead of gray.
   let fill, stroke;
@@ -50,11 +51,12 @@ export default function FrameShape({
         hitStrokeWidth={4}
       />
       <Text
-        x={0}
+        x={-width}
         y={depth + 4}
-        width={width}
-        text={`F${frameIndex}`}
-        fontSize={9}
+        width={width * 3}
+        wrap="none"
+        text={`${frameIndex}`}
+        fontSize={9 * labelFontSize}
         fill="#94a3b8"
         align="center"
         listening={false}

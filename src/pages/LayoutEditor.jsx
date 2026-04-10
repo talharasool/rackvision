@@ -48,6 +48,7 @@ export default function LayoutEditor() {
   const [editMode, setEditMode] = useState(false);
   const [scale, setScale] = useState(1);
   const [markerScale, setMarkerScale] = useState(1);
+  const [labelFontSize, setLabelFontSize] = useState(1);
   const [activeTool, setActiveTool] = useState('select');
   const [selectedRackIds, setSelectedRackIds] = useState([]);
   const [snapSize, setSnapSize] = useState(0);
@@ -250,6 +251,10 @@ export default function LayoutEditor() {
     setMarkerScale((prev) => Math.min(prev + 0.25, 3));
   const handleMarkerScaleDown = () =>
     setMarkerScale((prev) => Math.max(prev - 0.25, 0.25));
+  const handleLabelFontSizeUp = () =>
+    setLabelFontSize((prev) => Math.min(prev + 0.25, 3));
+  const handleLabelFontSizeDown = () =>
+    setLabelFontSize((prev) => Math.max(prev - 0.25, 0.5));
 
   const handleBayClick = (rackId, bayId) => {
     // In edit+select mode, clicking a bay selects the rack instead of navigating
@@ -507,6 +512,9 @@ export default function LayoutEditor() {
         markerScale={markerScale}
         onMarkerScaleUp={handleMarkerScaleUp}
         onMarkerScaleDown={handleMarkerScaleDown}
+        labelFontSize={labelFontSize}
+        onLabelFontSizeUp={handleLabelFontSizeUp}
+        onLabelFontSizeDown={handleLabelFontSizeDown}
         snapSize={snapSize}
         onSnapSizeChange={setSnapSize}
         canUndo={canUndo()}
@@ -534,6 +542,7 @@ export default function LayoutEditor() {
           onSelectionChange={setSelectedRackIds}
           supplierColors={supplierColors}
           markerScale={markerScale}
+          labelFontSize={labelFontSize}
           onNCTap={handleNCTap}
           onNCLongPress={handleNCLongPress}
           onNCDragEnd={handleNCDragEnd}

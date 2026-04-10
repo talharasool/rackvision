@@ -23,6 +23,7 @@ const RackShape = forwardRef(function RackShape(
     ncData = [],
     supplierColor,
     markerScale = 1,
+    labelFontSize = 1,
     onNCTap,
     onNCLongPress,
     onNCDragEnd,
@@ -82,6 +83,7 @@ const RackShape = forwardRef(function RackShape(
         isSelected={false}
         editMode={editMode}
         supplierColor={supplierColor}
+        labelFontSize={labelFontSize}
         onClick={() => onFrameClick?.(id, frame.id)}
       />
     );
@@ -137,6 +139,7 @@ const RackShape = forwardRef(function RackShape(
           editMode={editMode}
           supplierColor={supplierColor}
           markerScale={markerScale}
+          labelFontSize={labelFontSize}
           ncMarkers={ncByBay[bay.id] || []}
           onNCTap={onNCTap}
           onNCLongPress={onNCLongPress}
@@ -209,13 +212,15 @@ const RackShape = forwardRef(function RackShape(
         />
       )}
 
-      {/* Rack name label */}
+      {/* Rack name label — wide centering container + wrap="none" so label
+          stays centered on rack middle without wrapping at large font sizes */}
       <Text
-        x={0}
-        y={-18}
-        width={totalWidth}
+        x={-totalWidth}
+        y={-18 * labelFontSize}
+        width={totalWidth * 3}
+        wrap="none"
         text={name || 'Rack'}
-        fontSize={12}
+        fontSize={12 * labelFontSize}
         fontStyle="bold"
         fill="#e2e8f0"
         align="center"

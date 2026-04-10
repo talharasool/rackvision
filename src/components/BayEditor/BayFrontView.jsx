@@ -39,7 +39,8 @@ export default function BayFrontView({
     if (!rack) return null;
 
     const frameHeight = rack.frameHeight || 6000;
-    const bayLength = rack.bayLength || 2700;
+    // Prefer the bay's per-bay custom length if set; fall back to the rack default
+    const bayLength = bay?.bayConfig?.customLength || rack.bayLength || 2700;
     const uprightWidth = rack.uprightWidth || 100;
     const levels = rack.levels || 3;
     const firstElevation = rack.firstElevation || 0;
@@ -118,7 +119,7 @@ export default function BayFrontView({
       drawW,
       drawH,
     };
-  }, [rack]);
+  }, [rack, bay?.bayConfig?.customLength]);
 
   // Resolve beam name from bay config or rack-level data
   const getBeamName = (levelIdx) => {

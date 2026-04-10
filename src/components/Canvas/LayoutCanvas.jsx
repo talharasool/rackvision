@@ -22,6 +22,7 @@ export default function LayoutCanvas({
   onSelectionChange,
   supplierColors = {},
   markerScale = 1,
+  labelFontSize = 1,
   onNCTap,
   onNCLongPress,
   onNCDragEnd,
@@ -423,6 +424,7 @@ export default function LayoutCanvas({
               ncData={ncData[rack.id] || []}
               supplierColor={supplierColors?.[rack.supplierId]}
               markerScale={markerScale}
+              labelFontSize={labelFontSize}
               onNCTap={onNCTap}
               onNCLongPress={onNCLongPress}
               onNCDragEnd={onNCDragEnd}

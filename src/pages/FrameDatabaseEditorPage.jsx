@@ -90,14 +90,20 @@ export default function FrameDatabaseEditorPage() {
     const diagonalQty = Number(form.diagonalQty);
     const crossMemberQty = Number(form.crossMemberQty);
 
+    if (!form.supplierId) {
+      errs.supplierId = 'Supplier is required';
+    }
+
     if (!form.uprightHeight || uprightHeight <= 0) {
       errs.uprightHeight = 'Upright height is required and must be > 0';
     } else if (uprightHeight > 20000) {
       errs.uprightHeight = 'Height cannot exceed 20000mm';
     }
 
-    if (form.uprightWidth && (uprightWidth <= 0 || uprightWidth > 500)) {
-      errs.uprightWidth = 'Width must be between 1 and 500mm';
+    if (!form.uprightWidth || uprightWidth <= 0) {
+      errs.uprightWidth = 'Upright width is required and must be > 0';
+    } else if (uprightWidth > 500) {
+      errs.uprightWidth = 'Width cannot exceed 500mm';
     }
 
     if (!form.depth || depth <= 0) {
@@ -161,7 +167,12 @@ export default function FrameDatabaseEditorPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => (showForm ? resetForm() : navigate('/'))}
+              title={showForm ? 'Back to frame list' : 'Back to home'}
+            >
               <ArrowLeft size={18} />
             </Button>
             <div>
@@ -187,6 +198,8 @@ export default function FrameDatabaseEditorPage() {
                 onChange={(e) => handleSupplierChange(e.target.value)}
                 options={supplierOptions}
                 placeholder="Select supplier"
+                required
+                error={formErrors.supplierId}
               />
               <Select
                 label="Frame Type"
@@ -224,6 +237,7 @@ export default function FrameDatabaseEditorPage() {
                 value={form.uprightWidth}
                 onChange={(e) => setField('uprightWidth', e.target.value)}
                 placeholder="e.g. 100"
+                required
                 min={1}
                 max={500}
                 error={formErrors.uprightWidth}

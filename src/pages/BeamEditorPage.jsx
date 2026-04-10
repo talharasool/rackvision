@@ -5,10 +5,11 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import Card from '../components/ui/Card';
-import useBeamDatabaseStore, { BEAM_TYPES, FINISH_TYPES } from '../stores/beamDatabaseStore';
+import useBeamDatabaseStore, { BEAM_TYPES, FINISH_TYPES, generateBeamName } from '../stores/beamDatabaseStore';
 import useSupplierStore from '../stores/supplierStore';
 
 const emptyForm = {
+  customName: '',
   supplierId: '',
   supplierName: '',
   beamType: 'standard-double-c',
@@ -57,6 +58,7 @@ export default function BeamEditorPage() {
   const handleEdit = (beam) => {
     setEditingId(beam.id);
     setForm({
+      customName: beam.customName || '',
       supplierId: beam.supplierId,
       supplierName: beam.supplierName,
       beamType: beam.beamType,
@@ -86,22 +88,32 @@ export default function BeamEditorPage() {
     const depth = Number(form.depth);
     const thickness = Number(form.thickness);
 
+    if (!form.supplierId) {
+      errs.supplierId = 'Supplier is required';
+    }
+
     if (!form.length || length <= 0) {
       errs.length = 'Length is required and must be > 0';
     } else if (length > 10000) {
       errs.length = 'Length cannot exceed 10000mm';
     }
 
-    if (form.height && (height <= 0 || height > 500)) {
-      errs.height = 'Height must be between 1 and 500mm';
+    if (!form.height || height <= 0) {
+      errs.height = 'Height is required and must be > 0';
+    } else if (height > 500) {
+      errs.height = 'Height cannot exceed 500mm';
     }
 
-    if (form.depth && (depth <= 0 || depth > 500)) {
-      errs.depth = 'Depth must be between 1 and 500mm';
+    if (!form.depth || depth <= 0) {
+      errs.depth = 'Depth is required and must be > 0';
+    } else if (depth > 500) {
+      errs.depth = 'Depth cannot exceed 500mm';
     }
 
-    if (form.thickness && (thickness <= 0 || thickness > 50)) {
-      errs.thickness = 'Thickness must be between 0.1 and 50mm';
+    if (!form.thickness || thickness <= 0) {
+      errs.thickness = 'Thickness is required and must be > 0';
+    } else if (thickness > 50) {
+      errs.thickness = 'Thickness cannot exceed 50mm';
     }
 
     return errs;
@@ -149,7 +161,12 @@ export default function BeamEditorPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" onClick={() => navigate('/')}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => (showForm ? resetForm() : navigate('/'))}
+              title={showForm ? 'Back to beam list' : 'Back to home'}
+            >
               <ArrowLeft size={18} />
             </Button>
             <div>
@@ -169,12 +186,30 @@ export default function BeamEditorPage() {
               {editingId ? 'Edit Beam' : 'New Beam'}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <Input
+                  label="Beam Name"
+                  value={form.customName}
+                  onChange={(e) => setField('customName', e.target.value)}
+                  placeholder={generateBeamName({
+                    beamType: form.beamType,
+                    length: form.length || '...',
+                    height: form.height || '...',
+                    supplierName: form.supplierName,
+                  })}
+                />
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Leave blank to auto-generate from type, dimensions, and supplier
+                </p>
+              </div>
               <Select
                 label="Supplier"
                 value={form.supplierId}
                 onChange={(e) => handleSupplierChange(e.target.value)}
                 options={supplierOptions}
                 placeholder="Select supplier"
+                required
+                error={formErrors.supplierId}
               />
               <Select
                 label="Beam Type"
@@ -201,6 +236,7 @@ export default function BeamEditorPage() {
                 value={form.height}
                 onChange={(e) => setField('height', e.target.value)}
                 placeholder="e.g. 50"
+                required
                 min={1}
                 max={500}
                 error={formErrors.height}
@@ -211,6 +247,7 @@ export default function BeamEditorPage() {
                 value={form.depth}
                 onChange={(e) => setField('depth', e.target.value)}
                 placeholder="e.g. 40"
+                required
                 min={1}
                 max={500}
                 error={formErrors.depth}
@@ -221,6 +258,7 @@ export default function BeamEditorPage() {
                 value={form.thickness}
                 onChange={(e) => setField('thickness', e.target.value)}
                 placeholder="e.g. 1.5"
+                required
                 min={0.1}
                 max={50}
                 step={0.1}

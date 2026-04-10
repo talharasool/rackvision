@@ -93,39 +93,38 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
     setDuplicateTargets({});
   }, [bay?.id, rack?.bayLength]);
 
-  // Active bay length for beam filtering
+  // Active bay length for beam length proximity / display only
   const activeBayLength = customLength || rack?.bayLength || 2700;
 
-  // Filtered beams from database (by supplier + length)
+  // All beams for the selected supplier, sorted by closeness to current bay length
+  // (exact matches first, then nearest). Selecting a beam auto-syncs bay length.
   const filteredBeams = useMemo(() => {
-    return getFilteredBeams(selectedSupplier, activeBayLength);
+    const list = getFilteredBeams(selectedSupplier);
+    return [...list].sort(
+      (a, b) =>
+        Math.abs((a.length || 0) - activeBayLength) -
+        Math.abs((b.length || 0) - activeBayLength)
+    );
   }, [selectedSupplier, activeBayLength, allDbBeams, getFilteredBeams]);
 
-  // Compute top beam elevation for frame filtering
+  // Top beam elevation — for display indicator on frames, not filtering
   const topBeamElevation = elevations.length > 0 ? elevations[elevations.length - 1] : 0;
+  const rackFrameDepth = rack?.frameDepth || 0;
 
-  // Filtered frames from database
+  // All frames for the selected supplier, sorted by depth match then height match
   const filteredFrames = useMemo(() => {
-    return getFilteredFrames(selectedSupplier, rack?.frameDepth || 0, topBeamElevation);
-  }, [selectedSupplier, rack?.frameDepth, topBeamElevation, allDbFrames, getFilteredFrames]);
-
-  // Supplier options
-  const supplierOptions = useMemo(() => [
-    { value: '', label: 'All Suppliers' },
-    ...suppliers.map((s) => ({ value: s.id, label: s.name })),
-  ], [suppliers]);
+    const list = getFilteredFrames(selectedSupplier);
+    return [...list].sort((a, b) => {
+      const depthDiffA = Math.abs((a.depth || 0) - rackFrameDepth);
+      const depthDiffB = Math.abs((b.depth || 0) - rackFrameDepth);
+      if (depthDiffA !== depthDiffB) return depthDiffA - depthDiffB;
+      const heightFitA = (a.height || 0) >= topBeamElevation ? 0 : 1;
+      const heightFitB = (b.height || 0) >= topBeamElevation ? 0 : 1;
+      return heightFitA - heightFitB;
+    });
+  }, [selectedSupplier, rackFrameDepth, topBeamElevation, allDbFrames, getFilteredFrames]);
 
   // ---- Handlers ----
-
-  const handleSupplierChange = (e) => {
-    const val = e.target.value;
-    setSelectedSupplier(val);
-    const supplier = suppliers.find((s) => s.id === val);
-    onUpdate?.({
-      supplierId: val,
-      supplierName: supplier?.name || '',
-    });
-  };
 
   const handleCustomLengthChange = (e) => {
     const val = parseInt(e.target.value, 10);
@@ -158,6 +157,18 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
     return null;
   };
 
+  // Selecting a beam drives the bay length: a bay's width = its beams' length.
+  // If the chosen beam's length differs from the current bay length, sync them.
+  const syncBayLengthToBeam = (dbBeam, baseBayConfigPatch) => {
+    const beamLen = dbBeam.length || 0;
+    const patch = { ...baseBayConfigPatch };
+    if (beamLen > 0 && beamLen !== activeBayLength) {
+      patch.customLength = beamLen;
+      setCustomLength(beamLen);
+    }
+    return patch;
+  };
+
   const handleLevelBeamSelect = (levelIndex, dbBeam) => {
     const newSelections = [...(bayConfig.beamSelections || [])];
     while (newSelections.length <= levelIndex) {
@@ -170,14 +181,14 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
 
     if (bay?.id && rack?.id) {
       updateBay(rack.id, bay.id, {
-        bayConfig: { beamSelections: newSelections },
+        bayConfig: syncBayLengthToBeam(dbBeam, { beamSelections: newSelections }),
       });
     }
 
     // Also update the rack-level levelBeams for backward compatibility
     const newLevelBeams = [...levelBeams];
     while (newLevelBeams.length <= levelIndex) {
-      newLevelBeams.push({ beamId: '', beamType: '', bayLength: activeBayLength });
+      newLevelBeams.push({ beamId: '', beamType: '', bayLength: dbBeam.length || activeBayLength });
     }
     newLevelBeams[levelIndex] = {
       beamId: dbBeam.id,
@@ -196,7 +207,7 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
 
     if (bay?.id && rack?.id) {
       updateBay(rack.id, bay.id, {
-        bayConfig: { beamSelections: newSelections },
+        bayConfig: syncBayLengthToBeam(dbBeam, { beamSelections: newSelections }),
       });
     }
 
@@ -300,7 +311,8 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
     }
   };
 
-  // Frame selection
+  // Frame selection. Selecting a frame whose depth differs from the current
+  // rack frame depth syncs rack.frameDepth to the chosen frame's depth.
   const handleFrameSelect = (side, frameDbId) => {
     if (side === 'left') {
       setLeftFrameDbId(frameDbId);
@@ -313,6 +325,10 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
           [side === 'left' ? 'leftFrameDbId' : 'rightFrameDbId']: frameDbId,
         },
       });
+    }
+    const frame = getFrameById(frameDbId);
+    if (frame && frame.depth && frame.depth !== rackFrameDepth) {
+      onUpdate?.({ frameDepth: frame.depth });
     }
   };
 
@@ -338,11 +354,19 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
     return frame ? frame.name : 'Unknown frame';
   };
 
-  // Frame options for select
+  // Frame options for select — show depth/height inline so the user can
+  // see whether the frame matches the rack's depth and top beam elevation.
   const frameOptions = useMemo(() => [
     { value: '', label: 'Select frame...' },
-    ...filteredFrames.map((f) => ({ value: f.id, label: f.name })),
-  ], [filteredFrames]);
+    ...filteredFrames.map((f) => {
+      const depthMark = (f.depth || 0) === rackFrameDepth ? '' : ' ⚠';
+      const heightMark = (f.height || 0) >= topBeamElevation ? '' : ' ⚠';
+      return {
+        value: f.id,
+        label: `${f.name} — D${f.depth}${depthMark} H${f.height}${heightMark}`,
+      };
+    }),
+  ], [filteredFrames, rackFrameDepth, topBeamElevation]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -359,12 +383,13 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
             <p className="text-white font-medium">{rack?.name || '-'}</p>
           </div>
           <div className="col-span-2">
-            <Select
-              label="Supplier"
-              value={selectedSupplier}
-              onChange={handleSupplierChange}
-              options={supplierOptions}
-            />
+            <p className="text-xs text-slate-400 mb-1">Supplier</p>
+            <div className="w-full rounded px-3 py-2 text-sm text-slate-300 bg-slate-800/60 border border-slate-700 cursor-not-allowed select-none">
+              {suppliers.find((s) => s.id === rackSupplierId)?.name || rack?.manufacturer || 'Not set'}
+            </div>
+            <p className="text-[10px] text-slate-500 mt-1">
+              Supplier is set in the Rack Wizard and cannot be changed here
+            </p>
           </div>
           <div className="col-span-2">
             <Input
@@ -392,7 +417,7 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
 
         {filteredBeams.length === 0 && (
           <div className="text-xs text-slate-500 mb-2 px-2 py-1.5 rounded bg-slate-800/50 border border-slate-700">
-            No beams match current supplier/length filters.
+            No beams in the database for this supplier.
             {' '}
             <button
               onClick={() => navigate('/editors/beams')}
@@ -448,10 +473,16 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
                       {filteredBeams.map((b) => {
                         const sel = getLevelBeamSelection(i);
                         const isActive = sel?.beamDbId === b.id;
+                        const lengthMatches = (b.length || 0) === activeBayLength;
                         return (
                           <button
                             key={b.id}
                             onClick={() => handleLevelBeamSelect(i, b)}
+                            title={
+                              lengthMatches
+                                ? `Length matches bay (${activeBayLength} mm)`
+                                : `Selecting will change bay length to ${b.length} mm`
+                            }
                             className={`
                               w-full flex items-center justify-between px-2.5 py-1.5 rounded border text-left text-xs
                               transition-all duration-150
@@ -462,7 +493,13 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
                           >
                             <span className="font-medium truncate mr-2">{b.name}</span>
                             <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-slate-500">{b.length} mm</span>
+                              <span
+                                className={
+                                  lengthMatches ? 'text-slate-500' : 'text-amber-400'
+                                }
+                              >
+                                {b.length} mm
+                              </span>
                               {isActive && <Check size={12} className="text-blue-400" />}
                             </div>
                           </button>
@@ -519,8 +556,22 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
 
         {filteredFrames.length === 0 && (
           <div className="text-xs text-slate-500 mb-3 px-2 py-1.5 rounded bg-slate-800/50 border border-slate-700">
-            No frames match current filters (supplier, depth {rack?.frameDepth || 0} mm, min height {topBeamElevation} mm).
+            No frames in the database for this supplier.
+            {' '}
+            <button
+              onClick={() => navigate('/editors/frames')}
+              className="text-blue-400 hover:text-blue-300 inline-flex items-center gap-1"
+            >
+              Add frame <ExternalLink size={10} />
+            </button>
           </div>
+        )}
+        {filteredFrames.length > 0 && (
+          <p className="text-[10px] text-slate-500 mb-2">
+            Rack depth: {rackFrameDepth} mm · Top beam: {topBeamElevation} mm.
+            ⚠ marks depth/height mismatch. Selecting a different-depth frame
+            updates the rack depth.
+          </p>
         )}
 
         <div className="grid grid-cols-2 gap-4">

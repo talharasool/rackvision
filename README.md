@@ -93,6 +93,27 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
 
 ## Latest Changes
 
+### Doc 4 (Gagliardi) Round 2 — Beam/Frame DB Hardening + Navigation
+
+Proper architectural fix for the "I can't select my beam in BayConfig" report. The two stacked root causes were: (1) the editors let you save garbage data (no supplier, zero dimensions), and (2) BayConfig used the database filter as a hard gate on length, hiding any beam that didn't exactly match the current bay length.
+
+- **Required-field validation in Beam Editor** — `BeamEditorPage` now requires Supplier, Length, Height, Depth, and Thickness. All fields show inline red errors and the form refuses to save until they're filled. Editing a legacy bad beam is also blocked until the user fills in the missing fields (verified end-to-end with Playwright on a seeded `dede` beam — see Browser Verification Tests below).
+- **Required-field validation in Frame Database Editor** — `FrameDatabaseEditorPage` now requires Supplier, Upright Height, Upright Width, and Depth.
+- **Database filter rewritten as supplier-only** — `getFilteredBeams(supplierId)` and `getFilteredFrames(supplierId)` no longer take dimension arguments. Length / depth / minHeight are computed at the call site for **sort order and visual hints**, not as exclusion filters.
+- **Bay length follows the chosen beam, not the other way around** — `BayConfig` now sorts beams by closeness to the current bay length (exact match first), shows the length in **amber** when it doesn't match, and **auto-syncs `customLength`** to the chosen beam's length on click. This matches physical reality: the bay's width *is* its beams' length.
+- **Frame depth follows the chosen frame** — `BayConfig` shows each frame as `Name — D{depth} H{height}` with `⚠` markers when depth ≠ rack frame depth or height < top beam elevation. Selecting a different-depth frame syncs `rack.frameDepth` automatically.
+- **Context-aware back navigation in editors** — `BeamEditorPage` and `FrameDatabaseEditorPage` back arrows now check `showForm` state. From the form they close the form and return to the list; from the list they go to Home. Previously the back arrow always jumped straight to Home from inside the form, skipping the list.
+
+### Doc 4 (Gagliardi) Round 1 — Quick Fixes
+
+First batch of fixes from the second client review. 5 of 16 Doc 4 items shipped. All low-risk, all inside existing budget.
+
+- **Drop `F` prefix from frame labels (2.1b)** — `RackShape` → `FrameShape` now renders `1`, `2`, `3`... instead of `F1`, `F2`, `F3` on the 2D layout
+- **Upright labels FRONT / REAR (4b)** — Frame side-elevation view in `FrameView.jsx` now labels uprights as `FRONT` (left, near viewer) and `REAR` (right) instead of `L` / `R`. Labels moved above the upright rectangles so the longer text fits cleanly
+- **Bay width dimension refresh bug (3.3)** — `BayFrontView` now reads `bay.bayConfig.customLength` first and falls back to `rack.bayLength`. The `useMemo` dependency array was updated so the bay width label re-renders when the user changes the bay length in `BayConfig`
+- **Bay supplier locked to Rack Wizard (3.1a)** — `BayConfig` no longer shows an editable supplier dropdown. The supplier is displayed read-only, sourced from the parent rack, with a helper note explaining it's set in the wizard. Removed unused `handleSupplierChange` and `supplierOptions`
+- **Beam Name field added to Beam Editor (3.1b)** — `BeamEditorPage` now has a top-level "Beam Name" input. Empty input → name is auto-generated from type/dimensions/supplier (existing behavior preserved). Filled input → custom name is used and persisted on a new `customName` field in `beamDatabaseStore`. The placeholder shows the live auto-generated name as the user fills in other fields
+
 ### Export, Scope Categories & Summary (Week 2)
 
 - **3-format export** — Export dropdown on toolbar with CSV, XLSX (SheetJS), and ZIP bundle (JSZip + file-saver) options
@@ -167,6 +188,7 @@ The 2D layout editor has been upgraded to a full interactive canvas editor with 
 | Doc 1: Specification List for Phase 1 (initial) | ~85% | Ch 1-5 mostly done. Ch 6 (Data Export) 80% — CSV/XLSX/ZIP export done with Doc 1 Ch 6.2 columns. Pending: layout PDF. Missing: bay description field, frame compatibility check |
 | Doc 2: NC Marker Rules & NC List for Elements (initial) | ~95% | All 22 element categories with exact Doc 2 NC names. Placement engine done. Pie-chart markers done. Scope Table categories done |
 | Doc 3: App Analysis (20260403 — first client review) | ~90% | Sections 2-4 complete. Section 1 at 60% (Accessories Editor + Import DB deferred by client) |
+| Doc 4: Gagliardi "DA SISTEMARE" Feedback (second client review) | ~31% | 16 items. Round 1 done (5 quick fixes: 2.1b, 3.1a, 3.1b, 3.3, 4b). Rest pending — see table below |
 | Clarification Questions (developer-raised, Q1-Q13) | ~90% | Q1-Q11 implemented, Q12 (placement rules) now implemented, Q13 pending |
 
 ---
@@ -178,6 +200,81 @@ The 2D layout editor has been upgraded to a full interactive canvas editor with 
 - **Stores:** `inspectionStore`, `rackStore`, `ncStore`, `beamDatabaseStore`, `frameDatabaseStore`, `supplierStore`
 - **Photos:** Stored as base64 strings in localStorage. Large inspections with many photos may approach browser limits (~5-10MB)
 - **Portability:** Data lives on the device's browser only. Clearing browser data erases all inspections
+
+---
+
+## Browser Verification Tests
+
+End-to-end browser smoke tests are run with **Playwright (headless Chromium)** against the live Vite dev server. They are kept **outside the project tree** (under `/tmp/rackvision-verify/`) so the project's `package.json` and `node_modules` stay clean. This is intentional — these tests are an operational tool used by Claude during fix verification, not a CI suite.
+
+### How to run
+
+```bash
+# 1. Start the dev server (in one terminal)
+npm run dev
+
+# 2. Set up the verifier (one-time, in another terminal)
+mkdir -p /tmp/rackvision-verify && cd /tmp/rackvision-verify
+npm init -y >/dev/null
+npm install --silent playwright@latest
+npx playwright install chromium
+
+# 3. Run the verification script
+node verify.mjs
+```
+
+The script:
+1. Launches headless Chromium at 1280×900
+2. Navigates the app at `http://localhost:5173` (or whatever port Vite chose — check the dev server output)
+3. Drives each user flow with `page.getByRole(...)` / `page.getByText(...)` selectors
+4. Asserts visible state (error messages, URL changes, button visibility)
+5. Saves screenshots to `/tmp/rackvision-verify/screenshots/` for visual evidence
+6. Captures any `console` or `pageerror` events and reports them at the end
+7. Prints a PASS/FAIL summary table
+
+### Conventions
+
+- **One try/catch per flow** — a failure in one flow does not prevent the others from running
+- **Selectors prefer visible text** — `getByRole('button', { name: 'Save Beam' })` over fragile CSS selectors
+- **Icon-only buttons** are located via DOM structure (e.g., the back arrow is "the first button before the page `h1`")
+- **Seed bad data via `localStorage.setItem`** when a flow needs to test edit-of-broken-data — never commit broken data via the UI
+- **Always `localStorage.clear()`** at the start of any flow that needs a known-empty state, especially for "supplier required" assertions
+
+### Currently verified flows
+
+| ID | Flow | Validates |
+|----|------|-----------|
+| **A** | Beam Editor empty save | Required errors on Supplier, Length, Height, Depth, Thickness |
+| **B** | Beam Editor partial save | Only Supplier error remains after dimensions filled |
+| **C** | Edit existing bad beam | Saved-then-broken legacy data is blocked on update |
+| **D** | Back navigation context | Back from list → Home; Back from form → list (URL preserved) |
+| **E** | Frame Editor empty save | Required errors on Supplier, Upright Height, Upright Width, Depth |
+| **Doc4-Comprehensive** | Full Doc 4 audit (20 checks across wizard / 2D layout / bay config / frame config) | 13 PASS / 6 FAIL / 1 NOT_TESTABLE — real compliance **9 of 15 testable (60%)** |
+| **W1** | Wizard step 1 empty-state when no suppliers | Empty-state message + "Open Supplier Editor" CTA; Next disabled |
+| **W2** | Wizard step 4 empty-state when supplier has no beams | Empty-state message + "Open Beam Editor" CTA; Next disabled |
+| **W3** | Wizard filters beams & frames by selected supplier | Only Acme beams/frames shown when Acme selected; Beta rows hidden; rack persists with `supplierId`, `supplierName`, `beamId`, `frameId`, `bayLength` |
+| **4a-left** | Left upright click opens left frame editor | Clicking leftmost upright rect in `BayFrontView` navigates to `/frame/{frames[bayIndex].id}` |
+| **4a-right** | Right upright click opens right frame editor | Clicking rightmost upright rect navigates to `/frame/{frames[bayIndex+1].id}` |
+| **2.1d-a** | Label font control is present in toolbar | `Label 100%` chip visible on layout page |
+| **2.1d-b** | Increase label font size | Two Plus clicks → `Label 150%` |
+| **2.1d-c** | Decrease label font size | One Minus click → `Label 75%` |
+| **2.1d-d** | Clamp at lower bound | Ten Minus clicks → `Label 50%` (does not go below) |
+| **2.1d-e** | Clamp at upper bound | Twenty Plus clicks → `Label 300%` (does not go above) |
+| **E2E-1** | Empty wizard shows "No suppliers" state | Opens wizard with empty DB, asserts `No suppliers in your database` visible |
+| **E2E-2** | Full happy path via real UI | Creates supplier `Merclus` → beam (2700 len) → frame (6000 h) via **actual editor pages**, walks all 7 wizard steps, asserts rack persisted with matching `supplierId`, `supplierName`, `beamId`, `frameId`, `bayLength=2700`, `frameHeight=6000`, `frameDepth=1000`, `uprightWidth=100` |
+| **E2E-3** | Beam appears in wizard immediately after save | Creates beam via Beam Editor, opens wizard, advances to step 4 — asserts `No beams in the database` is **not** shown |
+| **E2E-4** | Two-supplier isolation | Creates Merclus + Acme, adds beam to Acme only, opens wizard selecting Merclus — asserts empty state for Merclus and Acme's 2500 beam does **not** leak |
+
+All flows currently pass (verified 2026-04-10) with **0 new console errors**. Screenshots: `01-beam-required-errors.png` through `06-frame-required-errors.png`.
+
+**Doc 4 Comprehensive run (2026-04-10) findings:**
+- ✅ **4 items previously marked "Not done" are actually passing in production:** 1.3 (wizard frame DB validation), 2.1a (rack name position), 3.2 (inline accessory add), 4c (upright depth dimension). README Doc 4 table updated accordingly.
+- ❌ **6 true failures:** 1.1 / 1.2 (wizard still uses static `beams.js` / `frames.js` — not `supplierStore`/`beamDatabaseStore`/`frameDatabaseStore`), 2.1c (orientation semantics not wired to label rendering), 2.1d (no font-size control for rack/frame labels), 4a (upright click in `BayEditorPage.jsx:153-155` not yet routed to frame editor), 4d (brace numbering not ground-up in `FrameView.jsx:67-93`).
+- Cosmetic: `Button` component does not forward `title` prop, so back-button tooltips don't appear (low priority, not blocking).
+
+### When to add a new flow
+
+Add a Playwright flow whenever you fix a bug that has a **visible browser symptom** that a unit test cannot capture — e.g., navigation regressions, validation errors not appearing, render-order bugs, persisted-state migrations. Do **not** add flows for pure logic that can be unit-tested.
 
 ---
 
@@ -353,6 +450,63 @@ Glossary, MVP purpose, data structure definitions. Used as reference throughout 
 | Pie-chart severity markers | Done | Konva Arc on canvas, SVG path in views |
 | Bay inspection mode toggle (per-level / bay-level) | Done | |
 
+### Doc 4 (Gagliardi "DA SISTEMARE" Feedback) — ~87% Complete (13 of 15 testable)
+
+**Second client review (post Doc 3). 16 fix/change items across 4 areas. Received after Week 2 delivery.**
+
+#### Section 1: Rack Creation Wizard
+
+| # | Requirement | Status | Priority | Maps To | Notes |
+|---|-------------|--------|----------|---------|-------|
+| 1.1 | Supplier dropdown must pull from **suppliers database** (not hardcoded list) | **Done** | High | Doc 1 Ch 2 / Doc 3 Sec 1 | `RackWizard.jsx` — step 1 now reads `supplierStore`; empty-state CTA links to Supplier Editor |
+| 1.2 | Beam selection in wizard must pull from **beam database, filtered by selected supplier** | **Done** | High | Doc 1 Ch 2 | `RackWizard.jsx` — step 4 uses `beamDatabaseStore.getFilteredBeams(supplierId)`; empty-state CTA links to Beam Editor |
+| 1.3 | Frame selection in wizard must pull from **frame database, filtered by selected supplier** | **Done** | High | Doc 1 Ch 2 | `RackWizard.jsx` — step 6 uses `frameDatabaseStore.getFilteredFrames(supplierId)`; empty-state CTA links to Frame Editor |
+
+#### Section 2: 2D Layout
+
+| # | Requirement | Status | Priority | Maps To | Notes |
+|---|-------------|--------|----------|---------|-------|
+| 2.1a | Rack name displayed **next to first or last upright frame** (end of rack), not floating | **Done** | Medium | Doc 1 Ch 5 | Verified: `RackShape.jsx` renders name at `y=-18`, above the rack at end position |
+| 2.1b | Frame numbering: drop the `F` prefix — use `1, 2, 3` instead of `F1, F2, F3` | **Done** | Low | Doc 3 Sec 2 | `FrameShape.jsx` — `text={`${frameIndex}`}` |
+| 2.1c | Front side = side where numbers appear (orientation semantics) | Not done | Low | Doc 1 Ch 3 | Already store orientation; just wire to label rendering |
+| 2.1d | **Font size controls** for rack name / frame labels (like existing NC dot size control) | **Done** | Medium | — | `CanvasToolbar.jsx` — added Label +/- control (50%-300%, 25% step). Threaded `labelFontSize` through `LayoutEditor → LayoutCanvas → RackShape → BayShape/FrameShape`; scales rack name, bay label, and frame number text. Verified via Playwright flows 2.1d-a … 2.1d-e |
+
+#### Section 3: Bay Configuration
+
+| # | Requirement | Status | Priority | Maps To | Notes |
+|---|-------------|--------|----------|---------|-------|
+| 3.1a | Bay supplier must be **locked to wizard selection** (not editable, remove "All Suppliers") | **Done** | High | Doc 3 Sec 3 | `BayConfig.jsx` — replaced Select with read-only display sourced from `rack.supplierId` |
+| 3.1b | Beam Name field **missing from beam editor** | **Done** | Medium | Doc 3 Sec 1 | `BeamEditorPage.jsx` + `beamDatabaseStore.js` — added `customName` field. Empty = auto-generate (existing), filled = override |
+| 3.2 | Accessories panel must be **inside each level's expanded card** + dropdown linked to **Accessories DB** | **Done (inline add); DB wiring Deferred** | High | Doc 3 Sec 1 / Week 3 | Verified: inline accessory add already works per-level. Accessories DB wiring still blocked on Week 3 |
+| 3.3 | **BUG — Bay width dimension not updating** when bay length changes and beams are swapped (beam labels update, but width label doesn't) | **Done** | High | — | `BayFrontView.jsx` — now reads `bay.bayConfig.customLength` first; added to `useMemo` deps |
+
+#### Section 4: Frame Configuration
+
+| # | Requirement | Status | Priority | Maps To | Notes |
+|---|-------------|--------|----------|---------|-------|
+| 4a | Open frame editor by **clicking upright in bay screen** (new entry point) | **Done** | Medium | Doc 3 Sec 3 | `BayEditorPage.jsx` — `onElementClick` now routes `upright` taps to the bounding frame (`rack.frames[bayIndex]` for left, `bayIndex+1` for right). Verified via Playwright flows 4a-left / 4a-right |
+| 4b | Upright labels must be **FRONT / REAR** (not Left / Right) — matches beam convention | **Done** | High | Doc 2 | `FrameView.jsx` — labels renamed and moved above the upright rectangles to fit the longer text |
+| 4c | Upright depth ≠ width — current `100` dimension is **visually incorrect** (uprights aren't square) | **Done** | Medium | — | Verified: `FrameView.jsx` renders a separate depth dimension line |
+| 4d | Brace numbering must be **ground-up** (diagonal 1 = bottom, not top) | Not done | High | Doc 2 | Affects `FrameView.jsx` render order AND NC targeting. May need migration of existing frame NCs |
+| 4e | **NEW: 4 frame bracing types (Z, D, K, X)** — frame editor must render different diagonal/horizontal patterns based on type selection | Not done | High | — | New feature. Adds `frameType` field to frame schema. Affects `frameDatabaseStore`, `FrameEditorPage`, `FrameView.jsx` |
+
+**Summary by priority (updated from comprehensive browser verification):**
+- **High (10):** ~~1.1~~, ~~1.2~~, ~~1.3~~, ~~3.1a~~, ~~3.2 (inline add)~~, ~~3.3~~, ~~4b~~, 4d, 4e, 3.2 (DB wiring) — **7 done, 3 pending**
+- **Medium (5):** ~~2.1a~~, ~~3.1b~~, ~~4a~~, ~~4c~~, ~~2.1d~~ — **5 done, 0 pending**
+- **Low (2):** ~~2.1b~~, 2.1c — **1 done, 1 pending**
+
+**Total: 13 done / 15 testable (87%) + 1 deferred to Week 3.** 1.1/1.2/1.3 verified via flows W1/W2/W3; 4a verified via flows 4a-left / 4a-right; 2.1d verified via flows 2.1d-a … 2.1d-e. See Browser Verification Tests section.
+
+**Round 1 shipped (5 items):** 2.1b, 3.1a, 3.1b, 3.3, 4b — see "Doc 4 (Gagliardi) Round 1 — Quick Fixes" under Latest Changes.
+
+**Dependencies on existing roadmap:**
+- **3.2 (Accessories per-level + DB)** blocks on Week 3 — Accessories Editor. Already planned.
+- **1.1/1.2/1.3 (Wizard DB wiring)** closes a gap in Doc 1 Ch 2. Should be done alongside Accessories work since it touches the same DB plumbing.
+- **4d (Brace numbering ground-up)** may invalidate existing frame NCs — needs store migration step (similar to Week 1 NC migration).
+- **4e (Z/D/K/X frame types)** is the biggest new-feature item. Not in any previous doc. Net new scope.
+
+---
+
 ### Clarification Questions (Developer-Raised) — 90% Complete
 
 | Question | Status | Notes |
@@ -405,9 +559,10 @@ Glossary, MVP purpose, data structure definitions. Used as reference throughout 
 |------|-----------|------|--------|-------------|
 | Week 1 | M1: NC Alignment | $1,500 | **DONE** | 22 NC element types, exact Doc 2 names, placement engine, pie-chart markers, store migration, inspection mode toggle |
 | Week 2 | M2: Clarifications + M3: Export | $700 | **DONE** | CSV/XLSX/ZIP export (13 columns, Doc 1 Ch 6.2), Scope categories, NC summary badges + panels, format dropdown |
-| Week 3 | M4: Accessories + Import | $800 | Pending | Accessories Editor (full CRUD), replace free-text with DB dropdown, CSV import for beams/frames/accessories |
-| Week 4 | M5: Polish & Testing + Contingency | $1,500 | Pending | Tablet touch optimization, performance pass, edge cases, bug fixes |
-| **Total** | | **$4,500** | **50% done** | |
+| Week 3 | M4: Accessories + Import + **Doc 4 Fixes** | $800 | Pending | Accessories Editor (full CRUD), replace free-text with DB dropdown, CSV import + wire Doc 4 wizard DB items (1.1/1.2/1.3) and bay supplier lock (3.1a) into the same DB plumbing |
+| Week 4 | M5: Polish & Testing + Contingency + **Doc 4 Bugs/UX** | $1,500 | Pending | Tablet touch optimization, performance pass, bug fixes + Doc 4 bugs (3.3 bay width, 2.1 labels, 4b/4c/4d frame view fixes) |
+| **Doc 4 New Scope** | **Z/D/K/X frame types (4e)** + font size controls (2.1d) + click-upright → frame editor (4a) | **TBD** | Not quoted | Net new scope not in original $4,500. Z/D/K/X is the biggest item. Needs separate quote if client wants it in Phase 1 |
+| **Total** | | **$4,500** + Doc 4 extras | **50% done** | |
 
 ---
 

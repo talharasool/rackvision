@@ -93,12 +93,12 @@ const useFrameDatabaseStore = create(
         return get().frames.find((f) => f.id === id) || null;
       },
 
-      getFilteredFrames: (supplierId, depth, minHeight) => {
+      // Supplier-only strict filter. Depth and minHeight are no longer
+      // filters — BayConfig shows depth/height inline so the user can pick
+      // the right frame, and selecting one drives rack.frameDepth.
+      getFilteredFrames: (supplierId) => {
         return get().frames.filter(
-          (f) =>
-            (!supplierId || f.supplierId === supplierId) &&
-            (!depth || f.depth === depth) &&
-            (!minHeight || f.height >= minHeight)
+          (f) => !supplierId || f.supplierId === supplierId
         );
       },
     }),

@@ -35,6 +35,7 @@ export default function BayShape({
   ncMarkers = [],
   supplierColor,
   markerScale = 1,
+  labelFontSize = 1,
   onNCTap,
   onNCLongPress,
   onNCDragEnd,
@@ -69,11 +70,12 @@ export default function BayShape({
         hitStrokeWidth={4}
       />
       <Text
-        x={0}
-        y={depth / 2 - 6}
-        width={width}
+        x={-width}
+        y={depth / 2 - 6 * labelFontSize}
+        width={width * 3}
+        wrap="none"
         text={`Bay ${bayIndex}`}
-        fontSize={11}
+        fontSize={11 * labelFontSize}
         fill="#cbd5e1"
         align="center"
         listening={false}

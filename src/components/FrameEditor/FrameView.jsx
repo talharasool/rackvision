@@ -350,28 +350,28 @@ export default function FrameView({
         onClick={() => handleClick('upright', 'right-upright')}
       />
 
-      {/* Upright labels */}
+      {/* Upright labels — side view: left = FRONT, right = REAR */}
       <text
         x={leftUprightX + uprightPxW / 2}
-        y={uprightTopY + 18}
+        y={uprightTopY - 2}
         textAnchor="middle"
-        fill="#ffffff"
+        fill={LABEL_COLOR}
         fontSize={8}
-        fontWeight="600"
+        fontWeight="700"
         className="pointer-events-none select-none"
       >
-        L
+        FRONT
       </text>
       <text
         x={rightUprightX + uprightPxW / 2}
-        y={uprightTopY + 18}
+        y={uprightTopY - 2}
         textAnchor="middle"
-        fill="#ffffff"
+        fill={LABEL_COLOR}
         fontSize={8}
-        fontWeight="600"
+        fontWeight="700"
         className="pointer-events-none select-none"
       >
-        R
+        REAR
       </text>
 
       {/* NC markers - grouped by element as pie charts (dev only) */}

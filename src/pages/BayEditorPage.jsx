@@ -151,6 +151,23 @@ export default function BayEditorPage() {
             bayIndex={bayIndex}
             ncs={bayNCs}
             onElementClick={(elementType, elementId) => {
+              // Clicking an upright opens that frame's editor.
+              // Bay N is bounded by frames[N] (left) and frames[N+1] (right).
+              if (elementType === 'upright') {
+                const frameIdx =
+                  elementId === 'left-upright'
+                    ? bayIndex
+                    : elementId === 'right-upright'
+                    ? bayIndex + 1
+                    : -1;
+                const targetFrame = rack.frames?.[frameIdx];
+                if (targetFrame) {
+                  navigate(
+                    `/inspection/${inspectionId}/area/${areaId}/rack/${rackId}/frame/${targetFrame.id}`
+                  );
+                  return;
+                }
+              }
               setActiveTab('inspection');
             }}
           />

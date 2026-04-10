@@ -110,6 +110,9 @@ export default function CanvasToolbar({
   markerScale,
   onMarkerScaleUp,
   onMarkerScaleDown,
+  labelFontSize,
+  onLabelFontSizeUp,
+  onLabelFontSizeDown,
   snapSize,
   onSnapSizeChange,
   canUndo,
@@ -223,6 +226,29 @@ export default function CanvasToolbar({
             <Plus size={12} />
           </button>
         </div>
+
+        {/* Label Font Size */}
+        {onLabelFontSizeUp && (
+          <div className="flex items-center gap-1 bg-slate-800 border border-slate-700 rounded-lg px-1 ml-2">
+            <button
+              onClick={onLabelFontSizeDown}
+              className="p-1.5 text-slate-400 hover:text-white transition-colors"
+              title="Decrease label font size"
+            >
+              <Minus size={12} />
+            </button>
+            <span className="text-xs text-slate-300 w-14 text-center select-none">
+              Label {Math.round((labelFontSize || 1) * 100)}%
+            </span>
+            <button
+              onClick={onLabelFontSizeUp}
+              className="p-1.5 text-slate-400 hover:text-white transition-colors"
+              title="Increase label font size"
+            >
+              <Plus size={12} />
+            </button>
+          </div>
+        )}
 
         {/* Zoom */}
         <div className="flex items-center gap-1 bg-slate-800 border border-slate-700 rounded-lg px-1 ml-2">
