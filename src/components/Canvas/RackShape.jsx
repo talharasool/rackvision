@@ -42,6 +42,7 @@ const RackShape = forwardRef(function RackShape(
     rotation = 0,
     bays = [],
     frames = [],
+    frontSide = 'top',
   } = rack;
 
   const scaledBayLength = bayLength * MM_TO_PX;
@@ -84,6 +85,7 @@ const RackShape = forwardRef(function RackShape(
         editMode={editMode}
         supplierColor={supplierColor}
         labelFontSize={labelFontSize}
+        frontSide={frontSide}
         onClick={() => onFrameClick?.(id, frame.id)}
       />
     );
@@ -212,12 +214,17 @@ const RackShape = forwardRef(function RackShape(
         />
       )}
 
-      {/* Rack name label — wide centering container + wrap="none" so label
-          stays centered on rack middle without wrapping at large font sizes */}
+      {/* Rack name label — Doc 4 §2.1a: positioned next to the LAST upright
+          frame (not centered). §2.1c: on the front side of the rack. When on
+          the top, it sits above the frame numbers; when on the bottom, below. */}
       <Text
-        x={-totalWidth}
-        y={-18 * labelFontSize}
-        width={totalWidth * 3}
+        x={totalWidth - scaledUprightWidth / 2 - 100}
+        y={
+          frontSide === 'top'
+            ? -28 * labelFontSize
+            : scaledFrameDepth + 18 * labelFontSize
+        }
+        width={200}
         wrap="none"
         text={name || 'Rack'}
         fontSize={12 * labelFontSize}

@@ -36,6 +36,8 @@ const initialRackData = {
   frameHeight: 0,
   frameDepth: 0,
   uprightWidth: 0,
+  uprightDepth: 0,
+  braceType: 'Z',
 };
 
 export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
@@ -71,6 +73,8 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
         frameHeight: editRack.frameHeight || 0,
         frameDepth: editRack.frameDepth || 0,
         uprightWidth: editRack.uprightWidth || 0,
+        uprightDepth: editRack.uprightDepth || editRack.uprightWidth || 0,
+        braceType: editRack.braceType || 'Z',
       });
       setCurrentStep(1);
     } else if (isOpen) {
@@ -129,6 +133,8 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
       frameHeight: 0,
       frameDepth: 0,
       uprightWidth: 0,
+      uprightDepth: 0,
+      braceType: 'Z',
     }));
   };
 
@@ -152,6 +158,8 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
         frameHeight: frame.uprightHeight || frame.height || 0,
         frameDepth: frame.depth || 0,
         uprightWidth: frame.uprightWidth || 0,
+        uprightDepth: frame.uprightDepth || frame.uprightWidth || 0,
+        braceType: frame.braceType || 'Z',
       }));
     }
   };

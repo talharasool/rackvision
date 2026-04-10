@@ -136,8 +136,17 @@ const useRackStore = create(
           frameHeight: rackData.frameHeight || 6000,
           frameDepth: rackData.frameDepth || 1000,
           uprightWidth: rackData.uprightWidth || 100,
+          // Doc 4 §4c: upright profile is non-square. Defaults to uprightWidth
+          // if not provided (backwards compat).
+          uprightDepth: rackData.uprightDepth || rackData.uprightWidth || 100,
+          // Doc 4 §4e: brace pattern (Z/D/K/X)
+          braceType: rackData.braceType || 'Z',
           position: defaultPos,
           rotation: rackData.rotation || 0,
+          // Doc 4 §2.1c: Front side of rack — the side where frame numbers
+          // and rack name appear. 'top' = above (default, matches legacy),
+          // 'bottom' = below. User toggles via rack context menu.
+          frontSide: rackData.frontSide || 'top',
           bays,
           frames,
           ...rackData,

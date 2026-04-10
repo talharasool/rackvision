@@ -36,16 +36,22 @@ export default function FrameView({
     const frameHeight = frame?.height || rack?.frameHeight || 6000;
     const frameDepth = frame?.depth || rack?.frameDepth || 1000;
     const uprightWidth = frame?.uprightWidth || rack?.uprightWidth || 100;
+    // Doc 4 §4c: side view uses uprightDepth (not uprightWidth). Fallback to
+    // uprightWidth for legacy frames that don't have the field yet.
+    const uprightDepth =
+      frame?.uprightDepth || rack?.uprightDepth || uprightWidth;
+    // Doc 4 §4e: brace pattern selector — Z/D/K/X
+    const braceType = frame?.braceType || rack?.braceType || 'Z';
 
     // Drawing area
     const drawW = SVG_WIDTH - SVG_PADDING.left - SVG_PADDING.right;
     const drawH = SVG_HEIGHT - SVG_PADDING.top - SVG_PADDING.bottom;
 
-    // Scale mm -> px
-    const scaleX = drawW / (frameDepth + uprightWidth * 2);
+    // Scale mm -> px — side view uses uprightDepth as the leg width
+    const scaleX = drawW / (frameDepth + uprightDepth * 2);
     const scaleY = drawH / frameHeight;
 
-    const uprightPxW = Math.max(uprightWidth * scaleX, 14);
+    const uprightPxW = Math.max(uprightDepth * scaleX, 14);
     const basePlateH = 10;
     const basePlateW = uprightPxW + 10;
     const boltR = 2.5;
@@ -59,49 +65,73 @@ export default function FrameView({
     // Floor Y
     const floorY = SVG_PADDING.top + drawH;
 
-    // Diagonal braces: X-pattern every ~1500mm
+    // Doc 4 §4d + §4e: brace generation.
+    // - Sections numbered from the GROUND UP (section 0 = bottom).
+    // - Pattern depends on braceType: Z, D, K, X.
     const braceInterval = 1500; // mm
     const numBraceSections = Math.max(1, Math.round(frameHeight / braceInterval));
     const sectionPxH = uprightPxH / numBraceSections;
+    const leftInner = leftUprightX + uprightPxW;
+    const rightInner = rightUprightX;
+
+    // sectionIndex 0 = bottom section. Convert to Y coords (Y grows downward).
+    const sectionTopY = (i) =>
+      uprightTopY + (numBraceSections - 1 - i) * sectionPxH;
+    const sectionBottomY = (i) => sectionTopY(i) + sectionPxH;
 
     const diagonals = [];
-    for (let i = 0; i < numBraceSections; i++) {
-      const topY = uprightTopY + i * sectionPxH;
-      const bottomY = topY + sectionPxH;
-      const leftInner = leftUprightX + uprightPxW;
-      const rightInner = rightUprightX;
+    let diagCount = 0;
+    const pushDiagonal = (x1, y1, x2, y2, section) => {
+      diagCount += 1;
+      diagonals.push({
+        id: `diagonal-${diagCount}`,
+        label: `Diagonal ${diagCount}`,
+        x1,
+        y1,
+        x2,
+        y2,
+        section,
+      });
+    };
 
-      // X-pattern: two diagonals per section
-      diagonals.push({
-        id: `diagonal-${i * 2 + 1}`,
-        label: `Diagonal ${i * 2 + 1}`,
-        x1: leftInner,
-        y1: topY,
-        x2: rightInner,
-        y2: bottomY,
-        section: i,
-      });
-      diagonals.push({
-        id: `diagonal-${i * 2 + 2}`,
-        label: `Diagonal ${i * 2 + 2}`,
-        x1: rightInner,
-        y1: topY,
-        x2: leftInner,
-        y2: bottomY,
-        section: i,
-      });
+    for (let i = 0; i < numBraceSections; i++) {
+      const topY = sectionTopY(i);
+      const bottomY = sectionBottomY(i);
+      const midY = (topY + bottomY) / 2;
+      const midX = (leftInner + rightInner) / 2;
+
+      if (braceType === 'X') {
+        // X-braced: two crossed diagonals per section
+        pushDiagonal(leftInner, topY, rightInner, bottomY, i);
+        pushDiagonal(rightInner, topY, leftInner, bottomY, i);
+      } else if (braceType === 'K') {
+        // K-braced: two diagonals meeting at midpoint of one vertical
+        pushDiagonal(leftInner, bottomY, midX, midY, i);
+        pushDiagonal(rightInner, bottomY, midX, midY, i);
+      } else if (braceType === 'D') {
+        // Diagonals only: single diagonal per section, same direction
+        pushDiagonal(leftInner, bottomY, rightInner, topY, i);
+      } else {
+        // Z: zig-zag — alternating direction per section, starting bottom-up
+        if (i % 2 === 0) {
+          pushDiagonal(leftInner, bottomY, rightInner, topY, i);
+        } else {
+          pushDiagonal(rightInner, bottomY, leftInner, topY, i);
+        }
+      }
     }
 
-    // Horizontal braces: at each brace section boundary
+    // Horizontal braces: at each brace section boundary, numbered ground-up.
+    // horizontal-1 = bottom-most (floor level), horizontal-N = top.
     const horizontals = [];
     for (let i = 0; i <= numBraceSections; i++) {
-      const y = uprightTopY + i * sectionPxH;
+      const y = uprightTopY + (numBraceSections - i) * sectionPxH;
       horizontals.push({
         id: `horizontal-${i + 1}`,
         label: `Horizontal ${i + 1}`,
-        x1: leftUprightX + uprightPxW,
+        x1: leftInner,
         y1: y,
-        x2: rightUprightX,
+        x2: rightInner,
         y2: y,
       });
     }
@@ -110,6 +140,8 @@ export default function FrameView({
       frameHeight,
       frameDepth,
       uprightWidth,
+      uprightDepth,
+      braceType,
       scaleX,
       scaleY,
       uprightPxW,
@@ -142,6 +174,8 @@ export default function FrameView({
     frameHeight,
     frameDepth,
     uprightWidth,
+    uprightDepth,
+    braceType,
     uprightPxW,
     basePlateH,
     basePlateW,
@@ -516,10 +550,10 @@ export default function FrameView({
           fontSize={8}
           fontWeight="500"
         >
-          {uprightWidth}
+          {uprightDepth}
         </text>
 
-        {/* Right upright width */}
+        {/* Right upright depth (side view — Doc 4 §4c) */}
         <line
           x1={rightUprightX}
           y1={SVG_PADDING.top - 14}
@@ -552,7 +586,7 @@ export default function FrameView({
           fontSize={8}
           fontWeight="500"
         >
-          {uprightWidth}
+          {uprightDepth}
         </text>
       </g>
 

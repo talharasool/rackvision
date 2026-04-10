@@ -21,6 +21,7 @@ export default function FrameShape({
   editMode,
   supplierColor,
   labelFontSize = 1,
+  frontSide = 'top',
 }) {
   // When supplierColor is provided, use a darker shade for the fill instead of gray.
   let fill, stroke;
@@ -50,9 +51,12 @@ export default function FrameShape({
         onTap={onClick}
         hitStrokeWidth={4}
       />
+      {/* Frame number — Doc 4 §2.1c: appears on the rack's front side.
+          'bottom' = below the frame rect, 'top' = above it. The side where
+          numbers appear IS the front side by definition. */}
       <Text
         x={-width}
-        y={depth + 4}
+        y={frontSide === 'top' ? -14 * labelFontSize : depth + 4}
         width={width * 3}
         wrap="none"
         text={`${frameIndex}`}

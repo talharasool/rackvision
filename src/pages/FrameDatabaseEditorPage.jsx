@@ -16,6 +16,8 @@ const emptyForm = {
   uprightDescription: '',
   uprightHeight: '',
   uprightWidth: '',
+  uprightDepth: '',
+  braceType: 'Z',
   depth: '',
   finish: 'painted',
   finishColor: '',
@@ -65,6 +67,8 @@ export default function FrameDatabaseEditorPage() {
       uprightDescription: frame.uprightDescription || '',
       uprightHeight: frame.uprightHeight || '',
       uprightWidth: frame.uprightWidth || '',
+      uprightDepth: frame.uprightDepth || frame.uprightWidth || '',
+      braceType: frame.braceType || 'Z',
       depth: frame.depth || '',
       finish: frame.finish,
       finishColor: frame.finishColor || '',
@@ -106,6 +110,11 @@ export default function FrameDatabaseEditorPage() {
       errs.uprightWidth = 'Width cannot exceed 500mm';
     }
 
+    const uprightDepth = Number(form.uprightDepth);
+    if (form.uprightDepth && (uprightDepth <= 0 || uprightDepth > 500)) {
+      errs.uprightDepth = 'Depth must be between 1 and 500mm';
+    }
+
     if (!form.depth || depth <= 0) {
       errs.depth = 'Depth is required and must be > 0';
     } else if (depth > 5000) {
@@ -134,6 +143,8 @@ export default function FrameDatabaseEditorPage() {
       ...form,
       uprightHeight: Number(form.uprightHeight) || 0,
       uprightWidth: Number(form.uprightWidth) || 0,
+      uprightDepth: Number(form.uprightDepth) || Number(form.uprightWidth) || 0,
+      braceType: form.braceType || 'Z',
       depth: Number(form.depth) || 0,
       diagonalQty: Number(form.diagonalQty) || 0,
       crossMemberQty: Number(form.crossMemberQty) || 0,
@@ -232,7 +243,7 @@ export default function FrameDatabaseEditorPage() {
                 error={formErrors.uprightHeight}
               />
               <Input
-                label="Width (mm)"
+                label="Width (front view, mm)"
                 type="number"
                 value={form.uprightWidth}
                 onChange={(e) => setField('uprightWidth', e.target.value)}
@@ -241,6 +252,16 @@ export default function FrameDatabaseEditorPage() {
                 min={1}
                 max={500}
                 error={formErrors.uprightWidth}
+              />
+              <Input
+                label="Depth (side view, mm)"
+                type="number"
+                value={form.uprightDepth}
+                onChange={(e) => setField('uprightDepth', e.target.value)}
+                placeholder="e.g. 90 (defaults to width if empty)"
+                min={1}
+                max={500}
+                error={formErrors.uprightDepth}
               />
 
               {/* Frame dimensions */}
@@ -284,6 +305,17 @@ export default function FrameDatabaseEditorPage() {
               <div className="sm:col-span-2">
                 <p className="text-sm text-slate-400 mb-2 font-medium">Bracing</p>
               </div>
+              <Select
+                label="Brace Pattern"
+                value={form.braceType}
+                onChange={(e) => setField('braceType', e.target.value)}
+                options={[
+                  { value: 'Z', label: 'Z — zig-zag diagonals' },
+                  { value: 'D', label: 'D — diagonals only' },
+                  { value: 'K', label: 'K — K-braced' },
+                  { value: 'X', label: 'X — X-braced (crossed)' },
+                ]}
+              />
               <Input
                 label="Diagonal Quantity"
                 type="number"

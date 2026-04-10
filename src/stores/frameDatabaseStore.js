@@ -35,6 +35,12 @@ const useFrameDatabaseStore = create(
           uprightDescription: data.uprightDescription || '',
           uprightHeight: data.uprightHeight || 0,
           uprightWidth: data.uprightWidth || 0,
+          // Doc 4 §4c: upright profile is non-square. uprightWidth is the
+          // front-view dimension; uprightDepth is the side-view dimension.
+          // Default to uprightWidth for backwards compatibility.
+          uprightDepth: data.uprightDepth || data.uprightWidth || 0,
+          // Doc 4 §4e: brace pattern — Z, D, K, X. Defaults to Z.
+          braceType: data.braceType || 'Z',
           height: data.uprightHeight || 0,
           depth: data.depth || 0,
           finish: data.finish || 'painted',

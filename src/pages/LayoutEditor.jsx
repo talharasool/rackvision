@@ -182,6 +182,21 @@ export default function LayoutEditor() {
         return;
       }
 
+      // F — flip front side (Doc 4 §2.1c): toggle which edge shows frame
+      // numbers + rack name. 'top' <-> 'bottom'.
+      if (e.key === 'f' && selectedRackIds.length > 0 && editMode) {
+        e.preventDefault();
+        selectedRackIds.forEach((id) => {
+          const rack = racks.find((r) => r.id === id);
+          if (rack) {
+            updateRack(id, {
+              frontSide: (rack.frontSide || 'top') === 'top' ? 'bottom' : 'top',
+            });
+          }
+        });
+        return;
+      }
+
       // Arrow keys — nudge
       if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && selectedRackIds.length > 0 && editMode) {
         e.preventDefault();

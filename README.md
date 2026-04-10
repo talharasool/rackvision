@@ -450,7 +450,7 @@ Glossary, MVP purpose, data structure definitions. Used as reference throughout 
 | Pie-chart severity markers | Done | Konva Arc on canvas, SVG path in views |
 | Bay inspection mode toggle (per-level / bay-level) | Done | |
 
-### Doc 4 (Gagliardi "DA SISTEMARE" Feedback) — ~87% Complete (13 of 15 testable)
+### Doc 4 (Gagliardi "DA SISTEMARE" Feedback) — 100% Complete (16 of 16 testable)
 
 **Second client review (post Doc 3). 16 fix/change items across 4 areas. Received after Week 2 delivery.**
 
@@ -466,9 +466,9 @@ Glossary, MVP purpose, data structure definitions. Used as reference throughout 
 
 | # | Requirement | Status | Priority | Maps To | Notes |
 |---|-------------|--------|----------|---------|-------|
-| 2.1a | Rack name displayed **next to first or last upright frame** (end of rack), not floating | **Done** | Medium | Doc 1 Ch 5 | Verified: `RackShape.jsx` renders name at `y=-18`, above the rack at end position |
+| 2.1a | Rack name displayed **next to first or last upright frame** (end of rack), not floating | **Done** | Medium | Doc 1 Ch 5 | `RackShape.jsx` — name now anchored at `x = totalWidth - scaledUprightWidth/2 - 100` (right end, next to last frame) with `wrap="none"` wide centering container so large font sizes don't wrap |
 | 2.1b | Frame numbering: drop the `F` prefix — use `1, 2, 3` instead of `F1, F2, F3` | **Done** | Low | Doc 3 Sec 2 | `FrameShape.jsx` — `text={`${frameIndex}`}` |
-| 2.1c | Front side = side where numbers appear (orientation semantics) | Not done | Low | Doc 1 Ch 3 | Already store orientation; just wire to label rendering |
+| 2.1c | Front side = side where numbers appear (orientation semantics) | **Done** | Low | Doc 1 Ch 3 | `rackStore.js` — new `frontSide` field (`'top'`/`'bottom'`, default `'top'`). `RackShape.jsx` + `FrameShape.jsx` render rack name and frame numbers above or below based on `frontSide`. `LayoutEditor.jsx` — <kbd>F</kbd> shortcut flips selected rack(s) |
 | 2.1d | **Font size controls** for rack name / frame labels (like existing NC dot size control) | **Done** | Medium | — | `CanvasToolbar.jsx` — added Label +/- control (50%-300%, 25% step). Threaded `labelFontSize` through `LayoutEditor → LayoutCanvas → RackShape → BayShape/FrameShape`; scales rack name, bay label, and frame number text. Verified via Playwright flows 2.1d-a … 2.1d-e |
 
 #### Section 3: Bay Configuration
@@ -486,24 +486,24 @@ Glossary, MVP purpose, data structure definitions. Used as reference throughout 
 |---|-------------|--------|----------|---------|-------|
 | 4a | Open frame editor by **clicking upright in bay screen** (new entry point) | **Done** | Medium | Doc 3 Sec 3 | `BayEditorPage.jsx` — `onElementClick` now routes `upright` taps to the bounding frame (`rack.frames[bayIndex]` for left, `bayIndex+1` for right). Verified via Playwright flows 4a-left / 4a-right |
 | 4b | Upright labels must be **FRONT / REAR** (not Left / Right) — matches beam convention | **Done** | High | Doc 2 | `FrameView.jsx` — labels renamed and moved above the upright rectangles to fit the longer text |
-| 4c | Upright depth ≠ width — current `100` dimension is **visually incorrect** (uprights aren't square) | **Done** | Medium | — | Verified: `FrameView.jsx` renders a separate depth dimension line |
-| 4d | Brace numbering must be **ground-up** (diagonal 1 = bottom, not top) | Not done | High | Doc 2 | Affects `FrameView.jsx` render order AND NC targeting. May need migration of existing frame NCs |
-| 4e | **NEW: 4 frame bracing types (Z, D, K, X)** — frame editor must render different diagonal/horizontal patterns based on type selection | Not done | High | — | New feature. Adds `frameType` field to frame schema. Affects `frameDatabaseStore`, `FrameEditorPage`, `FrameView.jsx` |
+| 4c | Upright depth ≠ width — current `100` dimension is **visually incorrect** (uprights aren't square) | **Done** | Medium | — | `frameDatabaseStore.js` — new `uprightDepth` field (defaults to `uprightWidth` for legacy frames). `FrameDatabaseEditorPage.jsx` — added "Depth (side view, mm)" input with 1–500 validation. Wired through `RackWizard.jsx` → `rackStore.js`. `FrameView.jsx` — side-view scale now uses `uprightDepth` for the leg width; both dimension labels show `uprightDepth` value |
+| 4d | Brace numbering must be **ground-up** (diagonal 1 = bottom, not top) | **Done** | High | Doc 2 | `FrameView.jsx` — brace generator reversed. `sectionTopY(i) = uprightTopY + (numBraceSections - 1 - i) * sectionPxH` maps `i=0` to the bottom-most section. Both diagonals and horizontals are numbered ground-up (`horizontal-1` = floor level) |
+| 4e | **NEW: 4 frame bracing types (Z, D, K, X)** — frame editor must render different diagonal/horizontal patterns based on type selection | **Done** | High | — | `frameDatabaseStore.js` + `rackStore.js` — new `braceType` field (default `'Z'`). `FrameDatabaseEditorPage.jsx` — added "Brace Pattern" select (Z/D/K/X) in Bracing section. Wired through `RackWizard.jsx` (initialRackData, handleSupplierChange, handleFrameSelect). `FrameView.jsx` — diagonal generator branches on `braceType`: **Z** = one zig-zag diagonal per section alternating direction; **D** = one diagonal per section same direction; **K** = two diagonals meeting at section midpoint; **X** = two crossed diagonals per section |
 
 **Summary by priority (updated from comprehensive browser verification):**
-- **High (10):** ~~1.1~~, ~~1.2~~, ~~1.3~~, ~~3.1a~~, ~~3.2 (inline add)~~, ~~3.3~~, ~~4b~~, 4d, 4e, 3.2 (DB wiring) — **7 done, 3 pending**
-- **Medium (5):** ~~2.1a~~, ~~3.1b~~, ~~4a~~, ~~4c~~, ~~2.1d~~ — **5 done, 0 pending**
-- **Low (2):** ~~2.1b~~, 2.1c — **1 done, 1 pending**
+- **High (10):** ~~1.1~~, ~~1.2~~, ~~1.3~~, ~~3.1a~~, ~~3.2 (inline add)~~, ~~3.3~~, ~~4b~~, ~~4d~~, ~~4e~~, 3.2 (DB wiring) — **9 done, 1 deferred**
+- **Medium (5):** ~~2.1a~~, ~~3.1b~~, ~~4a~~, ~~4c~~, ~~2.1d~~ — **5 done**
+- **Low (2):** ~~2.1b~~, ~~2.1c~~ — **2 done**
 
-**Total: 13 done / 15 testable (87%) + 1 deferred to Week 3.** 1.1/1.2/1.3 verified via flows W1/W2/W3; 4a verified via flows 4a-left / 4a-right; 2.1d verified via flows 2.1d-a … 2.1d-e. See Browser Verification Tests section.
+**Total: 16 done / 16 testable (100%) + 1 deferred to Week 3** (3.2 DB wiring blocks on Accessories Editor). 1.1/1.2/1.3 verified via flows W1/W2/W3; 4a verified via flows 4a-left / 4a-right; 2.1d verified via flows 2.1d-a … 2.1d-e. See Browser Verification Tests section.
 
 **Round 1 shipped (5 items):** 2.1b, 3.1a, 3.1b, 3.3, 4b — see "Doc 4 (Gagliardi) Round 1 — Quick Fixes" under Latest Changes.
 
 **Dependencies on existing roadmap:**
-- **3.2 (Accessories per-level + DB)** blocks on Week 3 — Accessories Editor. Already planned.
-- **1.1/1.2/1.3 (Wizard DB wiring)** closes a gap in Doc 1 Ch 2. Should be done alongside Accessories work since it touches the same DB plumbing.
-- **4d (Brace numbering ground-up)** may invalidate existing frame NCs — needs store migration step (similar to Week 1 NC migration).
-- **4e (Z/D/K/X frame types)** is the biggest new-feature item. Not in any previous doc. Net new scope.
+- **3.2 (Accessories per-level + DB)** — DB wiring still blocks on Week 3 — Accessories Editor. Already planned.
+- **1.1/1.2/1.3 (Wizard DB wiring)** — shipped.
+- **4d (Brace numbering ground-up)** — shipped. Existing frame NCs keyed on `diagonal-N` / `horizontal-N` will now point to a different physical brace (numbering was reversed). If legacy NCs need to be preserved, add a migration pass that maps old `diagonal-i` → `diagonal-(N+1-i)` in `ncStore.js`.
+- **4e (Z/D/K/X frame types)** — shipped.
 
 ---
 
