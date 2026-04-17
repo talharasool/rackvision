@@ -77,10 +77,17 @@ function LayoutCanvas({
     if (!rackIds.has(id)) delete rackRefsMap.current[id];
   });
 
-  // Get selected node refs for Transformer
-  const selectedNodes = selectedRackIds
-    .map((id) => rackRefsMap.current[id]?.current)
-    .filter(Boolean);
+  // Get selected node refs for Transformer.
+  // We use a state + effect so that after a new rack is created and React
+  // renders it (populating the ref), the Transformer picks up the node.
+  const [selectedNodes, setSelectedNodes] = useState([]);
+  useEffect(() => {
+    // Run after render so refs are populated
+    const nodes = selectedRackIds
+      .map((id) => rackRefsMap.current[id]?.current)
+      .filter(Boolean);
+    setSelectedNodes(nodes);
+  }, [selectedRackIds, racks]);
 
   // Resize observer to fill parent container
   useEffect(() => {

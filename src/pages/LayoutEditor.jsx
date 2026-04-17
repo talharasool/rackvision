@@ -444,9 +444,8 @@ export default function LayoutEditor() {
         }
         break;
       case 'edit':
-        navigate(
-          `/inspection/${inspectionId}/area/${areaId}/rack/${rackId}`
-        );
+        setSelectedRackIds([rackId]);
+        setShowProperties(true);
         break;
     }
     closeContextMenu();
