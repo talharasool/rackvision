@@ -7,6 +7,8 @@ import {
   Copy,
   RotateCw,
   Download,
+  AlertTriangle,
+  Eraser,
 } from 'lucide-react';
 import Button from '../components/ui/Button';
 import useInspectionStore from '../stores/inspectionStore';
@@ -77,6 +79,9 @@ export default function LayoutEditor() {
   // Context menu state
   const [contextMenu, setContextMenu] = useState(null);
 
+  // Delete confirmation modal
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+
   // Ref to the LayoutCanvas wrapper — exposes the Konva stage via getStage()
   // for Layout PDF export (Doc 1 §5.9).
   const canvasRef = useRef(null);
@@ -135,16 +140,41 @@ export default function LayoutEditor() {
 
       const ctrl = e.ctrlKey || e.metaKey;
 
-      // Delete / Backspace — delete selected
+      // Delete / Backspace — delete selected (show confirmation modal)
       if (
         (e.key === 'Delete' || e.key === 'Backspace') &&
         selectedRackIds.length > 0 &&
         editMode
       ) {
         e.preventDefault();
-        if (confirm(`Delete ${selectedRackIds.length} rack(s)?`)) {
-          selectedRackIds.forEach((id) => deleteRack(id));
-          setSelectedRackIds([]);
+        if (selectedRackIds.length === 1) {
+          // Single rack — show detailed modal
+          const rack = racks.find((r) => r.id === selectedRackIds[0]);
+          const rackNCs = nonConformities.filter((nc) => nc.rackId === selectedRackIds[0]);
+          setDeleteConfirm({
+            rackId: selectedRackIds[0],
+            rackName: rack?.name || 'Unnamed Rack',
+            bayCount: rack?.bays?.length || 0,
+            frameCount: rack?.frames?.length || 0,
+            ncCount: rackNCs.length,
+          });
+        } else {
+          // Multi-rack — show count-based modal
+          const totalNCs = nonConformities.filter((nc) => selectedRackIds.includes(nc.rackId)).length;
+          setDeleteConfirm({
+            rackId: '__multi__',
+            rackIds: [...selectedRackIds],
+            rackName: `${selectedRackIds.length} racks`,
+            bayCount: selectedRackIds.reduce((sum, id) => {
+              const r = racks.find((rk) => rk.id === id);
+              return sum + (r?.bays?.length || 0);
+            }, 0),
+            frameCount: selectedRackIds.reduce((sum, id) => {
+              const r = racks.find((rk) => rk.id === id);
+              return sum + (r?.frames?.length || 0);
+            }, 0),
+            ncCount: totalNCs,
+          });
         }
         return;
       }
@@ -385,12 +415,24 @@ export default function LayoutEditor() {
         if (dup) setSelectedRackIds([dup.id]);
         break;
       }
-      case 'delete':
-        if (confirm('Delete this rack?')) {
-          deleteRack(rackId);
-          setSelectedRackIds((ids) => ids.filter((id) => id !== rackId));
-        }
+      case 'delete': {
+        const rack = racks.find((r) => r.id === rackId);
+        const rackNCs = nonConformities.filter((nc) => nc.rackId === rackId);
+        setDeleteConfirm({
+          rackId,
+          rackName: rack?.name || 'Unnamed Rack',
+          bayCount: rack?.bays?.length || 0,
+          frameCount: rack?.frames?.length || 0,
+          ncCount: rackNCs.length,
+        });
         break;
+      }
+      case 'clearNCs': {
+        const rackNCs = nonConformities.filter((nc) => nc.rackId === rackId);
+        if (rackNCs.length === 0) break;
+        rackNCs.forEach((nc) => removeNC(nc.id));
+        break;
+      }
       case 'rotate':
         {
           const rack = racks.find((r) => r.id === rackId);
@@ -688,6 +730,21 @@ export default function LayoutEditor() {
                   <RotateCw size={14} />
                   Rotate 90
                 </button>
+                {(() => {
+                  const ncCount = nonConformities.filter((nc) => nc.rackId === contextMenu.rackId).length;
+                  return ncCount > 0 ? (
+                    <>
+                      <div className="border-t border-slate-700 my-1" />
+                      <button
+                        onClick={() => handleContextMenuAction('clearNCs')}
+                        className="w-full flex items-center gap-2 px-3 py-2 text-sm text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
+                      >
+                        <Eraser size={14} />
+                        Clear {ncCount} NC{ncCount !== 1 ? 's' : ''}
+                      </button>
+                    </>
+                  ) : null;
+                })()}
                 <div className="border-t border-slate-700 my-1" />
                 <button
                   onClick={() => handleContextMenuAction('delete')}
@@ -837,6 +894,81 @@ export default function LayoutEditor() {
             className="absolute inset-0 z-40"
             onClick={closeNCPopup}
           />
+        )}
+
+        {/* Delete Rack Confirmation Modal */}
+        {deleteConfirm && (
+          <>
+            <div
+              className="fixed inset-0 z-[60] bg-black/60"
+              onClick={() => setDeleteConfirm(null)}
+            />
+            <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+              <div className="bg-slate-900 border border-slate-600 rounded-2xl shadow-2xl p-5 max-w-sm w-full">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-full bg-red-500/15">
+                    <AlertTriangle size={20} className="text-red-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-semibold text-white">Delete Rack?</h3>
+                    <p className="text-xs text-slate-400">{deleteConfirm.rackName}</p>
+                  </div>
+                </div>
+
+                <div className="bg-slate-800/60 rounded-lg p-3 mb-4 text-sm text-slate-300">
+                  <p className="mb-2">This will permanently delete:</p>
+                  <ul className="space-y-1 text-xs text-slate-400">
+                    <li>- {deleteConfirm.bayCount} bay{deleteConfirm.bayCount !== 1 ? 's' : ''}</li>
+                    <li>- {deleteConfirm.frameCount} frame{deleteConfirm.frameCount !== 1 ? 's' : ''}</li>
+                    {deleteConfirm.ncCount > 0 && (
+                      <li className="text-red-400 font-medium">
+                        - {deleteConfirm.ncCount} recorded NC{deleteConfirm.ncCount !== 1 ? 's' : ''} (inspection data will be lost)
+                      </li>
+                    )}
+                  </ul>
+                </div>
+
+                {deleteConfirm.ncCount > 0 && (
+                  <button
+                    onClick={() => {
+                      const ids = deleteConfirm.rackIds || [deleteConfirm.rackId];
+                      const rackNCs = nonConformities.filter((nc) => ids.includes(nc.rackId));
+                      rackNCs.forEach((nc) => removeNC(nc.id));
+                      setDeleteConfirm(null);
+                    }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 mb-2 bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 text-sm font-medium rounded-lg border border-amber-500/30 transition-colors"
+                  >
+                    <Eraser size={14} />
+                    Clear NCs Only (keep rack)
+                  </button>
+                )}
+
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setDeleteConfirm(null)}
+                    className="flex-1 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium rounded-lg transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (deleteConfirm.rackIds) {
+                        deleteConfirm.rackIds.forEach((id) => deleteRack(id));
+                        setSelectedRackIds([]);
+                      } else {
+                        deleteRack(deleteConfirm.rackId);
+                        setSelectedRackIds((ids) => ids.filter((id) => id !== deleteConfirm.rackId));
+                      }
+                      setDeleteConfirm(null);
+                    }}
+                    className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
+                  >
+                    Delete Everything
+                  </button>
+                </div>
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>
