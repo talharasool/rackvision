@@ -93,6 +93,13 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
 
 ## Latest Changes
 
+### Safe Rack Deletion & NC Management
+
+- **Delete confirmation modal** — Deleting a rack (right-click → Delete, or keyboard Delete/Backspace) now shows a detailed modal listing what will be lost: rack name, bay count, frame count, and NC count. NCs are highlighted in red since they represent recorded inspection data.
+- **"Clear NCs Only" option** — New button inside the delete modal lets you remove all NCs from a rack without deleting the rack itself. Useful when re-doing an inspection on the same rack structure.
+- **"Clear NCs" in context menu** — Right-click context menu now shows a "Clear X NCs" option (amber) when the rack has recorded NCs, separate from the destructive "Delete Rack" (red).
+- **Multi-rack keyboard delete** — Selecting multiple racks and pressing Delete/Backspace also uses the new confirmation modal with combined totals.
+
 ### Per-Level Accessories, Feature Flags & DB Enhancements
 
 - **Per-level accessories** — Each beam level's expanded panel now has its own accessory picker (DB-backed + custom entries). Data stored in `bayConfig.levelAccessories` keyed by level index. Duplicated when copying bay config.
