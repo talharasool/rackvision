@@ -191,6 +191,8 @@ The 2D layout editor has been upgraded to a full interactive canvas editor with 
 - **Page height overflow** — LayoutEditor, BayEditorPage, FrameEditorPage use `h-[calc(100vh-4rem)]`
 - **Selection vs navigation conflict** — Edit mode click selects parent rack instead of navigating
 - **"Apply to all levels" bug** — Now correctly scoped to current bay only (was affecting all bays)
+- **"Edit Properties" blank page** — Right-click → Edit Properties was navigating to a non-existent route. Now opens the properties side panel correctly.
+- **Duplicated rack not draggable** — Duplicated racks were overlapping the original (only 50px offset) and couldn't be grabbed. Fixed: duplicate now places below the original based on actual rack depth, and Konva node refs resolve correctly after render so the rack is immediately selectable and draggable.
 
 ---
 

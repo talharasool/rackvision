@@ -82,11 +82,19 @@ function LayoutCanvas({
   // renders it (populating the ref), the Transformer picks up the node.
   const [selectedNodes, setSelectedNodes] = useState([]);
   useEffect(() => {
-    // Run after render so refs are populated
-    const nodes = selectedRackIds
-      .map((id) => rackRefsMap.current[id]?.current)
-      .filter(Boolean);
-    setSelectedNodes(nodes);
+    // Use rAF to ensure Konva nodes are fully mounted before resolving refs.
+    // Without this, newly created racks may have null ref.current.
+    const resolveNodes = () => {
+      const nodes = selectedRackIds
+        .map((id) => rackRefsMap.current[id]?.current)
+        .filter(Boolean);
+      setSelectedNodes(nodes);
+    };
+    // Immediate attempt
+    resolveNodes();
+    // Deferred attempt for newly created racks whose refs aren't populated yet
+    const rafId = requestAnimationFrame(resolveNodes);
+    return () => cancelAnimationFrame(rafId);
   }, [selectedRackIds, racks]);
 
   // Resize observer to fill parent container
