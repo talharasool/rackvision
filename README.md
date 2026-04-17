@@ -57,7 +57,7 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
   - **Bay/rack-level** (7): Rear Safety Mesh (5), Underpass Protection (2), Horizontal Bracing (2), Vertical Bracing (2), Bay (5), Aisle (2), Entire Racking System (6)
   - **Frame elements** (6): Upright (6), Frame (2), Brace (2), Base Plate (6), Front Impact Guard (5), Corner Impact Guard (5)
   - **Other frame** (4): Guardrail (6), Load Sign (4), Top Tie Beam (5), Footplate (4)
-- **Pie-chart severity markers** — multiple NCs on the same element render as a single pie-chart marker (both on 2D canvas and SVG views)
+- **Pie-chart severity markers** — multiple NCs on the same element render as a single pie-chart marker (both on 2D canvas and SVG views) — enabled in production
 - **Marker placement engine** — 18 element-type position rules for auto-placing NC markers on the 2D layout
 - **NC grouping** — NCs grouped by element for consolidated marker display
 - **Inspection mode toggle** — Bay inspection splits into "Per Level" (beam, pallet support bar, etc.) and "Bay/Rack Level" (aisle, entire racking system, etc.)
@@ -67,7 +67,7 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
 
 ### NC Export & Summary
 
-> **Note:** Export dropdowns and pie-chart markers are currently **hidden in production** and only visible in local dev mode (`import.meta.env.DEV`). Remove the guards when ready to ship to client.
+> **Note:** Export dropdowns are currently **hidden in production** and only visible in local dev mode (`import.meta.env.DEV`). Pie-chart markers are enabled in production. PWA service worker registration is dev-only.
 
 - **Export NCs (3 formats)** *(dev only)* — CSV, XLSX, or ZIP bundle via dropdown menu on toolbar
   - **CSV** — RFC 4180 compliant with UTF-8 BOM for Excel compatibility
@@ -75,7 +75,7 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
   - **ZIP** — Bundle containing `inspection.xlsx` + `/photos/` folder with all NC photos
 - **13 columns per Doc 1 Ch 6.2** — Lot, Manufacturer, Rack name, Reference, Level, Position, Quantity, Element, Photo, Description, Anomaly, Damage, Scope
 - **Export buttons** *(dev only)* — "Export NCs" on 2D layout toolbar (per area), "Export All NCs" on Working Areas page (all areas)
-- **Pie-chart severity markers** *(dev only)* — multiple NCs on the same element render as a single pie-chart marker (both on 2D canvas and SVG views)
+- **Pie-chart severity markers** — multiple NCs on the same element render as a single pie-chart marker (both on 2D canvas and SVG views)
 - **Scope Table categories (Doc 2)** — NCs classified as Missing, To be corrected, To be repositioned, or Other
 - **NC Summary Badge** — compact severity breakdown (red/yellow/green counts + proportional bar) shown on:
   - Rack list (per rack row)
@@ -92,6 +92,17 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
 ---
 
 ## Latest Changes
+
+### Per-Level Accessories, Feature Flags & DB Enhancements
+
+- **Per-level accessories** — Each beam level's expanded panel now has its own accessory picker (DB-backed + custom entries). Data stored in `bayConfig.levelAccessories` keyed by level index. Duplicated when copying bay config.
+- **Accessory Database** — New `accessoryDatabaseStore` with CRUD, 11 categories, supplier filtering. Dedicated `AccessoryEditorPage` at `/editors/accessories`.
+- **Beam description field** — `beamDatabaseStore` now supports `description`; visible in editor list + form.
+- **Frame customName + description** — `frameDatabaseStore` supports `customName` (overrides auto-generated name) and `description`.
+- **Bay-level accessories in Bay Information** — DB-backed accessory selector with supplier filtering, custom entries, and "From database" tags.
+- **Pie-chart markers enabled in production** — Removed `import.meta.env.DEV` gate from pie-chart severity markers in BayFrontView, FrameView, BayShape, RackShape.
+- **PWA service worker dev-only** — Service worker registration gated behind `import.meta.env.DEV`.
+- **Per-bay independence fix** — Added `key={bayId}` to BayFrontView, BayConfig, BayInspection to force re-mount on bay navigation (fixes stale local state).
 
 ### Doc 4 (Gagliardi) Round 2 — Beam/Frame DB Hardening + Navigation
 
@@ -181,15 +192,17 @@ The 2D layout editor has been upgraded to a full interactive canvas editor with 
 
 ## Progress Overview
 
-**Overall completion: ~93% of total client scope across 3 client documents + developer clarifications.**
+**Overall completion: ~95% of Milestone 1-2 scope (SOW). Client estimates 80% of total product vision.**
 
-| Document | Coverage | Status |
-|----------|----------|--------|
-| Doc 1: Specification List for Phase 1 (initial) | ~85% | Ch 1-5 mostly done. Ch 6 (Data Export) 80% — CSV/XLSX/ZIP export done with Doc 1 Ch 6.2 columns. Pending: layout PDF. Missing: bay description field, frame compatibility check |
-| Doc 2: NC Marker Rules & NC List for Elements (initial) | ~95% | All 22 element categories with exact Doc 2 NC names. Placement engine done. Pie-chart markers done. Scope Table categories done |
-| Doc 3: App Analysis (20260403 — first client review) | ~90% | Sections 2-4 complete. Section 1 at 60% (Accessories Editor + Import DB deferred by client) |
-| Doc 4: Gagliardi "DA SISTEMARE" Feedback (second client review) | **100%** | 16/16 items shipped. Round 1 (5 quick fixes) + Round 2 (wizard DB wiring + navigation) + Round 3 (2.1a, 2.1c, 4c, 4d, 4e). 3.2 DB wiring deferred to Week 3 (Accessories Editor) |
-| Clarification Questions (developer-raised, Q1-Q13) | ~90% | Q1-Q11 implemented, Q12 (placement rules) now implemented, Q13 pending |
+| Document / Area | Coverage | Status |
+|-----------------|----------|--------|
+| Doc 1: Specification List for Phase 1 | ~95% | Ch 1-6 done. Layout PDF done. Bay description done. Frame compat check done. Renewals done. Pending: layout PDF vector export (future) |
+| Doc 2: NC Marker Rules & NC List for Elements | ~95% | All 22 element categories, exact Doc 2 names. Placement engine + pie-chart markers (production). Scope Table done |
+| Doc 3: App Analysis (first client review) | ~95% | Sections 1-4 complete. Accessories Editor done (DB + CRUD). Import DB deferred by client |
+| Doc 4: Gagliardi Feedback (second client review) | **100%** | 16/16 items shipped |
+| SOW Milestone 1 | **100%** | Wizard, layout, editors, databases all complete |
+| SOW Milestone 2 | **~95%** | Bay/frame config, inspection, export, per-level accessories done. Pending: Italian language |
+| Client Meeting Points (April 2026) | **~90%** | 22/23 points done. Pending: Italian i18n |
 
 ---
 
@@ -197,7 +210,7 @@ The 2D layout editor has been upgraded to a full interactive canvas editor with 
 
 - **Engine:** All data persisted to browser `localStorage` via Zustand persist middleware
 - **Backend:** None — the app runs entirely in the browser with no server or cloud database
-- **Stores:** `inspectionStore`, `rackStore`, `ncStore`, `beamDatabaseStore`, `frameDatabaseStore`, `supplierStore`
+- **Stores:** `inspectionStore`, `rackStore`, `ncStore`, `beamDatabaseStore`, `frameDatabaseStore`, `supplierStore`, `accessoryDatabaseStore`
 - **Photos:** Stored as base64 strings in localStorage. Large inspections with many photos may approach browser limits (~5-10MB)
 - **Portability:** Data lives on the device's browser only. Clearing browser data erases all inspections
 
@@ -280,7 +293,7 @@ Add a Playwright flow whenever you fix a bug that has a **visible browser sympto
 
 ## Document Compliance Audit
 
-### Doc 1 (Specification List for Phase 1) — ~75% Complete
+### Doc 1 (Specification List for Phase 1) — ~95% Complete
 
 **7-chapter specification document (43 pages) — the most comprehensive Phase 1 spec.**
 

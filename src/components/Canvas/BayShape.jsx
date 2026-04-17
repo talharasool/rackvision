@@ -101,7 +101,7 @@ export default function BayShape({
               x={markerX}
               y={markerY}
               severity={group.ncs[0].severity}
-              ncGroup={import.meta.env.DEV && group.ncs.length > 1 ? group.ncs : null}
+              ncGroup={group.ncs.length > 1 ? group.ncs : null}
               size={6}
               markerScale={markerScale}
               draggable={editMode}

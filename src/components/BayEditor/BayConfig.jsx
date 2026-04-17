@@ -55,6 +55,7 @@ export default function BayConfig({ rack, bay, bayIndex }) {
   const [selectedSupplier, setSelectedSupplier] = useState(rackSupplierId);
   const [customLength, setCustomLength] = useState(bayConfig.customLength || rack?.bayLength || 2700);
   const [accessories, setAccessories] = useState(bayConfig.accessories || []);
+  const [levelAccessories, setLevelAccessories] = useState(bayConfig.levelAccessories || {});
   const [leftFrameDbId, setLeftFrameDbId] = useState(bayConfig.leftFrameDbId || '');
   const [rightFrameDbId, setRightFrameDbId] = useState(bayConfig.rightFrameDbId || '');
   const [duplicateTargets, setDuplicateTargets] = useState({});
@@ -96,6 +97,7 @@ export default function BayConfig({ rack, bay, bayIndex }) {
     const bc = bay?.bayConfig || {};
     setCustomLength(bc.customLength || rack?.bayLength || 2700);
     setAccessories(bc.accessories || []);
+    setLevelAccessories(bc.levelAccessories || {});
     setLeftFrameDbId(bc.leftFrameDbId || '');
     setRightFrameDbId(bc.rightFrameDbId || '');
     setDuplicateTargets({});
@@ -310,6 +312,47 @@ export default function BayConfig({ rack, bay, bayIndex }) {
     setAccessories(newAcc);
     if (bay?.id && rack?.id) {
       updateBay(rack.id, bay.id, { bayConfig: { accessories: newAcc } });
+    }
+  };
+
+  // Per-level accessory handlers
+  const getLevelAccessories = (levelIndex) => levelAccessories[levelIndex] || [];
+
+  const handleAddLevelAccessoryFromDb = (levelIndex, dbAcc) => {
+    const current = getLevelAccessories(levelIndex);
+    if (current.some((a) => a.dbAccessoryId === dbAcc.id)) return;
+    const updated = { ...levelAccessories, [levelIndex]: [...current, { name: dbAcc.name, notes: dbAcc.description || '', dbAccessoryId: dbAcc.id, category: dbAcc.category }] };
+    setLevelAccessories(updated);
+    if (bay?.id && rack?.id) {
+      updateBay(rack.id, bay.id, { bayConfig: { levelAccessories: updated } });
+    }
+  };
+
+  const handleAddLevelAccessoryCustom = (levelIndex) => {
+    const current = getLevelAccessories(levelIndex);
+    const updated = { ...levelAccessories, [levelIndex]: [...current, { name: '', notes: '', category: 'other' }] };
+    setLevelAccessories(updated);
+    if (bay?.id && rack?.id) {
+      updateBay(rack.id, bay.id, { bayConfig: { levelAccessories: updated } });
+    }
+  };
+
+  const handleLevelAccessoryChange = (levelIndex, accIndex, field, value) => {
+    const current = [...getLevelAccessories(levelIndex)];
+    current[accIndex] = { ...current[accIndex], [field]: value };
+    const updated = { ...levelAccessories, [levelIndex]: current };
+    setLevelAccessories(updated);
+    if (bay?.id && rack?.id) {
+      updateBay(rack.id, bay.id, { bayConfig: { levelAccessories: updated } });
+    }
+  };
+
+  const handleRemoveLevelAccessory = (levelIndex, accIndex) => {
+    const current = getLevelAccessories(levelIndex).filter((_, i) => i !== accIndex);
+    const updated = { ...levelAccessories, [levelIndex]: current };
+    setLevelAccessories(updated);
+    if (bay?.id && rack?.id) {
+      updateBay(rack.id, bay.id, { bayConfig: { levelAccessories: updated } });
     }
   };
 
@@ -642,8 +685,76 @@ export default function BayConfig({ rack, bay, bayIndex }) {
                         <span className="text-xs text-slate-400 flex items-center gap-1">
                           <StickyNote size={10} /> Level {i + 1} Accessories
                         </span>
+                        <Button variant="ghost" size="sm" icon={Plus} onClick={() => handleAddLevelAccessoryCustom(i)}>
+                          Custom
+                        </Button>
                       </div>
-                      {/* Accessories are per-bay, shown contextually in each level for convenience */}
+
+                      {/* DB accessory picker for this level */}
+                      {filteredDbAccessories.length > 0 && (
+                        <div className="mb-2">
+                          <div className="flex flex-col gap-1 max-h-[100px] overflow-y-auto pr-1">
+                            {filteredDbAccessories.map((dbAcc) => {
+                              const isAdded = getLevelAccessories(i).some((a) => a.dbAccessoryId === dbAcc.id);
+                              return (
+                                <button
+                                  key={dbAcc.id}
+                                  onClick={() => handleAddLevelAccessoryFromDb(i, dbAcc)}
+                                  disabled={isAdded}
+                                  className={`
+                                    w-full flex items-center justify-between px-2 py-1 rounded border text-left text-[11px] transition-all duration-150
+                                    ${isAdded
+                                      ? 'border-blue-500/50 bg-blue-500/10 text-blue-400 cursor-default'
+                                      : 'border-slate-700 bg-slate-800/40 text-slate-300 hover:border-slate-500 cursor-pointer'}
+                                  `}
+                                >
+                                  <span className="truncate">{dbAcc.name}</span>
+                                  {isAdded && <Check size={10} className="text-blue-400 shrink-0 ml-1" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Added level accessories */}
+                      {getLevelAccessories(i).length > 0 && (
+                        <div className="flex flex-col gap-1">
+                          {getLevelAccessories(i).map((acc, ai) => (
+                            <div key={ai} className="flex items-center gap-1.5 p-1.5 rounded bg-slate-800/50 border border-slate-700">
+                              <div className="flex-1 flex flex-col gap-0.5">
+                                <input
+                                  type="text"
+                                  placeholder="Name"
+                                  value={acc.name}
+                                  onChange={(e) => handleLevelAccessoryChange(i, ai, 'name', e.target.value)}
+                                  className="w-full rounded px-2 py-1 text-[11px] text-white placeholder-slate-500 bg-slate-800 border border-slate-600 outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                                <input
+                                  type="text"
+                                  placeholder="Notes"
+                                  value={acc.notes}
+                                  onChange={(e) => handleLevelAccessoryChange(i, ai, 'notes', e.target.value)}
+                                  className="w-full rounded px-2 py-1 text-[11px] text-slate-300 placeholder-slate-500 bg-slate-800 border border-slate-600 outline-none focus:ring-1 focus:ring-blue-500"
+                                />
+                                {acc.dbAccessoryId && (
+                                  <span className="text-[9px] text-blue-400/60">From database</span>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => handleRemoveLevelAccessory(i, ai)}
+                                className="p-0.5 rounded hover:bg-slate-700 text-slate-500 hover:text-red-400 transition-colors"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {getLevelAccessories(i).length === 0 && filteredDbAccessories.length === 0 && (
+                        <p className="text-[10px] text-slate-500">No accessories configured for this level</p>
+                      )}
                     </div>
                   </div>
                 )}
