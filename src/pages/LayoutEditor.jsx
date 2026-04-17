@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useEffect } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   X,
@@ -18,6 +18,7 @@ import CanvasToolbar from '../components/Canvas/CanvasToolbar';
 import PropertiesPanel from '../components/Canvas/PropertiesPanel';
 import { getNCTypeName } from '../utils/ncHelpers';
 import { buildExportRows, rowsToCSV, downloadFile, downloadXLSX, downloadZIPBundle } from '../utils/exportNC';
+import { exportLayoutPDF } from '../utils/exportLayoutPDF';
 
 /** Severity label with colored dot */
 function SeverityBadge({ severity }) {
@@ -45,13 +46,28 @@ export default function LayoutEditor() {
   const { nonConformities, removeNC, updateNC } = useNCStore();
   const { suppliers } = useSupplierStore();
 
+  // Persist editor preferences across sessions
+  const savedPrefs = useRef(() => {
+    try {
+      return JSON.parse(localStorage.getItem('rackvision-editor-prefs') || '{}');
+    } catch { return {}; }
+  });
+  const prefs = savedPrefs.current();
+  const persistPref = (key, value) => {
+    try {
+      const current = JSON.parse(localStorage.getItem('rackvision-editor-prefs') || '{}');
+      current[key] = value;
+      localStorage.setItem('rackvision-editor-prefs', JSON.stringify(current));
+    } catch { /* ignore */ }
+  };
+
   const [editMode, setEditMode] = useState(false);
-  const [scale, setScale] = useState(1);
-  const [markerScale, setMarkerScale] = useState(1);
-  const [labelFontSize, setLabelFontSize] = useState(1);
+  const [scale, setScale] = useState(prefs.scale ?? 1);
+  const [markerScale, setMarkerScale] = useState(prefs.markerScale ?? 1);
+  const [labelFontSize, setLabelFontSize] = useState(prefs.labelFontSize ?? 1);
   const [activeTool, setActiveTool] = useState('select');
   const [selectedRackIds, setSelectedRackIds] = useState([]);
-  const [snapSize, setSnapSize] = useState(0);
+  const [snapSize, setSnapSize] = useState(prefs.snapSize ?? 0);
   const [showProperties, setShowProperties] = useState(false);
 
   // NC popup state
@@ -60,6 +76,10 @@ export default function LayoutEditor() {
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState(null);
+
+  // Ref to the LayoutCanvas wrapper — exposes the Konva stage via getStage()
+  // for Layout PDF export (Doc 1 §5.9).
+  const canvasRef = useRef(null);
 
   const inspection = inspections.find((i) => i.id === inspectionId);
   const area = inspection?.workingAreas?.find((a) => a.id === areaId);
@@ -263,13 +283,13 @@ export default function LayoutEditor() {
   const handleResetZoom = () => setScale(1);
   const handleScaleChange = (newScale) => setScale(newScale);
   const handleMarkerScaleUp = () =>
-    setMarkerScale((prev) => Math.min(prev + 0.25, 3));
+    setMarkerScale((prev) => { const v = Math.min(prev + 0.25, 3); persistPref('markerScale', v); return v; });
   const handleMarkerScaleDown = () =>
-    setMarkerScale((prev) => Math.max(prev - 0.25, 0.25));
+    setMarkerScale((prev) => { const v = Math.max(prev - 0.25, 0.25); persistPref('markerScale', v); return v; });
   const handleLabelFontSizeUp = () =>
-    setLabelFontSize((prev) => Math.min(prev + 0.25, 3));
+    setLabelFontSize((prev) => { const v = Math.min(prev + 0.25, 3); persistPref('labelFontSize', v); return v; });
   const handleLabelFontSizeDown = () =>
-    setLabelFontSize((prev) => Math.max(prev - 0.25, 0.5));
+    setLabelFontSize((prev) => { const v = Math.max(prev - 0.25, 0.5); persistPref('labelFontSize', v); return v; });
 
   const handleBayClick = (rackId, bayId) => {
     // In edit+select mode, clicking a bay selects the rack instead of navigating
@@ -509,6 +529,39 @@ export default function LayoutEditor() {
     }
   };
 
+  const handleExportLayoutPDF = () => {
+    const stage = canvasRef.current?.getStage?.();
+    if (!stage) {
+      alert('Layout canvas is not ready yet.');
+      return;
+    }
+    if (areaRacks.length === 0) {
+      alert('No racks in this area — nothing to export.');
+      return;
+    }
+    // Briefly clear selection so selection outlines don't appear in the PDF.
+    const prevSelection = selectedRackIds;
+    setSelectedRackIds([]);
+    // Defer to next frame so React commits the cleared selection before snapshot.
+    requestAnimationFrame(() => {
+      try {
+        exportLayoutPDF({
+          stage,
+          inspection,
+          area,
+          racks: areaRacks,
+          nonConformities,
+          suppliers,
+        });
+      } catch (err) {
+        console.error('Layout PDF export failed', err);
+        alert(`Layout PDF export failed: ${err.message || err}`);
+      } finally {
+        setSelectedRackIds(prevSelection);
+      }
+    });
+  };
+
   const handleBack = () =>
     navigate(`/inspection/${inspectionId}/area/${areaId}/racks`);
 
@@ -531,7 +584,7 @@ export default function LayoutEditor() {
         onLabelFontSizeUp={handleLabelFontSizeUp}
         onLabelFontSizeDown={handleLabelFontSizeDown}
         snapSize={snapSize}
-        onSnapSizeChange={setSnapSize}
+        onSnapSizeChange={(v) => { setSnapSize(v); persistPref('snapSize', v); }}
         canUndo={canUndo()}
         canRedo={canRedo()}
         onUndo={undo}
@@ -539,11 +592,13 @@ export default function LayoutEditor() {
         onBack={handleBack}
         areaName={area.name}
         onExportNCs={handleExportNCs}
+        onExportLayoutPDF={handleExportLayoutPDF}
       />
 
       {/* Canvas Area */}
       <div className="flex-1 relative overflow-hidden">
         <LayoutCanvas
+          ref={canvasRef}
           racks={areaRacks}
           editMode={editMode}
           scale={scale}
@@ -582,51 +637,69 @@ export default function LayoutEditor() {
         )}
 
         {/* Context Menu */}
-        {contextMenu && (
-          <>
-            <div
-              className="fixed inset-0 z-40"
-              onClick={closeContextMenu}
-            />
-            <div
-              className="absolute z-50 bg-slate-900 border border-slate-600 rounded-xl shadow-2xl p-1 min-w-44"
-              style={{
-                left: contextMenu.x,
-                top: contextMenu.y,
-              }}
-            >
-              <button
-                onClick={() => handleContextMenuAction('edit')}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
+        {contextMenu && (() => {
+          const cmRack = racks.find((r) => r.id === contextMenu.rackId);
+          const cmLevels = cmRack?.levels ?? 3;
+          const cmBays = cmRack?.bays?.length ?? cmRack?.numberOfBays ?? 0;
+          const cmFrames = cmRack?.frames?.length ?? 0;
+          return (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={closeContextMenu}
+              />
+              <div
+                className="absolute z-50 bg-slate-900 border border-slate-600 rounded-xl shadow-2xl p-1 min-w-52"
+                style={{
+                  left: contextMenu.x,
+                  top: contextMenu.y,
+                }}
               >
-                <Pencil size={14} />
-                Edit Properties
-              </button>
-              <button
-                onClick={() => handleContextMenuAction('duplicate')}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
-              >
-                <Copy size={14} />
-                Duplicate
-              </button>
-              <button
-                onClick={() => handleContextMenuAction('rotate')}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
-              >
-                <RotateCw size={14} />
-                Rotate 90
-              </button>
-              <div className="border-t border-slate-700 my-1" />
-              <button
-                onClick={() => handleContextMenuAction('delete')}
-                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-              >
-                <Trash2 size={14} />
-                Delete
-              </button>
-            </div>
-          </>
-        )}
+                {/* Rack info header */}
+                {cmRack && (
+                  <div className="px-3 py-2 border-b border-slate-700 mb-1">
+                    <p className="text-sm font-semibold text-white truncate">
+                      {cmRack.name || 'Unnamed Rack'}
+                    </p>
+                    <p className="text-[11px] text-slate-400">
+                      {cmBays} bay{cmBays !== 1 ? 's' : ''} · {cmFrames} frame{cmFrames !== 1 ? 's' : ''} · {cmLevels} level{cmLevels !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => handleContextMenuAction('edit')}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
+                >
+                  <Pencil size={14} />
+                  Edit Properties
+                </button>
+                <button
+                  onClick={() => handleContextMenuAction('duplicate')}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
+                >
+                  <Copy size={14} />
+                  Duplicate
+                </button>
+                <button
+                  onClick={() => handleContextMenuAction('rotate')}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
+                >
+                  <RotateCw size={14} />
+                  Rotate 90
+                </button>
+                <div className="border-t border-slate-700 my-1" />
+                <button
+                  onClick={() => handleContextMenuAction('delete')}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                >
+                  <Trash2 size={14} />
+                  Delete Rack
+                </button>
+              </div>
+            </>
+          );
+        })()}
 
         {/* Supplier Color Legend */}
         {activeSuppliers.length > 0 && (

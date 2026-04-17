@@ -83,11 +83,12 @@ export default function HomePage() {
             <span className="text-sm font-medium text-white">Suppliers</span>
           </Card>
           <Card
-            className="flex flex-col items-center justify-center py-6 gap-2 opacity-40 cursor-not-allowed"
+            hover
+            onClick={() => navigate('/editors/accessories')}
+            className="flex flex-col items-center justify-center py-6 gap-2"
           >
-            <Package size={24} className="text-slate-500" />
-            <span className="text-sm font-medium text-slate-500">Accessories</span>
-            <span className="text-[10px] text-slate-600">Coming Soon</span>
+            <Package size={24} className="text-orange-400" />
+            <span className="text-sm font-medium text-white">Accessories</span>
           </Card>
           <Card
             className="flex flex-col items-center justify-center py-6 gap-2 opacity-40 cursor-not-allowed"

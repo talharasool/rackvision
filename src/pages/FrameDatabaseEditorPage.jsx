@@ -5,11 +5,13 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Select from '../components/ui/Select';
 import Card from '../components/ui/Card';
-import useFrameDatabaseStore, { FRAME_TYPES } from '../stores/frameDatabaseStore';
+import useFrameDatabaseStore, { FRAME_TYPES, generateFrameName } from '../stores/frameDatabaseStore';
 import { FINISH_TYPES } from '../stores/beamDatabaseStore';
 import useSupplierStore from '../stores/supplierStore';
 
 const emptyForm = {
+  customName: '',
+  description: '',
   supplierId: '',
   supplierName: '',
   frameType: 'welded',
@@ -61,6 +63,8 @@ export default function FrameDatabaseEditorPage() {
   const handleEdit = (frame) => {
     setEditingId(frame.id);
     setForm({
+      customName: frame.customName || '',
+      description: frame.description || '',
       supplierId: frame.supplierId,
       supplierName: frame.supplierName,
       frameType: frame.frameType,
@@ -203,6 +207,32 @@ export default function FrameDatabaseEditorPage() {
               {editingId ? 'Edit Frame' : 'New Frame'}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2">
+                <Input
+                  label="Frame Name"
+                  value={form.customName}
+                  onChange={(e) => setField('customName', e.target.value)}
+                  placeholder={generateFrameName({
+                    frameType: form.frameType,
+                    height: form.uprightHeight || '...',
+                    depth: form.depth || '...',
+                    supplierName: form.supplierName,
+                  })}
+                />
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Leave blank to auto-generate from type, dimensions, and supplier
+                </p>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setField('description', e.target.value)}
+                  placeholder="Optional frame description or notes"
+                  rows={2}
+                  className="w-full rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 bg-slate-800 border border-slate-600 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-y"
+                />
+              </div>
               <Select
                 label="Supplier"
                 value={form.supplierId}
@@ -394,6 +424,9 @@ export default function FrameDatabaseEditorPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-white font-medium">{frame.name}</span>
+                        {frame.description && (
+                          <span className="text-xs text-slate-500 line-clamp-1">{frame.description}</span>
+                        )}
                         <div className="flex flex-wrap gap-3 text-xs text-slate-400">
                           <span>{frameTypeLabel(frame.frameType)}</span>
                           <span>{frame.height}×{frame.depth} mm</span>

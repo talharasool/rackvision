@@ -58,7 +58,22 @@ export default function BayInspection({
 
   const fileInputRef = useRef(null);
 
-  const levels = rack?.levels || bay?.levels || 3;
+  // Per-bay level count with rack-level fallback (Doc 1 §3.1.1 — bays edit independently)
+  const levels = bay?.bayConfig?.levels ?? rack?.levels ?? bay?.levels ?? 3;
+
+  // Compute elevation per level for display in level selector
+  const bc = bay?.bayConfig || {};
+  const _iH = bc.individualHeights ?? rack?.individualHeights ?? [];
+  const _fE = bc.firstElevation ?? rack?.firstElevation ?? 0;
+  const _lS = bc.levelSpacing ?? rack?.levelSpacing ?? 1500;
+  const _useI = (bc.useIndividualHeights ?? rack?.useIndividualHeights) && _iH.length === levels;
+  const levelElevations = useMemo(() => {
+    const elev = [];
+    for (let i = 0; i < levels; i++) {
+      elev.push(_useI ? _iH[i] : _fE + _lS * i);
+    }
+    return elev;
+  }, [levels, _useI, _iH, _fE, _lS]);
 
   // Element buttons based on mode and level
   const elementButtons = useMemo(() => {
@@ -269,7 +284,10 @@ export default function BayInspection({
                     }
                   `}
                 >
-                  L{level}
+                  <span>L{level}</span>
+                  <span className="block text-[10px] font-normal opacity-60">
+                    {levelElevations[i] ?? 0}mm
+                  </span>
                 </button>
               );
             })}

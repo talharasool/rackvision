@@ -17,6 +17,7 @@ import useRackStore from '../stores/rackStore';
 import useNCStore from '../stores/ncStore';
 import NCSummaryBadge from '../components/ui/NCSummaryBadge';
 import RackWizard from '../components/Wizard/RackWizard';
+import { getBayDescription } from '../utils/rackHelpers';
 
 export default function RackList() {
   const { inspectionId, areaId } = useParams();
@@ -126,7 +127,7 @@ export default function RackList() {
                     Bays
                   </th>
                   <th className="text-center text-sm font-medium text-slate-400 px-6 py-3">
-                    Bay Length
+                    Bay Description
                   </th>
                   <th className="text-center text-sm font-medium text-slate-400 px-6 py-3">
                     Levels
@@ -154,8 +155,8 @@ export default function RackList() {
                     <td className="px-6 py-4 text-slate-300 text-center">
                       {rack.numberOfBays}
                     </td>
-                    <td className="px-6 py-4 text-slate-300 text-center">
-                      {rack.bayLength} mm
+                    <td className="px-6 py-4 text-slate-300 text-center font-mono text-xs">
+                      {getBayDescription(rack) || `${rack.bayLength} mm`}
                     </td>
                     <td className="px-6 py-4 text-slate-300 text-center">
                       {rack.levels}

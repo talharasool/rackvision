@@ -10,6 +10,7 @@ import useSupplierStore from '../stores/supplierStore';
 
 const emptyForm = {
   customName: '',
+  description: '',
   supplierId: '',
   supplierName: '',
   beamType: 'standard-double-c',
@@ -59,6 +60,7 @@ export default function BeamEditorPage() {
     setEditingId(beam.id);
     setForm({
       customName: beam.customName || '',
+      description: beam.description || '',
       supplierId: beam.supplierId,
       supplierName: beam.supplierName,
       beamType: beam.beamType,
@@ -201,6 +203,16 @@ export default function BeamEditorPage() {
                 <p className="text-[10px] text-slate-500 mt-1">
                   Leave blank to auto-generate from type, dimensions, and supplier
                 </p>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
+                <textarea
+                  value={form.description}
+                  onChange={(e) => setField('description', e.target.value)}
+                  placeholder="Optional beam description or notes"
+                  rows={2}
+                  className="w-full rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 bg-slate-800 border border-slate-600 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-y"
+                />
               </div>
               <Select
                 label="Supplier"
@@ -348,6 +360,9 @@ export default function BeamEditorPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col gap-0.5">
                         <span className="text-white font-medium">{beam.name}</span>
+                        {beam.description && (
+                          <span className="text-xs text-slate-500 line-clamp-1">{beam.description}</span>
+                        )}
                         <div className="flex flex-wrap gap-3 text-xs text-slate-400">
                           <span>{beam.length}×{beam.height}×{beam.depth} mm</span>
                           {beam.supplierName && <span>{beam.supplierName}</span>}

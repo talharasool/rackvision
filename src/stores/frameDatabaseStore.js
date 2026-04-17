@@ -29,6 +29,8 @@ const useFrameDatabaseStore = create(
         const frame = {
           id: generateId(),
           name: '',
+          customName: (data.customName || '').trim(),
+          description: data.description || '',
           supplierId: data.supplierId || '',
           supplierName: data.supplierName || '',
           frameType: data.frameType || 'welded',
@@ -52,7 +54,7 @@ const useFrameDatabaseStore = create(
           supplierCode: data.supplierCode || '',
           createdAt: new Date().toISOString(),
         };
-        frame.name = generateFrameName(frame);
+        frame.name = frame.customName || generateFrameName(frame);
         set((state) => ({
           frames: [...state.frames, frame],
         }));
@@ -68,7 +70,8 @@ const useFrameDatabaseStore = create(
             if (data.uprightHeight !== undefined) {
               updated.height = data.uprightHeight;
             }
-            updated.name = generateFrameName(updated);
+            updated.customName = (updated.customName || '').trim();
+            updated.name = updated.customName || generateFrameName(updated);
             return updated;
           }),
         }));

@@ -1,4 +1,12 @@
-import { useRef, useEffect, useState, useCallback, createRef } from 'react';
+import {
+  useRef,
+  useEffect,
+  useState,
+  useCallback,
+  createRef,
+  forwardRef,
+  useImperativeHandle,
+} from 'react';
 import { Stage, Layer, Line, Rect } from 'react-konva';
 import RackShape from './RackShape';
 import SelectionTransformer from './SelectionTransformer';
@@ -8,7 +16,7 @@ const MIN_SCALE = 0.2;
 const MAX_SCALE = 3.0;
 const GRID_SIZE = 50; // px between grid lines
 
-export default function LayoutCanvas({
+function LayoutCanvas({
   racks = [],
   editMode = false,
   scale = 1,
@@ -29,9 +37,19 @@ export default function LayoutCanvas({
   onTransformEnd,
   snapSize = 0,
   onContextMenu,
-}) {
+}, forwardedRef) {
   const containerRef = useRef(null);
   const stageRef = useRef(null);
+
+  // Expose the Konva stage via the forwarded ref so parent components can
+  // snapshot the canvas for PDF export.
+  useImperativeHandle(
+    forwardedRef,
+    () => ({
+      getStage: () => stageRef.current,
+    }),
+    []
+  );
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
   const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
 
@@ -462,3 +480,5 @@ export default function LayoutCanvas({
     </div>
   );
 }
+
+export default forwardRef(LayoutCanvas);

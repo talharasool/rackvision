@@ -181,14 +181,14 @@ The 2D layout editor has been upgraded to a full interactive canvas editor with 
 
 ## Progress Overview
 
-**Overall completion: ~90% of total client scope across 3 client documents + developer clarifications.**
+**Overall completion: ~93% of total client scope across 3 client documents + developer clarifications.**
 
 | Document | Coverage | Status |
 |----------|----------|--------|
 | Doc 1: Specification List for Phase 1 (initial) | ~85% | Ch 1-5 mostly done. Ch 6 (Data Export) 80% — CSV/XLSX/ZIP export done with Doc 1 Ch 6.2 columns. Pending: layout PDF. Missing: bay description field, frame compatibility check |
 | Doc 2: NC Marker Rules & NC List for Elements (initial) | ~95% | All 22 element categories with exact Doc 2 NC names. Placement engine done. Pie-chart markers done. Scope Table categories done |
 | Doc 3: App Analysis (20260403 — first client review) | ~90% | Sections 2-4 complete. Section 1 at 60% (Accessories Editor + Import DB deferred by client) |
-| Doc 4: Gagliardi "DA SISTEMARE" Feedback (second client review) | ~31% | 16 items. Round 1 done (5 quick fixes: 2.1b, 3.1a, 3.1b, 3.3, 4b). Rest pending — see table below |
+| Doc 4: Gagliardi "DA SISTEMARE" Feedback (second client review) | **100%** | 16/16 items shipped. Round 1 (5 quick fixes) + Round 2 (wizard DB wiring + navigation) + Round 3 (2.1a, 2.1c, 4c, 4d, 4e). 3.2 DB wiring deferred to Week 3 (Accessories Editor) |
 | Clarification Questions (developer-raised, Q1-Q13) | ~90% | Q1-Q11 implemented, Q12 (placement rules) now implemented, Q13 pending |
 
 ---

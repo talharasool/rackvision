@@ -10,10 +10,11 @@ import Card from '../ui/Card';
 import Select from '../ui/Select';
 import useBeamDatabaseStore from '../../stores/beamDatabaseStore';
 import useFrameDatabaseStore from '../../stores/frameDatabaseStore';
+import useAccessoryDatabaseStore from '../../stores/accessoryDatabaseStore';
 import useSupplierStore from '../../stores/supplierStore';
 import useRackStore from '../../stores/rackStore';
 
-export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
+export default function BayConfig({ rack, bay, bayIndex }) {
   const navigate = useNavigate();
 
   // Stores
@@ -24,21 +25,28 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
   const getFilteredFrames = useFrameDatabaseStore((s) => s.getFilteredFrames);
   const getFrameById = useFrameDatabaseStore((s) => s.getFrameById);
   const allDbFrames = useFrameDatabaseStore((s) => s.frames);
+  const getFilteredAccessories = useAccessoryDatabaseStore((s) => s.getFilteredAccessories);
+  const getAccessoryById = useAccessoryDatabaseStore((s) => s.getAccessoryById);
+  const allDbAccessories = useAccessoryDatabaseStore((s) => s.accessories);
   const updateBay = useRackStore((s) => s.updateBay);
+  const updateRack = useRackStore((s) => s.updateRack);
   const duplicateBayConfig = useRackStore((s) => s.duplicateBayConfig);
 
-  // Rack-level values
-  const levels = rack?.levels || 3;
-  const firstElevation = rack?.firstElevation || 0;
-  const levelSpacing = rack?.levelSpacing || 1500;
-  const individualHeights = rack?.individualHeights || [];
+  // Bay config — each bay can independently override levels / elevations.
+  // Falls back to rack-level values when the bay has no override set.
+  const bayConfig = bay?.bayConfig || { beamSelections: [], accessories: [], customLength: null, leftFrameDbId: '', rightFrameDbId: '' };
+
+  // Per-bay level configuration with rack-level fallback (Doc 1 §3.1.1 —
+  // each bay edits independently so changing one bay does not affect others).
+  const levels = bayConfig.levels ?? rack?.levels ?? 3;
+  const firstElevation = bayConfig.firstElevation ?? rack?.firstElevation ?? 0;
+  const levelSpacing = bayConfig.levelSpacing ?? rack?.levelSpacing ?? 1500;
+  const individualHeights = bayConfig.individualHeights ?? rack?.individualHeights ?? [];
   const useIndividual =
-    rack?.useIndividualHeights && individualHeights.length === levels;
+    (bayConfig.useIndividualHeights ?? rack?.useIndividualHeights) &&
+    individualHeights.length === levels;
   const levelBeams = rack?.levelBeams || [];
   const rackSupplierId = rack?.supplierId || '';
-
-  // Bay config
-  const bayConfig = bay?.bayConfig || { beamSelections: [], accessories: [], customLength: null, leftFrameDbId: '', rightFrameDbId: '' };
 
   // Local state
   const [editLevels, setEditLevels] = useState(levels);
@@ -76,7 +84,7 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
     }
     setEditInteraxis(inter);
     setEditLevels(levels);
-  }, [elevations, levels]);
+  }, [elevations, levels, bay?.id]);
 
   // Sync supplier from rack
   useEffect(() => {
@@ -123,6 +131,11 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
       return heightFitA - heightFitB;
     });
   }, [selectedSupplier, rackFrameDepth, topBeamElevation, allDbFrames, getFilteredFrames]);
+
+  // Accessories from the database, filtered by supplier
+  const filteredDbAccessories = useMemo(() => {
+    return getFilteredAccessories(selectedSupplier);
+  }, [selectedSupplier, allDbAccessories, getFilteredAccessories]);
 
   // ---- Handlers ----
 
@@ -184,18 +197,6 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
         bayConfig: syncBayLengthToBeam(dbBeam, { beamSelections: newSelections }),
       });
     }
-
-    // Also update the rack-level levelBeams for backward compatibility
-    const newLevelBeams = [...levelBeams];
-    while (newLevelBeams.length <= levelIndex) {
-      newLevelBeams.push({ beamId: '', beamType: '', bayLength: dbBeam.length || activeBayLength });
-    }
-    newLevelBeams[levelIndex] = {
-      beamId: dbBeam.id,
-      beamType: dbBeam.beamType || 'standard-double-c',
-      bayLength: dbBeam.length || activeBayLength,
-    };
-    onUpdate?.({ levelBeams: newLevelBeams });
   };
 
   const handleApplyBeamToAll = (dbBeam) => {
@@ -210,14 +211,6 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
         bayConfig: syncBayLengthToBeam(dbBeam, { beamSelections: newSelections }),
       });
     }
-
-    // Also update rack-level levelBeams for backward compat (current bay only)
-    const newLevelBeams = Array.from({ length: levels }, () => ({
-      beamId: dbBeam.id,
-      beamType: dbBeam.beamType || 'standard-double-c',
-      bayLength: dbBeam.length || activeBayLength,
-    }));
-    onUpdate?.({ levelBeams: newLevelBeams });
   };
 
   const handleLevelsChange = (delta) => {
@@ -240,18 +233,22 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
       newElevations.push(cumulative);
     }
 
-    // Extend levelBeams
-    const newLevelBeams = [...levelBeams];
-    while (newLevelBeams.length < newLevels) {
-      newLevelBeams.push({ beamId: '', beamType: '', bayLength: activeBayLength });
-    }
+    // Trim / extend this bay's beam selections to match the new level count
+    const prevSelections = bayConfig.beamSelections || [];
+    const newSelections = [...prevSelections];
+    while (newSelections.length < newLevels) newSelections.push(null);
 
-    onUpdate?.({
-      levels: newLevels,
-      individualHeights: newElevations,
-      useIndividualHeights: true,
-      levelBeams: newLevelBeams.slice(0, newLevels),
-    });
+    // Per-bay write — never touches the rack, so other bays keep their own levels
+    if (bay?.id && rack?.id) {
+      updateBay(rack.id, bay.id, {
+        bayConfig: {
+          levels: newLevels,
+          individualHeights: newElevations,
+          useIndividualHeights: true,
+          beamSelections: newSelections.slice(0, newLevels),
+        },
+      });
+    }
   };
 
   const handleInteraxisChange = (index, value) => {
@@ -268,10 +265,15 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
       newElevations.push(cumulative);
     }
 
-    onUpdate?.({
-      individualHeights: newElevations,
-      useIndividualHeights: true,
-    });
+    // Per-bay write — only this bay's elevations change
+    if (bay?.id && rack?.id) {
+      updateBay(rack.id, bay.id, {
+        bayConfig: {
+          individualHeights: newElevations,
+          useIndividualHeights: true,
+        },
+      });
+    }
   };
 
   // Compute "from ground" cumulative values
@@ -326,9 +328,10 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
         },
       });
     }
+    // Frame depth is a rack-wide property — update at rack level directly.
     const frame = getFrameById(frameDbId);
-    if (frame && frame.depth && frame.depth !== rackFrameDepth) {
-      onUpdate?.({ frameDepth: frame.depth });
+    if (frame && frame.depth && frame.depth !== rackFrameDepth && rack?.id) {
+      updateRack(rack.id, { frameDepth: frame.depth });
     }
   };
 
@@ -401,6 +404,114 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
             <p className="text-[10px] text-slate-500 mt-1">
               Filters available beams by length
             </p>
+          </div>
+
+          {/* Accessories (inside Bay Information) */}
+          <div className="col-span-2 border-t border-slate-700 pt-3 mt-1">
+            <div className="flex items-center justify-between mb-2">
+              <h4 className="text-sm font-semibold text-white">Accessories</h4>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => navigate('/editors/accessories')}
+                  className="text-xs text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                >
+                  <Plus size={12} /> New <ExternalLink size={10} />
+                </button>
+                <Button variant="ghost" size="sm" icon={Plus} onClick={handleAddAccessory}>
+                  Custom
+                </Button>
+              </div>
+            </div>
+
+            {/* DB-backed accessory selection */}
+            {filteredDbAccessories.length > 0 && (
+              <div className="mb-2">
+                <p className="text-xs text-slate-500 mb-1">
+                  From database ({filteredDbAccessories.length}):
+                </p>
+                <div className="flex flex-col gap-1 max-h-[120px] overflow-y-auto pr-1">
+                  {filteredDbAccessories.map((dbAcc) => {
+                    const isAdded = accessories.some((a) => a.dbAccessoryId === dbAcc.id);
+                    return (
+                      <button
+                        key={dbAcc.id}
+                        onClick={() => {
+                          if (isAdded) return;
+                          const newAcc = [...accessories, { name: dbAcc.name, notes: dbAcc.description || '', dbAccessoryId: dbAcc.id }];
+                          setAccessories(newAcc);
+                          if (bay?.id && rack?.id) {
+                            updateBay(rack.id, bay.id, { bayConfig: { accessories: newAcc } });
+                          }
+                        }}
+                        disabled={isAdded}
+                        className={`
+                          w-full flex items-center justify-between px-2.5 py-1.5 rounded border text-left text-xs transition-all duration-150
+                          ${isAdded
+                            ? 'border-blue-500 bg-blue-500/10 text-blue-400 cursor-default'
+                            : 'border-slate-700 bg-slate-800/40 text-slate-300 hover:border-slate-500 cursor-pointer'}
+                        `}
+                      >
+                        <div className="flex flex-col">
+                          <span className="font-medium">{dbAcc.name}</span>
+                          {dbAcc.description && (
+                            <span className="text-[10px] text-slate-500 line-clamp-1">{dbAcc.description}</span>
+                          )}
+                        </div>
+                        {isAdded && <Check size={12} className="text-blue-400 shrink-0" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {filteredDbAccessories.length === 0 && (
+              <div className="text-xs text-slate-500 mb-2 px-2 py-1.5 rounded bg-slate-800/50 border border-slate-700">
+                No accessories in DB.
+                {' '}
+                <button
+                  onClick={() => navigate('/editors/accessories')}
+                  className="text-blue-400 hover:text-blue-300 inline-flex items-center gap-1"
+                >
+                  Add <ExternalLink size={10} />
+                </button>
+              </div>
+            )}
+
+            {/* Added accessories */}
+            {accessories.length > 0 && (
+              <div className="flex flex-col gap-1.5">
+                {accessories.map((acc, i) => (
+                  <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-slate-800/50 border border-slate-700">
+                    <div className="flex-1 flex flex-col gap-1">
+                      <input
+                        type="text"
+                        placeholder="Accessory name"
+                        value={acc.name}
+                        onChange={(e) => handleAccessoryChange(i, 'name', e.target.value)}
+                        className="w-full rounded px-2 py-1.5 text-xs text-white placeholder-slate-500 bg-slate-800 border border-slate-600 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Notes (optional)"
+                        value={acc.notes}
+                        onChange={(e) => handleAccessoryChange(i, 'notes', e.target.value)}
+                        className="w-full rounded px-2 py-1.5 text-xs text-slate-300 placeholder-slate-500 bg-slate-800 border border-slate-600 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                      />
+                      {acc.dbAccessoryId && (
+                        <span className="text-[10px] text-blue-400/60">From database</span>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleRemoveAccessory(i)}
+                      className="mt-1 p-1 rounded hover:bg-slate-700 text-slate-500 hover:text-red-400 transition-colors"
+                    >
+                      <X size={14} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </Card>
@@ -641,55 +752,6 @@ export default function BayConfig({ rack, bay, bayIndex, onUpdate }) {
             </div>
           ))}
         </div>
-      </Card>
-
-      {/* Per-Bay Accessories */}
-      <Card className="!p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-white">Accessories</h3>
-          <Button variant="ghost" size="sm" icon={Plus} onClick={handleAddAccessory}>
-            Add
-          </Button>
-        </div>
-
-        {accessories.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-4 text-center">
-            <StickyNote size={24} className="text-slate-600 mb-2" />
-            <p className="text-sm text-slate-500">No accessories added</p>
-            <p className="text-[10px] text-slate-600 mt-1">
-              Click "Add" to add accessories to this bay
-            </p>
-          </div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {accessories.map((acc, i) => (
-              <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-slate-800/50 border border-slate-700">
-                <div className="flex-1 flex flex-col gap-1.5">
-                  <input
-                    type="text"
-                    placeholder="Accessory name"
-                    value={acc.name}
-                    onChange={(e) => handleAccessoryChange(i, 'name', e.target.value)}
-                    className="w-full rounded px-2 py-1.5 text-xs text-white placeholder-slate-500 bg-slate-800 border border-slate-600 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Notes (optional)"
-                    value={acc.notes}
-                    onChange={(e) => handleAccessoryChange(i, 'notes', e.target.value)}
-                    className="w-full rounded px-2 py-1.5 text-xs text-slate-300 placeholder-slate-500 bg-slate-800 border border-slate-600 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <button
-                  onClick={() => handleRemoveAccessory(i)}
-                  className="mt-1 p-1 rounded hover:bg-slate-700 text-slate-500 hover:text-red-400 transition-colors"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
       </Card>
 
       {/* Duplicate Configuration */}

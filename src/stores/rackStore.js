@@ -292,6 +292,62 @@ const useRackStore = create(
       },
 
       /**
+       * Clone all racks whose areaId is a key in `areaIdMap` into the mapped
+       * target area. Assigns fresh ids to racks, bays, and frames so the
+       * original rack stays untouched. Returns an id-mapping object:
+       *   { racks: {oldId → newId}, bays: {...}, frames: {...} }
+       * so the NC store can replay the clone and keep references in sync.
+       * Used by the Renewals workflow (Doc 1 §1.2, §7.4.1).
+       */
+      cloneRacksForRenewal: (areaIdMap) => {
+        const rackIdMap = {};
+        const bayIdMap = {};
+        const frameIdMap = {};
+        const newRacks = [];
+
+        const source = get().racks.filter((r) =>
+          Object.prototype.hasOwnProperty.call(areaIdMap, r.areaId)
+        );
+
+        source.forEach((rack) => {
+          const newRackId = generateId();
+          rackIdMap[rack.id] = newRackId;
+
+          const newBays = (rack.bays || []).map((bay) => {
+            const newBayId = generateId();
+            bayIdMap[bay.id] = newBayId;
+            return {
+              ...JSON.parse(JSON.stringify(bay)),
+              id: newBayId,
+              rackId: newRackId,
+            };
+          });
+
+          const newFrames = (rack.frames || []).map((frame) => {
+            const newFrameId = generateId();
+            frameIdMap[frame.id] = newFrameId;
+            return {
+              ...JSON.parse(JSON.stringify(frame)),
+              id: newFrameId,
+              rackId: newRackId,
+            };
+          });
+
+          newRacks.push({
+            ...JSON.parse(JSON.stringify(rack)),
+            id: newRackId,
+            areaId: areaIdMap[rack.areaId],
+            bays: newBays,
+            frames: newFrames,
+          });
+        });
+
+        set((state) => ({ racks: [...state.racks, ...newRacks] }));
+
+        return { racks: rackIdMap, bays: bayIdMap, frames: frameIdMap };
+      },
+
+      /**
        * Copy the bayConfig from sourceBayId to all targetBayIds within the same rack.
        */
       duplicateBayConfig: (rackId, sourceBayId, targetBayIds) => {

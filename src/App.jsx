@@ -10,6 +10,7 @@ import RenewalsPage from './pages/RenewalsPage'
 import BeamEditorPage from './pages/BeamEditorPage'
 import FrameDatabaseEditorPage from './pages/FrameDatabaseEditorPage'
 import SupplierEditorPage from './pages/SupplierEditorPage'
+import AccessoryEditorPage from './pages/AccessoryEditorPage'
 import Header from './components/Layout/Header'
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
             <Route path="/editors/beams" element={<BeamEditorPage />} />
             <Route path="/editors/frames" element={<FrameDatabaseEditorPage />} />
             <Route path="/editors/suppliers" element={<SupplierEditorPage />} />
+            <Route path="/editors/accessories" element={<AccessoryEditorPage />} />
             <Route path="/inspection/:inspectionId/areas" element={<WorkingAreas />} />
             <Route path="/inspection/:inspectionId/area/:areaId/racks" element={<RackList />} />
             <Route path="/inspection/:inspectionId/area/:areaId/layout" element={<LayoutEditor />} />

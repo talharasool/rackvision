@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Minus, Check, ExternalLink } from 'lucide-react';
+import { Plus, Minus, Check, ExternalLink, AlertTriangle } from 'lucide-react';
 import Modal from '../ui/Modal';
 import Input from '../ui/Input';
 import Select from '../ui/Select';
@@ -236,6 +236,32 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
   const selectedBeam = filteredBeams.find((b) => b.id === rackData.beamId);
   const selectedFrame = filteredFrames.find((f) => f.id === rackData.frameId);
   const selectedSupplier = suppliers.find((s) => s.id === rackData.supplierId);
+
+  // Doc 1 §2.3.7: highest beam elevation (top of highest level) so we can
+  // flag frames that are too short.
+  const highestBeamElevation = useMemo(() => {
+    if (rackData.useIndividualHeights && rackData.individualHeights.length) {
+      return Math.max(...rackData.individualHeights);
+    }
+    return (
+      rackData.firstElevation +
+      Math.max(0, rackData.levels - 1) * rackData.levelSpacing
+    );
+  }, [
+    rackData.useIndividualHeights,
+    rackData.individualHeights,
+    rackData.firstElevation,
+    rackData.levels,
+    rackData.levelSpacing,
+  ]);
+
+  const isFrameCompatible = (frame) => {
+    const h = frame?.uprightHeight || frame?.height || 0;
+    return h >= highestBeamElevation;
+  };
+
+  const selectedFrameIncompatible =
+    !!selectedFrame && !isFrameCompatible(selectedFrame);
 
   // ─── Step Renderers ─────────────────────────────────────────────────
 
@@ -564,37 +590,75 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
           </Button>
         </Card>
       ) : (
-        <div className="flex flex-col gap-2 max-h-[300px] overflow-y-auto pr-1">
-          {filteredFrames.map((frame) => {
-            const isSelected = rackData.frameId === frame.id;
-            return (
-              <div
-                key={frame.id}
-                onClick={() => handleFrameSelect(frame.id)}
-                className={`
-                  flex items-center justify-between p-3 rounded-lg border cursor-pointer
-                  transition-all duration-150
-                  ${
-                    isSelected
-                      ? 'border-blue-500 bg-blue-500/10'
-                      : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
-                  }
-                `}
-              >
-                <div>
-                  <p className="text-sm font-medium text-white">{frame.name}</p>
-                  <p className="text-xs text-slate-400">
-                    Height: {frame.uprightHeight || frame.height}mm · Depth: {frame.depth}mm · Upright: {frame.uprightWidth}mm
-                  </p>
-                </div>
-                {isSelected && (
-                  <div className="w-5 h-5 rounded-full bg-blue-600 flex items-center justify-center">
-                    <Check size={12} className="text-white" />
-                  </div>
-                )}
+        <div className="flex flex-col gap-3">
+          <p className="text-xs text-slate-400">
+            Highest beam elevation from step 5:{' '}
+            <span className="font-medium text-white">
+              {highestBeamElevation}mm
+            </span>
+            . Frames shorter than this are flagged as incompatible.
+          </p>
+          {selectedFrameIncompatible && (
+            <div className="flex items-start gap-2 p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-200 text-sm">
+              <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+              <div>
+                <p className="font-medium">Frame may be too short.</p>
+                <p className="text-xs mt-0.5">
+                  Selected frame is{' '}
+                  {selectedFrame?.uprightHeight || selectedFrame?.height}mm tall
+                  but the highest beam sits at {highestBeamElevation}mm. Pick a
+                  taller frame or adjust elevations in step 5.
+                </p>
               </div>
-            );
-          })}
+            </div>
+          )}
+          <div className="flex flex-col gap-2 max-h-[280px] overflow-y-auto pr-1">
+            {filteredFrames.map((frame) => {
+              const isSelected = rackData.frameId === frame.id;
+              const compatible = isFrameCompatible(frame);
+              return (
+                <div
+                  key={frame.id}
+                  onClick={() => handleFrameSelect(frame.id)}
+                  className={`
+                    flex items-center justify-between p-3 rounded-lg border cursor-pointer
+                    transition-all duration-150
+                    ${
+                      isSelected
+                        ? compatible
+                          ? 'border-blue-500 bg-blue-500/10'
+                          : 'border-amber-500 bg-amber-500/10'
+                        : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                    }
+                  `}
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-white">{frame.name}</p>
+                      {!compatible && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-amber-300 bg-amber-500/15 border border-amber-500/40 px-1.5 py-0.5 rounded">
+                          <AlertTriangle size={10} />
+                          Too short
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-400">
+                      Height: {frame.uprightHeight || frame.height}mm · Depth: {frame.depth}mm · Upright: {frame.uprightWidth}mm
+                    </p>
+                  </div>
+                  {isSelected && (
+                    <div
+                      className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                        compatible ? 'bg-blue-600' : 'bg-amber-600'
+                      }`}
+                    >
+                      <Check size={12} className="text-white" />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
     </WizardStep>
@@ -665,6 +729,17 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
           </div>
         </div>
       </Card>
+      {selectedFrameIncompatible && (
+        <div className="mt-3 flex items-start gap-2 p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-200 text-sm">
+          <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+          <p className="text-xs">
+            Warning: selected frame (
+            {selectedFrame?.uprightHeight || selectedFrame?.height}mm) is
+            shorter than the highest beam elevation ({highestBeamElevation}mm).
+            You can still create the rack but the configuration is incompatible.
+          </p>
+        </div>
+      )}
     </WizardStep>
   );
 

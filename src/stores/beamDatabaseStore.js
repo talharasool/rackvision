@@ -49,6 +49,7 @@ const useBeamDatabaseStore = create(
           finishColor: data.finishColor || '',
           feature1: data.feature1 || '',
           feature2: data.feature2 || '',
+          description: data.description || '',
           feature3: data.feature3 || '',
           supplierCode: data.supplierCode || '',
           createdAt: new Date().toISOString(),

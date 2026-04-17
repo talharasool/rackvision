@@ -82,6 +82,37 @@ const useNCStore = create(
       getNCsForFrame: (frameId) => {
         return get().nonConformities.filter((nc) => nc.frameId === frameId);
       },
+
+      /**
+       * Clone all NCs referencing any rack id in `idMap.racks` into new NCs
+       * whose rackId/bayId/frameId point at the cloned ids. Used by the
+       * Renewals workflow so the new inspection starts with the same NC set
+       * as the source inspection.
+       */
+      cloneNCsWithIdMap: (idMap) => {
+        const rackMap = idMap?.racks || {};
+        const bayMap = idMap?.bays || {};
+        const frameMap = idMap?.frames || {};
+
+        const clones = get()
+          .nonConformities.filter((nc) =>
+            Object.prototype.hasOwnProperty.call(rackMap, nc.rackId)
+          )
+          .map((nc) => ({
+            ...JSON.parse(JSON.stringify(nc)),
+            id: generateId(),
+            rackId: rackMap[nc.rackId] || nc.rackId,
+            bayId: nc.bayId ? bayMap[nc.bayId] || '' : '',
+            frameId: nc.frameId ? frameMap[nc.frameId] || '' : '',
+            createdAt: new Date().toISOString(),
+          }));
+
+        set((state) => ({
+          nonConformities: [...state.nonConformities, ...clones],
+        }));
+
+        return clones.length;
+      },
     }),
     {
       name: 'rackvision-ncs',

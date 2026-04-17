@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   Download,
   ChevronDown,
+  FileText,
 } from 'lucide-react';
 
 const SNAP_OPTIONS = [
@@ -122,6 +123,7 @@ export default function CanvasToolbar({
   onBack,
   areaName,
   onExportNCs,
+  onExportLayoutPDF,
 }) {
   return (
     <div className="flex items-center justify-between px-4 py-2 bg-slate-900 border-b border-slate-700 shrink-0">
@@ -277,8 +279,20 @@ export default function CanvasToolbar({
         </div>
       </div>
 
-      {/* Right: Export — dev only */}
-      {import.meta.env.DEV && <ExportDropdown onExportNCs={onExportNCs} />}
+      {/* Right: Export actions */}
+      <div className="flex items-center gap-2">
+        {onExportLayoutPDF && (
+          <button
+            onClick={onExportLayoutPDF}
+            className="flex items-center gap-1.5 px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700 transition-colors"
+            title="Export layout as PDF (Doc 1 §5.9)"
+          >
+            <FileText size={14} />
+            Layout PDF
+          </button>
+        )}
+        {import.meta.env.DEV && <ExportDropdown onExportNCs={onExportNCs} />}
+      </div>
     </div>
   );
 }

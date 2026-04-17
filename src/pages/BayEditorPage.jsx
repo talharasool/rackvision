@@ -21,7 +21,7 @@ export default function BayEditorPage() {
   const { inspectionId, areaId, rackId, bayId } = useParams();
   const navigate = useNavigate();
   const { inspections } = useInspectionStore();
-  const { racks, updateRack } = useRackStore();
+  const { racks } = useRackStore();
   const { nonConformities, addNC, removeNC } = useNCStore();
 
   const [activeTab, setActiveTab] = useState('config');
@@ -62,9 +62,6 @@ export default function BayEditorPage() {
     addNC({ ...ncData, rackId, bayId });
   };
 
-  const handleUpdateBay = (data) => {
-    updateRack(rackId, data);
-  };
 
   return (
     <div className="h-[calc(100vh-4rem)] bg-slate-950 flex flex-col overflow-hidden">
@@ -146,6 +143,7 @@ export default function BayEditorPage() {
         {/* Left Panel - Bay Front View (60%) */}
         <div className="w-[60%] border-r border-slate-700 bg-slate-900/50 flex items-center justify-center p-4 overflow-auto">
           <BayFrontView
+            key={bayId}
             rack={rack}
             bay={bay}
             bayIndex={bayIndex}
@@ -223,13 +221,14 @@ export default function BayEditorPage() {
           <div className="flex-1 overflow-y-auto p-4">
             {activeTab === 'config' ? (
               <BayConfig
+                key={bayId}
                 rack={rack}
                 bay={bay}
                 bayIndex={bayIndex}
-                onUpdate={handleUpdateBay}
               />
             ) : (
               <BayInspection
+                key={bayId}
                 rack={rack}
                 bay={bay}
                 bayIndex={bayIndex}

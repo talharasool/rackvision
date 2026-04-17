@@ -42,12 +42,15 @@ export default function BayFrontView({
     // Prefer the bay's per-bay custom length if set; fall back to the rack default
     const bayLength = bay?.bayConfig?.customLength || rack.bayLength || 2700;
     const uprightWidth = rack.uprightWidth || 100;
-    const levels = rack.levels || 3;
-    const firstElevation = rack.firstElevation || 0;
-    const levelSpacing = rack.levelSpacing || 1500;
-    const individualHeights = rack.individualHeights || [];
+    // Per-bay level configuration (Doc 1 §3.1.1) — fall back to rack defaults.
+    const bc = bay?.bayConfig || {};
+    const levels = bc.levels ?? rack.levels ?? 3;
+    const firstElevation = bc.firstElevation ?? rack.firstElevation ?? 0;
+    const levelSpacing = bc.levelSpacing ?? rack.levelSpacing ?? 1500;
+    const individualHeights = bc.individualHeights ?? rack.individualHeights ?? [];
     const useIndividual =
-      rack.useIndividualHeights && individualHeights.length === levels;
+      (bc.useIndividualHeights ?? rack.useIndividualHeights) &&
+      individualHeights.length === levels;
 
     // Compute the highest beam elevation to ensure all levels fit
     let maxElevation = frameHeight;

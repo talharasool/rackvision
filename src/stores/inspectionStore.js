@@ -84,6 +84,51 @@ const useInspectionStore = create(
         return workingArea;
       },
 
+      /**
+       * Renewals workflow (Doc 1 §1.2, §7.4.1).
+       * Creates a fresh inspection record that copies the source inspection's
+       * metadata and working-area list, and exposes an areaIdMap
+       * (sourceAreaId → newAreaId) so the caller can clone the associated
+       * racks + NCs via rackStore/ncStore.
+       */
+      createRenewal: (sourceInspectionId) => {
+        const source = get().inspections.find(
+          (ins) => ins.id === sourceInspectionId
+        );
+        if (!source) return null;
+
+        const newId = generateId();
+        const areaIdMap = {};
+        const newWorkingAreas = (source.workingAreas || []).map((area) => {
+          const newAreaId = generateId();
+          areaIdMap[area.id] = newAreaId;
+          return {
+            ...JSON.parse(JSON.stringify(area)),
+            id: newAreaId,
+          };
+        });
+
+        const renewal = {
+          ...JSON.parse(JSON.stringify(source)),
+          id: newId,
+          createdAt: new Date().toISOString(),
+          status: 'draft',
+          parentInspectionId: source.id,
+          renewalIndex: (source.renewalIndex || 0) + 1,
+          name: source.name
+            ? `${source.name} (Renewal)`
+            : `Renewal of ${source.endCustomer || 'inspection'}`,
+          workingAreas: newWorkingAreas,
+        };
+
+        set((state) => ({
+          inspections: [...state.inspections, renewal],
+          currentInspection: renewal,
+        }));
+
+        return { inspection: renewal, areaIdMap };
+      },
+
       removeWorkingArea: (inspectionId, areaId) => {
         set((state) => {
           const inspections = state.inspections.map((ins) => {
