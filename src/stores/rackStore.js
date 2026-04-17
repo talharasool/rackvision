@@ -223,13 +223,18 @@ const useRackStore = create(
           newRackId
         );
 
+        // Offset below the original rack so it doesn't overlap.
+        // Use frame depth (mm * 0.1 = px) + padding so the copy is clearly visible.
+        const rackHeightPx = (rack.frameDepth || 1000) * 0.1;
+        const offsetY = rackHeightPx + 40;
+
         const duplicate = {
           ...rack,
           id: newRackId,
           name: `${rack.name} (Copy)`,
           position: {
-            x: rack.position.x + 50,
-            y: rack.position.y + 50,
+            x: rack.position.x,
+            y: rack.position.y + offsetY,
           },
           bays,
           frames,
