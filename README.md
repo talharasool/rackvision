@@ -651,6 +651,108 @@ src/
 └── main.jsx              # Entry point
 ```
 
+## Release & Deployment SOP
+
+RackVision follows **Semantic Versioning** (SemVer) for all releases, similar to how Apple and Google manage app releases.
+
+### Versioning Scheme
+
+```
+v{MAJOR}.{MINOR}.{PATCH}
+```
+
+| Part | When to bump | Example |
+|------|-------------|---------|
+| **MAJOR** | Breaking changes, data migration required, major UI overhaul | v1.0.0 → v2.0.0 |
+| **MINOR** | New features, new element types, new editor pages | v1.1.0 → v1.2.0 |
+| **PATCH** | Bug fixes, UI tweaks, documentation updates | v1.2.0 → v1.2.1 |
+
+### Release History
+
+| Version | Tag | Date | Highlights |
+|---------|-----|------|------------|
+| **v1.0.0** | Initial Release | 2026-04 | Phases 1-4: inspections, racks, 2D layout, bay/frame editors |
+| **v1.1.0** | NC Alignment & Export | 2026-04 | Doc 2 NC types (22 categories), CSV/XLSX/ZIP export, severity badges |
+| **v1.2.0** | Accessories & Polish | 2026-04 | Per-level accessories, Doc 4 complete (16/16), pie-chart markers, feature flags |
+| **v1.2.1** | Safe Deletion & Fixes | 2026-04 | Safe rack deletion modal, Edit Properties fix, duplicate rack fix |
+
+### Pre-Release Checklist
+
+Before creating a new release, complete every step:
+
+1. **Code is on `main`** — all feature branches merged, no open PRs for this release
+2. **Build passes** — `npm run build` completes with zero errors
+3. **Lint passes** — `npm run lint` shows no blocking issues
+4. **Manual smoke test** — open the production URL and verify:
+   - Home page loads, recent inspections display
+   - Create a new inspection → add working area → create rack via wizard
+   - 2D layout: drag, zoom, right-click menu, duplicate, delete all work
+   - Bay editor: front view renders, NC recording flow completes
+   - Frame editor: side view renders, brace types display correctly
+   - Export: CSV/XLSX/ZIP downloads successfully
+5. **No regressions** — compare against previous release notes for any broken features
+
+### Release Process
+
+```bash
+# 1. Ensure clean working tree
+git status  # should show "nothing to commit, working tree clean"
+
+# 2. Tag the release
+git tag v{X.Y.Z} -m "v{X.Y.Z} — Short description"
+
+# 3. Push tag to GitHub
+git push origin v{X.Y.Z}
+
+# 4. Create GitHub Release
+gh release create v{X.Y.Z} \
+  --title "v{X.Y.Z} — Short Description" \
+  --notes "## What's New
+- Feature or fix 1
+- Feature or fix 2
+
+## Bug Fixes
+- Fix description"
+
+# 5. Verify Vercel auto-deploys from main
+npx vercel ls  # confirm latest deployment is "Ready"
+
+# 6. Verify production URL
+# Open https://rackvision-three.vercel.app and run smoke test
+```
+
+### Deployment Pipeline
+
+| Step | Tool | Trigger | Notes |
+|------|------|---------|-------|
+| Build | Vite 8 | `git push origin main` | Vercel auto-builds on push |
+| Deploy | Vercel | Automatic | Zero-downtime deployment, instant rollback available |
+| CDN | Vercel Edge | Automatic | Global CDN, assets cached at edge |
+| Release | GitHub Releases | Manual | Tag + release notes after deploy verification |
+
+### Rollback
+
+If a deployment introduces a critical bug:
+
+```bash
+# Option 1: Revert via Vercel dashboard
+# Go to vercel.com → project → Deployments → promote a previous deployment
+
+# Option 2: Revert via git
+git revert HEAD
+git push origin main
+# Vercel auto-deploys the revert
+```
+
+### Environment URLs
+
+| Environment | URL | Deploys from |
+|-------------|-----|-------------|
+| Production | https://rackvision-three.vercel.app | `main` branch (auto) |
+| Preview | Auto-generated per commit | Any branch/PR |
+
+---
+
 ## Getting Started
 
 ```bash
