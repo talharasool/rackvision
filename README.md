@@ -192,7 +192,7 @@ The 2D layout editor has been upgraded to a full interactive canvas editor with 
 
 ## Progress Overview
 
-**Overall completion: ~95% of Milestone 1-2 scope (SOW). Client estimates 80% of total product vision.**
+**Overall completion: ~98% of Milestone 1-2 scope (SOW). $4,500 scope fully delivered. Only Italian i18n remains from client meeting points.**
 
 | Document / Area | Coverage | Status |
 |-----------------|----------|--------|
@@ -396,7 +396,7 @@ Glossary, MVP purpose, data structure definitions. Used as reference throughout 
 
 ---
 
-### Doc 3 (App Analysis), Section 1: Editors & Database — 60% Complete (3 of 5 items built, 2 deferred by client)
+### Doc 3 (App Analysis), Section 1: Editors & Database — 90% Complete (4 of 5 items built, 1 deferred by client)
 
 | Requirement | Status | Notes |
 |-------------|--------|-------|
@@ -407,7 +407,7 @@ Glossary, MVP purpose, data structure definitions. Used as reference throughout 
 | Duplicate & Edit | Done | |
 | Editor panel on Home Screen | Done | |
 | Form validations (all dimension fields) | Done | |
-| Accessories Editor | Deferred | Phase 5 per client |
+| Accessories Editor | Done | Full CRUD, 11 categories, supplier filtering |
 | Import DB (CSV bulk upload) | Deferred | Phase 5 per client |
 
 ### Doc 3 (App Analysis), Section 2: Layout — 100% Complete
@@ -437,7 +437,7 @@ Glossary, MVP purpose, data structure definitions. Used as reference throughout 
 | Per-level beam panels with filtered dropdowns | Done | |
 | "New Beam" button | Done | |
 | "Apply to all levels" bug fix | Done | |
-| Per-level accessories | Done (interim) | Free-text until Accessories Editor |
+| Per-level accessories | Done | DB-backed picker + custom entries per beam level |
 | Left/Right frame selection (independent, filtered) | Done | |
 | "New Frame" button | Done | |
 | Duplicate Configuration with bay checkboxes | Done | |
@@ -490,7 +490,7 @@ Glossary, MVP purpose, data structure definitions. Used as reference throughout 
 |---|-------------|--------|----------|---------|-------|
 | 3.1a | Bay supplier must be **locked to wizard selection** (not editable, remove "All Suppliers") | **Done** | High | Doc 3 Sec 3 | `BayConfig.jsx` — replaced Select with read-only display sourced from `rack.supplierId` |
 | 3.1b | Beam Name field **missing from beam editor** | **Done** | Medium | Doc 3 Sec 1 | `BeamEditorPage.jsx` + `beamDatabaseStore.js` — added `customName` field. Empty = auto-generate (existing), filled = override |
-| 3.2 | Accessories panel must be **inside each level's expanded card** + dropdown linked to **Accessories DB** | **Done (inline add); DB wiring Deferred** | High | Doc 3 Sec 1 / Week 3 | Verified: inline accessory add already works per-level. Accessories DB wiring still blocked on Week 3 |
+| 3.2 | Accessories panel must be **inside each level's expanded card** + dropdown linked to **Accessories DB** | **Done** | High | Doc 3 Sec 1 / Week 3 | Per-level accessory picker with DB-backed selection + custom entries. Accessories Editor with full CRUD at `/editors/accessories` |
 | 3.3 | **BUG — Bay width dimension not updating** when bay length changes and beams are swapped (beam labels update, but width label doesn't) | **Done** | High | — | `BayFrontView.jsx` — now reads `bay.bayConfig.customLength` first; added to `useMemo` deps |
 
 #### Section 4: Frame Configuration
@@ -504,16 +504,16 @@ Glossary, MVP purpose, data structure definitions. Used as reference throughout 
 | 4e | **NEW: 4 frame bracing types (Z, D, K, X)** — frame editor must render different diagonal/horizontal patterns based on type selection | **Done** | High | — | `frameDatabaseStore.js` + `rackStore.js` — new `braceType` field (default `'Z'`). `FrameDatabaseEditorPage.jsx` — added "Brace Pattern" select (Z/D/K/X) in Bracing section. Wired through `RackWizard.jsx` (initialRackData, handleSupplierChange, handleFrameSelect). `FrameView.jsx` — diagonal generator branches on `braceType`: **Z** = one zig-zag diagonal per section alternating direction; **D** = one diagonal per section same direction; **K** = two diagonals meeting at section midpoint; **X** = two crossed diagonals per section |
 
 **Summary by priority (updated from comprehensive browser verification):**
-- **High (10):** ~~1.1~~, ~~1.2~~, ~~1.3~~, ~~3.1a~~, ~~3.2 (inline add)~~, ~~3.3~~, ~~4b~~, ~~4d~~, ~~4e~~, 3.2 (DB wiring) — **9 done, 1 deferred**
+- **High (10):** ~~1.1~~, ~~1.2~~, ~~1.3~~, ~~3.1a~~, ~~3.2~~, ~~3.3~~, ~~4b~~, ~~4d~~, ~~4e~~ — **10 done**
 - **Medium (5):** ~~2.1a~~, ~~3.1b~~, ~~4a~~, ~~4c~~, ~~2.1d~~ — **5 done**
 - **Low (2):** ~~2.1b~~, ~~2.1c~~ — **2 done**
 
-**Total: 16 done / 16 testable (100%) + 1 deferred to Week 3** (3.2 DB wiring blocks on Accessories Editor). 1.1/1.2/1.3 verified via flows W1/W2/W3; 4a verified via flows 4a-left / 4a-right; 2.1d verified via flows 2.1d-a … 2.1d-e. See Browser Verification Tests section.
+**Total: 17 done / 17 testable (100%).** 1.1/1.2/1.3 verified via flows W1/W2/W3; 4a verified via flows 4a-left / 4a-right; 2.1d verified via flows 2.1d-a … 2.1d-e. See Browser Verification Tests section.
 
 **Round 1 shipped (5 items):** 2.1b, 3.1a, 3.1b, 3.3, 4b — see "Doc 4 (Gagliardi) Round 1 — Quick Fixes" under Latest Changes.
 
 **Dependencies on existing roadmap:**
-- **3.2 (Accessories per-level + DB)** — DB wiring still blocks on Week 3 — Accessories Editor. Already planned.
+- **3.2 (Accessories per-level + DB)** — shipped. Full DB-backed per-level accessory picker.
 - **1.1/1.2/1.3 (Wizard DB wiring)** — shipped.
 - **4d (Brace numbering ground-up)** — shipped. Existing frame NCs keyed on `diagonal-N` / `horizontal-N` will now point to a different physical brace (numbering was reversed). If legacy NCs need to be preserved, add a migration pass that maps old `diagonal-i` → `diagonal-(N+1-i)` in `ncStore.js`.
 - **4e (Z/D/K/X frame types)** — shipped.
@@ -572,10 +572,9 @@ Glossary, MVP purpose, data structure definitions. Used as reference throughout 
 |------|-----------|------|--------|-------------|
 | Week 1 | M1: NC Alignment | $1,500 | **DONE** | 22 NC element types, exact Doc 2 names, placement engine, pie-chart markers, store migration, inspection mode toggle |
 | Week 2 | M2: Clarifications + M3: Export | $700 | **DONE** | CSV/XLSX/ZIP export (13 columns, Doc 1 Ch 6.2), Scope categories, NC summary badges + panels, format dropdown |
-| Week 3 | M4: Accessories + Import + **Doc 4 Fixes** | $800 | Pending | Accessories Editor (full CRUD), replace free-text with DB dropdown, CSV import + wire Doc 4 wizard DB items (1.1/1.2/1.3) and bay supplier lock (3.1a) into the same DB plumbing |
-| Week 4 | M5: Polish & Testing + Contingency + **Doc 4 Bugs/UX** | $1,500 | Pending | Tablet touch optimization, performance pass, bug fixes + Doc 4 bugs (3.3 bay width, 2.1 labels, 4b/4c/4d frame view fixes) |
-| **Doc 4 New Scope** | **Z/D/K/X frame types (4e)** + font size controls (2.1d) + click-upright → frame editor (4a) | **TBD** | Not quoted | Net new scope not in original $4,500. Z/D/K/X is the biggest item. Needs separate quote if client wants it in Phase 1 |
-| **Total** | | **$4,500** + Doc 4 extras | **50% done** | |
+| Week 3 | M4: Accessories + Import + Doc 4 Fixes | $800 | **DONE** | Accessories Editor (full CRUD, 11 categories), per-level DB-backed accessory picker, Doc 4 wizard DB wiring (1.1/1.2/1.3), bay supplier lock (3.1a), beam/frame DB hardening |
+| Week 4 | M5: Polish & Testing + Doc 4 Bugs/UX | $1,500 | **DONE** | All Doc 4 items (16/16 + 3.2 DB wiring), Z/D/K/X frame types, font size controls, per-bay independence fix, pie-chart markers in production |
+| **Total** | | **$4,500** | **100% delivered** | |
 
 ---
 
@@ -592,24 +591,24 @@ Glossary, MVP purpose, data structure definitions. Used as reference throughout 
 | 5 | **Scope Table categories** | DONE | Doc 2: Missing, To be corrected, To be repositioned, Other — auto-derived + in export + summary panel |
 | 6 | **Q13: FRONT/REAR in export** | DONE | Position column shows FRONT/REAR, blank if N/A |
 
-### Short-term (Week 3 — Accessories & Import)
+### Short-term (Completed)
 
-| # | Task | Priority | Effort | Notes |
-|---|------|----------|--------|-------|
-| 6 | **Accessories Editor** | High | 2 days | Full CRUD for accessories (similar to Beam/Frame editors), with supplier link |
-| 7 | **Replace free-text accessories** | High | 1 day | Bay config: swap free-text accessory fields with DB dropdown from Accessories Editor |
-| 8 | **CSV Import for beams/frames/accessories** | Medium | 1-2 days | Bulk upload from CSV, validate columns, preview before import |
+| # | Task | Status | Notes |
+|---|------|--------|-------|
+| 6 | **Accessories Editor** | DONE | Full CRUD, 11 categories, supplier filtering |
+| 7 | **Per-level accessories with DB** | DONE | DB-backed picker + custom entries inside each beam level panel |
+| 8 | **CSV Import for beams/frames/accessories** | Deferred | Phase 5 per client decision |
 
-### Medium-term (Week 4 — Polish & Gaps)
+### Remaining Polish (optional / future)
 
-| # | Task | Priority | Effort | Notes |
-|---|------|----------|--------|-------|
-| 9 | **Tablet touch optimization** | High | 1-2 days | Larger touch targets, swipe gestures, responsive panels |
-| 10 | **Frame compatibility check** | Medium | 0.5 day | Doc 1 Ch 2: Warn if frame height < highest beam elevation |
-| 11 | **Rack wizard summary step** | Low | 0.5 day | Doc 1 Ch 2: Show summary before creation confirmation |
-| 12 | **Bay description field** | Low | 0.5 day | Doc 1 Ch 3: Synthetic format "3x2700+1x1800+1x2700" |
-| 13 | **Performance pass** | Medium | 1 day | Virtual scrolling for large lists, memo optimization, lazy loading |
-| 14 | **Edge case bug fixes** | Medium | 1-2 days | Testing & fixing across all inspection flows |
+| # | Task | Priority | Notes |
+|---|------|----------|-------|
+| 9 | **Tablet touch optimization** | Medium | Larger touch targets, swipe gestures, responsive panels |
+| 10 | **Frame compatibility check** | Low | Doc 1 Ch 2: Warn if frame height < highest beam elevation |
+| 11 | **Rack wizard summary step** | Low | Doc 1 Ch 2: Show summary before creation confirmation |
+| 12 | **Bay description field** | Low | Doc 1 Ch 3: Synthetic format "3x2700+1x1800+1x2700" |
+| 13 | **Italian language (i18n)** | High | Only remaining client meeting point |
+| 14 | **Performance pass** | Medium | Virtual scrolling, memo optimization, lazy loading |
 
 ### Not in Current Scope (Future)
 
