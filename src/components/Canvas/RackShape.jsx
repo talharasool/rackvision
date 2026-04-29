@@ -214,32 +214,14 @@ const RackShape = forwardRef(function RackShape(
         />
       )}
 
-      {/* Rack name label — Doc 5 §12: centered over the last end frame.
-          Placed on the opposite side from the frame numbers so both are visible. */}
-      <Rect
-        x={totalWidth - scaledUprightWidth - 20}
-        y={
-          frontSide === 'top'
-            ? scaledFrameDepth + 2
-            : -20 * labelFontSize
-        }
-        width={scaledUprightWidth + 40}
-        height={16 * labelFontSize}
-        fill="#0f172a"
-        cornerRadius={3}
-        opacity={0.85}
-        listening={false}
-      />
+      {/* Rack name label — Doc 5 §12: vertically centered in rack body,
+          horizontally aligned with the last end frame upright. */}
       <Text
-        x={totalWidth - scaledUprightWidth - 20}
-        y={
-          frontSide === 'top'
-            ? scaledFrameDepth + 4
-            : -18 * labelFontSize
-        }
-        width={scaledUprightWidth + 40}
+        x={totalWidth - scaledUprightWidth / 2 - 20}
+        y={scaledFrameDepth / 2 - (7 * labelFontSize)}
+        width={40}
         text={name || 'Rack'}
-        fontSize={12 * labelFontSize}
+        fontSize={14 * labelFontSize}
         fontStyle="bold"
         fill="#e2e8f0"
         align="center"
