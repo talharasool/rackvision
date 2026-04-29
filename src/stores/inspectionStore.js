@@ -129,6 +129,15 @@ const useInspectionStore = create(
         return { inspection: renewal, areaIdMap };
       },
 
+      // Doc 5 §10: Delete an inspection and all its data
+      deleteInspection: (id) => {
+        set((state) => ({
+          inspections: state.inspections.filter((ins) => ins.id !== id),
+          currentInspection:
+            state.currentInspection?.id === id ? null : state.currentInspection,
+        }));
+      },
+
       removeWorkingArea: (inspectionId, areaId) => {
         set((state) => {
           const inspections = state.inspections.map((ins) => {
