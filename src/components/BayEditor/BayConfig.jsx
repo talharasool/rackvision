@@ -799,7 +799,7 @@ export default function BayConfig({ rack, bay, bayIndex }) {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <Select
-              label="Left Frame"
+              label="Front Frame"
               value={leftFrameDbId}
               onChange={(e) => handleFrameSelect('left', e.target.value)}
               options={frameOptions}
@@ -813,7 +813,7 @@ export default function BayConfig({ rack, bay, bayIndex }) {
           </div>
           <div>
             <Select
-              label="Right Frame"
+              label="Rear Frame"
               value={rightFrameDbId}
               onChange={(e) => handleFrameSelect('right', e.target.value)}
               options={frameOptions}
