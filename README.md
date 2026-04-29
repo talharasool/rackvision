@@ -91,6 +91,12 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
 
 ## Latest Changes
 
+### Doc 5 — Milestone A: Quick Fixes (v1.3.0)
+
+- **Home button** — RackVision logo in header is now clickable, navigates to home page from any screen
+- **Frame labels corrected** — Bay config "Left Frame"/"Right Frame" renamed to "Front Frame"/"Rear Frame"
+- **Rack name repositioned** — Rack name now appears beside the last frame, vertically centered in the rack body (was floating above)
+
 ### Safe Rack Deletion & NC Management
 
 - **Delete confirmation modal** — Deleting a rack (right-click → Delete, or keyboard Delete/Backspace) now shows a detailed modal listing what will be lost: rack name, bay count, frame count, and NC count. NCs are highlighted in red since they represent recorded inspection data.
@@ -675,6 +681,7 @@ v{MAJOR}.{MINOR}.{PATCH}
 | **v1.1.0** | NC Alignment & Export | 2026-04 | Doc 2 NC types (22 categories), CSV/XLSX/ZIP export, severity badges |
 | **v1.2.0** | Accessories & Polish | 2026-04 | Per-level accessories, Doc 4 complete (16/16), pie-chart markers, feature flags |
 | **v1.2.1** | Safe Deletion & Fixes | 2026-04 | Safe rack deletion modal, Edit Properties fix, duplicate rack fix |
+| **v1.3.0** | Doc 5 Milestone A | 2026-04 | Home button, Front/Rear frame labels, rack name repositioned |
 
 ### Pre-Release Checklist
 
