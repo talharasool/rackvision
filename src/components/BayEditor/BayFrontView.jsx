@@ -384,9 +384,12 @@ export default function BayFrontView({
       {beamPositions.map((beam, i) => {
         const levelIdx = beam.level - 1;
         const bc = bay?.bayConfig || {};
-        // Get accessories for this level
-        const levelAccessories = bc.levelAccessories?.[levelIdx] ||
-          (bc.accessories || []).filter(a => a.levelIndex === levelIdx);
+        // Get accessories for this level: per-level first, then bay-level (no levelIndex)
+        const perLevel = bc.levelAccessories?.[levelIdx] || [];
+        const bayLevel = (bc.accessories || []).filter(
+          a => a.levelIndex === levelIdx || a.levelIndex == null
+        );
+        const levelAccessories = perLevel.length > 0 ? perLevel : bayLevel;
         if (!levelAccessories || levelAccessories.length === 0) return null;
 
         // Get abbreviations (deduplicate)
