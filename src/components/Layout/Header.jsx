@@ -29,14 +29,16 @@ export default function Header({ inspectionName }) {
             {inspectionName}
           </span>
         )}
-        <button
-          onClick={toggleLanguage}
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors border border-slate-700"
-          title={i18n.language === 'en' ? 'Passa a Italiano' : 'Switch to English'}
-        >
-          <Globe size={14} />
-          {i18n.language === 'en' ? 'EN' : 'IT'}
-        </button>
+        {import.meta.env.DEV && (
+          <button
+            onClick={toggleLanguage}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white hover:bg-slate-800 transition-colors border border-slate-700"
+            title={i18n.language === 'en' ? 'Passa a Italiano' : 'Switch to English'}
+          >
+            <Globe size={14} />
+            {i18n.language === 'en' ? 'EN' : 'IT'}
+          </button>
+        )}
       </div>
     </header>
   );
