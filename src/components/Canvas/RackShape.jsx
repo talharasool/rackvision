@@ -215,16 +215,14 @@ const RackShape = forwardRef(function RackShape(
       )}
 
       {/* Rack name label — Doc 5 §12: vertically centered in rack body,
-          horizontally aligned with the last end frame upright. */}
+          placed to the right of the last frame, outside the rack. */}
       <Text
-        x={totalWidth - scaledUprightWidth / 2 - 20}
+        x={totalWidth + 4}
         y={scaledFrameDepth / 2 - (7 * labelFontSize)}
-        width={40}
         text={name || 'Rack'}
         fontSize={14 * labelFontSize}
         fontStyle="bold"
         fill="#e2e8f0"
-        align="center"
         listening={false}
       />
 
