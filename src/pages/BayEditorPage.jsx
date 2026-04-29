@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
   Settings,
@@ -18,6 +19,7 @@ import BayConfig from '../components/BayEditor/BayConfig';
 import BayInspection from '../components/BayEditor/BayInspection';
 
 export default function BayEditorPage() {
+  const { t } = useTranslation();
   const { inspectionId, areaId, rackId, bayId } = useParams();
   const navigate = useNavigate();
   const { inspections } = useInspectionStore();
@@ -51,8 +53,8 @@ export default function BayEditorPage() {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-slate-400 mb-4">Bay not found.</p>
-          <Button onClick={() => navigate('/')}>Go Home</Button>
+          <p className="text-slate-400 mb-4">{t('bay.bay_not_found')}</p>
+          <Button onClick={() => navigate('/')}>{t('common.go_home')}</Button>
         </div>
       </div>
     );
@@ -96,7 +98,7 @@ export default function BayEditorPage() {
                 ? 'text-slate-400 hover:text-white hover:bg-slate-700'
                 : 'text-slate-600 cursor-not-allowed'
             }`}
-            title="Previous bay"
+            title={t('bay.previous_bay_title')}
           >
             <ChevronLeft size={18} />
           </button>
@@ -124,7 +126,7 @@ export default function BayEditorPage() {
                 ? 'text-slate-400 hover:text-white hover:bg-slate-700'
                 : 'text-slate-600 cursor-not-allowed'
             }`}
-            title="Next bay"
+            title={t('bay.next_bay_title')}
           >
             <ChevronRight size={18} />
           </button>
@@ -193,7 +195,7 @@ export default function BayEditorPage() {
               }`}
             >
               <Settings size={16} />
-              Configuration
+              {t('bay.tab_configuration')}
             </button>
             <button
               onClick={() => setActiveTab('inspection')}
@@ -204,7 +206,7 @@ export default function BayEditorPage() {
               }`}
             >
               <ClipboardCheck size={16} />
-              Inspection
+              {t('bay.tab_inspection')}
             </button>
           </div>
 
@@ -215,7 +217,7 @@ export default function BayEditorPage() {
                 onClick={() => setShowNCPanel(!showNCPanel)}
                 className="w-full flex items-center justify-between px-4 py-2 text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors"
               >
-                <span>NC Summary</span>
+                <span>{t('bay.nc_summary_toggle')}</span>
                 <span>{showNCPanel ? '\u25B2' : '\u25BC'}</span>
               </button>
               {showNCPanel && (

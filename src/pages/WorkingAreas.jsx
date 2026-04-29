@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Plus, MapPin, Trash2, Download, ChevronDown } from 'lucide-react';
 import Card from '../components/ui/Card';
 import Button from '../components/ui/Button';
@@ -11,6 +12,7 @@ import NCSummaryBadge from '../components/ui/NCSummaryBadge';
 import { buildExportRows, rowsToCSV, downloadFile, downloadXLSX, downloadZIPBundle } from '../utils/exportNC';
 
 export default function WorkingAreas() {
+  const { t } = useTranslation();
   const { inspectionId } = useParams();
   const navigate = useNavigate();
   const { inspections, setCurrentInspection, addWorkingArea, removeWorkingArea } =
@@ -55,7 +57,7 @@ export default function WorkingAreas() {
       nonConformities,
     });
     if (rows.length === 0) {
-      alert('No non-conformities to export.');
+      alert(t('inspection.no_ncs_to_export'));
       return;
     }
     const date = new Date().toISOString().slice(0, 10);
@@ -95,8 +97,8 @@ export default function WorkingAreas() {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-slate-400 mb-4">Inspection not found.</p>
-          <Button onClick={() => navigate('/')}>Go Home</Button>
+          <p className="text-slate-400 mb-4">{t('inspection.inspection_not_found')}</p>
+          <Button onClick={() => navigate('/')}>{t('common.go_home')}</Button>
         </div>
       </div>
     );
@@ -133,7 +135,7 @@ export default function WorkingAreas() {
               <ArrowLeft size={20} />
             </button>
             <div>
-              <h1 className="text-2xl font-bold text-white">Working Areas</h1>
+              <h1 className="text-2xl font-bold text-white">{t('inspection.working_areas_page_title')}</h1>
               <p className="text-sm text-slate-400">
                 {inspection.endCustomer || 'Untitled'} -- {inspection.city || 'No city'}
               </p>
@@ -147,7 +149,7 @@ export default function WorkingAreas() {
                   onClick={() => setShowExportMenu((v) => !v)}
                   icon={Download}
                 >
-                  Export All NCs
+                  {t('inspection.export_all_ncs')}
                   <ChevronDown size={12} className="ml-1" />
                 </Button>
                 {showExportMenu && (
@@ -156,26 +158,26 @@ export default function WorkingAreas() {
                       onClick={() => handleExportAllNCs('csv')}
                       className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
                     >
-                      Export CSV
+                      {t('common.export_csv')}
                     </button>
                     <button
                       onClick={() => handleExportAllNCs('xlsx')}
                       className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
                     >
-                      Export XLSX
+                      {t('common.export_xlsx')}
                     </button>
                     <button
                       onClick={() => handleExportAllNCs('zip')}
                       className="w-full text-left px-3 py-2 text-sm text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
                     >
-                      Export ZIP (with photos)
+                      {t('common.export_zip_with_photos')}
                     </button>
                   </div>
                 )}
               </div>
             )}
             <Button onClick={() => setShowForm(!showForm)} icon={Plus}>
-              Add Working Area
+              {t('inspection.add_working_area')}
             </Button>
           </div>
         </div>
@@ -183,30 +185,30 @@ export default function WorkingAreas() {
         {/* Inline Add Form */}
         {showForm && (
           <Card className="mb-6">
-            <h3 className="text-white font-medium mb-4">New Working Area</h3>
+            <h3 className="text-white font-medium mb-4">{t('inspection.new_working_area')}</h3>
             <div className="flex flex-col sm:flex-row gap-3">
               <Input
-                label="Area Name"
+                label={t('inspection.area_name')}
                 value={areaName}
                 onChange={(e) => setAreaName(e.target.value)}
-                placeholder="e.g. Warehouse A"
+                placeholder={t('inspection.area_name_placeholder')}
                 required
                 className="flex-1"
               />
               <Input
-                label="Description"
+                label={t('inspection.area_description')}
                 value={areaDescription}
                 onChange={(e) => setAreaDescription(e.target.value)}
-                placeholder="Optional description"
+                placeholder={t('inspection.area_description_placeholder')}
                 className="flex-1"
               />
             </div>
             <div className="flex justify-end gap-3 mt-4">
               <Button variant="secondary" onClick={() => setShowForm(false)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button onClick={handleAdd} disabled={!areaName.trim()} icon={Plus}>
-                Add
+                {t('common.add')}
               </Button>
             </div>
           </Card>
@@ -216,9 +218,9 @@ export default function WorkingAreas() {
         {areas.length === 0 ? (
           <Card className="text-center py-12">
             <MapPin size={40} className="text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-400">No working areas yet.</p>
+            <p className="text-slate-400">{t('inspection.no_areas_yet_heading')}</p>
             <p className="text-slate-500 text-sm mt-1">
-              Click "Add Working Area" to get started.
+              {t('inspection.no_areas_click_to_start')}
             </p>
           </Card>
         ) : (

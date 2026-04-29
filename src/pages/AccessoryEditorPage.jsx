@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Plus, Pencil, Trash2, Copy, Search } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -18,6 +19,7 @@ const emptyForm = {
 };
 
 export default function AccessoryEditorPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { accessories, addAccessory, updateAccessory, deleteAccessory, duplicateAccessory } = useAccessoryDatabaseStore();
   const { suppliers } = useSupplierStore();
@@ -68,10 +70,10 @@ export default function AccessoryEditorPage() {
   const validateForm = () => {
     const errs = {};
     if (!form.name.trim()) {
-      errs.name = 'Name is required';
+      errs.name = t('editors.error_accessory_name_required');
     }
     if (!form.supplierId) {
-      errs.supplierId = 'Supplier is required';
+      errs.supplierId = t('editors.error_accessory_supplier_required');
     }
     return errs;
   };
@@ -116,17 +118,17 @@ export default function AccessoryEditorPage() {
               variant="ghost"
               size="sm"
               onClick={() => (showForm ? resetForm() : navigate('/'))}
-              title={showForm ? 'Back to accessory list' : 'Back to home'}
+              title={showForm ? t('editors.back_to_accessory_list_title') : t('editors.back_to_home_title')}
             >
               <ArrowLeft size={18} />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-white">Accessory Editor</h1>
-              <p className="text-sm text-slate-400">Manage accessory database</p>
+              <h1 className="text-2xl font-bold text-white">{t('editors.accessory_editor_title')}</h1>
+              <p className="text-sm text-slate-400">{t('editors.accessory_editor_subtitle')}</p>
             </div>
           </div>
           {!showForm && (
-            <Button onClick={handleNew} icon={Plus}>New Accessory</Button>
+            <Button onClick={handleNew} icon={Plus}>{t('editors.new_accessory_button')}</Button>
           )}
         </div>
 
@@ -134,57 +136,57 @@ export default function AccessoryEditorPage() {
         {showForm && (
           <Card className="mb-6">
             <h2 className="text-lg font-semibold text-white mb-4">
-              {editingId ? 'Edit Accessory' : 'New Accessory'}
+              {editingId ? t('editors.edit_accessory_form_title') : t('editors.new_accessory_form_title')}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
                 <Input
-                  label="Name"
+                  label={t('editors.accessory_name_label')}
                   value={form.name}
                   onChange={(e) => setField('name', e.target.value)}
-                  placeholder="e.g. Pallet Support Bar 2700mm"
+                  placeholder={t('editors.accessory_name_placeholder')}
                   required
                   error={formErrors.name}
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1">{t('editors.accessory_description_label')}</label>
                 <textarea
                   value={form.description}
                   onChange={(e) => setField('description', e.target.value)}
-                  placeholder="Optional description or notes"
+                  placeholder={t('editors.accessory_description_placeholder')}
                   rows={2}
                   className="w-full rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 bg-slate-800 border border-slate-600 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-y"
                 />
               </div>
               <Select
-                label="Category"
+                label={t('editors.accessory_category_label')}
                 value={form.category}
                 onChange={(e) => setField('category', e.target.value)}
                 options={ACCESSORY_CATEGORIES}
               />
               <Select
-                label="Supplier"
+                label={t('common.supplier')}
                 value={form.supplierId}
                 onChange={(e) => handleSupplierChange(e.target.value)}
                 options={supplierOptions}
-                placeholder="Select supplier"
+                placeholder={t('common.select_supplier_placeholder')}
                 required
                 error={formErrors.supplierId}
               />
               <Input
-                label="Supplier Code"
+                label={t('editors.supplier_code_label')}
                 value={form.supplierCode}
                 onChange={(e) => setField('supplierCode', e.target.value)}
-                placeholder="Optional"
+                placeholder={t('common.supplier_code_placeholder')}
               />
             </div>
 
             <div className="flex gap-3 mt-6">
               <Button onClick={handleSave}>
-                {editingId ? 'Update Accessory' : 'Save Accessory'}
+                {editingId ? t('editors.update_accessory') : t('editors.save_accessory')}
               </Button>
-              <Button variant="ghost" onClick={resetForm}>Cancel</Button>
+              <Button variant="ghost" onClick={resetForm}>{t('common.cancel')}</Button>
             </div>
           </Card>
         )}
@@ -196,20 +198,20 @@ export default function AccessoryEditorPage() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search accessories..."
+                placeholder={t('editors.search_accessories_placeholder')}
               />
             </div>
 
             <h2 className="text-lg font-semibold text-white mb-3">
-              Accessories ({filteredAccessories.length})
+              {t('editors.accessories_list_heading', { n: filteredAccessories.length })}
             </h2>
 
             {filteredAccessories.length === 0 ? (
               <Card className="text-center py-8">
                 <p className="text-slate-500">
                   {accessories.length === 0
-                    ? 'No accessories in database. Create your first one.'
-                    : 'No accessories match your search.'}
+                    ? t('editors.no_accessories_db')
+                    : t('editors.no_accessories_search')}
                 </p>
               </Card>
             ) : (
@@ -225,7 +227,7 @@ export default function AccessoryEditorPage() {
                         <div className="flex flex-wrap gap-3 text-xs text-slate-400">
                           <span>{categoryLabel(acc.category)}</span>
                           {acc.supplierName && <span>{acc.supplierName}</span>}
-                          {acc.supplierCode && <span>Code: {acc.supplierCode}</span>}
+                          {acc.supplierCode && <span>{t('common.code_label')} {acc.supplierCode}</span>}
                         </div>
                       </div>
                       <div className="flex items-center gap-1">

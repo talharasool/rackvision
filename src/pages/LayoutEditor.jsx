@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   X,
   Pencil,
@@ -40,6 +41,7 @@ function SeverityBadge({ severity }) {
 }
 
 export default function LayoutEditor() {
+  const { t } = useTranslation();
   const { inspectionId, areaId } = useParams();
   const navigate = useNavigate();
   const { inspections } = useInspectionStore();
@@ -156,7 +158,7 @@ export default function LayoutEditor() {
           const rackNCs = nonConformities.filter((nc) => nc.rackId === selectedRackIds[0]);
           setDeleteConfirm({
             rackId: selectedRackIds[0],
-            rackName: rack?.name || 'Unnamed Rack',
+            rackName: rack?.name || t('layout.unnamed_rack'),
             bayCount: rack?.bays?.length || 0,
             frameCount: rack?.frames?.length || 0,
             ncCount: rackNCs.length,
@@ -303,8 +305,8 @@ export default function LayoutEditor() {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-slate-400 mb-4">Layout not found.</p>
-          <Button onClick={() => navigate('/')}>Go Home</Button>
+          <p className="text-slate-400 mb-4">{t('layout.layout_not_found')}</p>
+          <Button onClick={() => navigate('/')}>{t('common.go_home')}</Button>
         </div>
       </div>
     );
@@ -433,7 +435,7 @@ export default function LayoutEditor() {
         const rackNCs = nonConformities.filter((nc) => nc.rackId === rackId);
         setDeleteConfirm({
           rackId,
-          rackName: rack?.name || 'Unnamed Rack',
+          rackName: rack?.name || t('layout.unnamed_rack'),
           bayCount: rack?.bays?.length || 0,
           frameCount: rack?.frames?.length || 0,
           ncCount: rackNCs.length,
@@ -556,7 +558,7 @@ export default function LayoutEditor() {
       nonConformities,
     });
     if (rows.length === 0) {
-      alert('No non-conformities to export for this area.');
+      alert(t('layout.no_ncs_to_export_area'));
       return;
     }
     const date = new Date().toISOString().slice(0, 10);
@@ -586,11 +588,11 @@ export default function LayoutEditor() {
   const handleExportLayoutPDF = () => {
     const stage = canvasRef.current?.getStage?.();
     if (!stage) {
-      alert('Layout canvas is not ready yet.');
+      alert(t('layout.layout_canvas_not_ready'));
       return;
     }
     if (areaRacks.length === 0) {
-      alert('No racks in this area — nothing to export.');
+      alert(t('layout.no_racks_to_export'));
       return;
     }
     // Briefly clear selection so selection outlines don't appear in the PDF.
@@ -609,7 +611,7 @@ export default function LayoutEditor() {
         });
       } catch (err) {
         console.error('Layout PDF export failed', err);
-        alert(`Layout PDF export failed: ${err.message || err}`);
+        alert(t('layout.layout_pdf_export_failed', { error: err.message || err }));
       } finally {
         setSelectedRackIds(prevSelection);
       }
@@ -715,10 +717,10 @@ export default function LayoutEditor() {
                 {cmRack && (
                   <div className="px-3 py-2 border-b border-slate-700 mb-1">
                     <p className="text-sm font-semibold text-white truncate">
-                      {cmRack.name || 'Unnamed Rack'}
+                      {cmRack.name || t('layout.unnamed_rack')}
                     </p>
                     <p className="text-[11px] text-slate-400">
-                      {cmBays} bay{cmBays !== 1 ? 's' : ''} · {cmFrames} frame{cmFrames !== 1 ? 's' : ''} · {cmLevels} level{cmLevels !== 1 ? 's' : ''}
+                      {t('layout.delete_bay_count', { n: cmBays })} · {t('layout.delete_frame_count', { n: cmFrames })} · {cmLevels} level{cmLevels !== 1 ? 's' : ''}
                     </p>
                   </div>
                 )}
@@ -728,21 +730,21 @@ export default function LayoutEditor() {
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
                 >
                   <Pencil size={14} />
-                  Edit Properties
+                  {t('layout.edit_properties')}
                 </button>
                 <button
                   onClick={() => handleContextMenuAction('duplicate')}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
                 >
                   <Copy size={14} />
-                  Duplicate
+                  {t('layout.duplicate')}
                 </button>
                 <button
                   onClick={() => handleContextMenuAction('rotate')}
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
                 >
                   <RotateCw size={14} />
-                  Rotate 90
+                  {t('layout.rotate_90')}
                 </button>
                 {(() => {
                   const ncCount = nonConformities.filter((nc) => nc.rackId === contextMenu.rackId).length;
@@ -754,7 +756,7 @@ export default function LayoutEditor() {
                         className="w-full flex items-center gap-2 px-3 py-2 text-sm text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors"
                       >
                         <Eraser size={14} />
-                        Clear {ncCount} NC{ncCount !== 1 ? 's' : ''}
+                        {t('layout.clear_n_ncs', { n: ncCount })}
                       </button>
                     </>
                   ) : null;
@@ -765,7 +767,7 @@ export default function LayoutEditor() {
                   className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                 >
                   <Trash2 size={14} />
-                  Delete Rack
+                  {t('layout.delete_rack')}
                 </button>
               </div>
             </>
@@ -776,7 +778,7 @@ export default function LayoutEditor() {
         {activeSuppliers.length > 0 && (
           <div className="absolute bottom-4 left-4 bg-slate-900/90 border border-slate-700 rounded-lg p-3 backdrop-blur-sm max-w-56">
             <h4 className="text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-              Suppliers
+              {t('layout.suppliers_legend_title')}
             </h4>
             <div className="flex flex-col gap-1.5">
               {activeSuppliers.map((supplier) => (
@@ -799,7 +801,7 @@ export default function LayoutEditor() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 border border-slate-600 rounded-xl shadow-2xl p-4 min-w-64 max-w-80 z-50">
             <div className="flex items-start justify-between mb-3">
               <h3 className="text-sm font-semibold text-white">
-                Non-Conformity
+                {t('layout.nc_popup_title')}
               </h3>
               <button
                 onClick={closeNCPopup}
@@ -811,18 +813,18 @@ export default function LayoutEditor() {
 
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-slate-400">Type:</span>
+                <span className="text-slate-400">{t('layout.nc_popup_type_label')}</span>
                 <span className="text-slate-200">
                   {getNCTypeName(selectedNC.ncTypeId)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-400">Severity:</span>
+                <span className="text-slate-400">{t('layout.nc_popup_severity_label')}</span>
                 <SeverityBadge severity={selectedNC.severity} />
               </div>
               {selectedNC.elementType && (
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Element:</span>
+                  <span className="text-slate-400">{t('layout.nc_popup_element_label')}</span>
                   <span className="text-slate-200 capitalize">
                     {selectedNC.elementType}
                   </span>
@@ -830,7 +832,7 @@ export default function LayoutEditor() {
               )}
               {selectedNC.face && (
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Face:</span>
+                  <span className="text-slate-400">{t('layout.nc_popup_face_label')}</span>
                   <span className="text-slate-200 uppercase">
                     {selectedNC.face}
                   </span>
@@ -838,13 +840,13 @@ export default function LayoutEditor() {
               )}
               {selectedNC.quantity > 1 && (
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Quantity:</span>
+                  <span className="text-slate-400">{t('layout.nc_popup_quantity_label')}</span>
                   <span className="text-slate-200">{selectedNC.quantity}</span>
                 </div>
               )}
               {selectedNC.notes && (
                 <div>
-                  <span className="text-slate-400 block mb-1">Notes:</span>
+                  <span className="text-slate-400 block mb-1">{t('layout.nc_popup_notes_label')}</span>
                   <p className="text-slate-300 text-xs bg-slate-800 rounded p-2">
                     {selectedNC.notes}
                   </p>
@@ -858,13 +860,13 @@ export default function LayoutEditor() {
                 className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium rounded-lg transition-colors"
               >
                 <Pencil size={12} />
-                Edit
+                {t('layout.nc_popup_edit_button')}
               </button>
               <button
                 onClick={closeNCPopup}
                 className="flex-1 px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-medium rounded-lg transition-colors"
               >
-                Close
+                {t('layout.nc_popup_close_button')}
               </button>
             </div>
           </div>
@@ -882,21 +884,21 @@ export default function LayoutEditor() {
               className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
             >
               <Pencil size={14} />
-              Edit NC
+              {t('layout.nc_actions_edit')}
             </button>
             <button
               onClick={handleDeleteNC}
               className="w-full flex items-center gap-2 px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
             >
               <Trash2 size={14} />
-              Delete NC
+              {t('layout.nc_actions_delete')}
             </button>
             <div className="border-t border-slate-700 mt-1 pt-1">
               <button
                 onClick={closeNCPopup}
                 className="w-full px-3 py-2 text-xs text-slate-500 hover:text-slate-300 transition-colors"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </div>
@@ -924,19 +926,19 @@ export default function LayoutEditor() {
                     <AlertTriangle size={20} className="text-red-400" />
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold text-white">Delete Rack?</h3>
+                    <h3 className="text-base font-semibold text-white">{t('layout.delete_rack_title')}</h3>
                     <p className="text-xs text-slate-400">{deleteConfirm.rackName}</p>
                   </div>
                 </div>
 
                 <div className="bg-slate-800/60 rounded-lg p-3 mb-4 text-sm text-slate-300">
-                  <p className="mb-2">This will permanently delete:</p>
+                  <p className="mb-2">{t('layout.delete_rack_body')}</p>
                   <ul className="space-y-1 text-xs text-slate-400">
-                    <li>- {deleteConfirm.bayCount} bay{deleteConfirm.bayCount !== 1 ? 's' : ''}</li>
-                    <li>- {deleteConfirm.frameCount} frame{deleteConfirm.frameCount !== 1 ? 's' : ''}</li>
+                    <li>- {t('layout.delete_bay_count', { n: deleteConfirm.bayCount })}</li>
+                    <li>- {t('layout.delete_frame_count', { n: deleteConfirm.frameCount })}</li>
                     {deleteConfirm.ncCount > 0 && (
                       <li className="text-red-400 font-medium">
-                        - {deleteConfirm.ncCount} recorded NC{deleteConfirm.ncCount !== 1 ? 's' : ''} (inspection data will be lost)
+                        - {t('layout.delete_nc_count_with_warning', { n: deleteConfirm.ncCount })}
                       </li>
                     )}
                   </ul>
@@ -953,7 +955,7 @@ export default function LayoutEditor() {
                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 mb-2 bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 text-sm font-medium rounded-lg border border-amber-500/30 transition-colors"
                   >
                     <Eraser size={14} />
-                    Clear NCs Only (keep rack)
+                    {t('layout.clear_ncs_only')}
                   </button>
                 )}
 
@@ -962,7 +964,7 @@ export default function LayoutEditor() {
                     onClick={() => setDeleteConfirm(null)}
                     className="flex-1 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium rounded-lg transition-colors"
                   >
-                    Cancel
+                    {t('common.cancel')}
                   </button>
                   <button
                     onClick={() => {
@@ -977,7 +979,7 @@ export default function LayoutEditor() {
                     }}
                     className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
                   >
-                    Delete Everything
+                    {t('common.delete_everything')}
                   </button>
                 </div>
               </div>

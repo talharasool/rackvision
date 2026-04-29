@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, RefreshCw, Check, AlertCircle } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Card from '../components/ui/Card';
@@ -18,6 +19,7 @@ import useNCStore from '../stores/ncStore';
  * the new renewal's working-area list to start the walkthrough.
  */
 export default function RenewalsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const { inspections, createRenewal } = useInspectionStore();
@@ -65,7 +67,7 @@ export default function RenewalsPage() {
     setError(null);
     try {
       const result = createRenewal(pendingSource.id);
-      if (!result) throw new Error('Failed to create renewal inspection.');
+      if (!result) throw new Error(t('renewals.failed_to_create_renewal'));
 
       const { inspection: renewal, areaIdMap } = result;
 
@@ -78,7 +80,7 @@ export default function RenewalsPage() {
       navigate(`/inspection/${renewal.id}/areas`);
     } catch (err) {
       console.error('Renewal failed', err);
-      setError(err.message || 'Renewal failed.');
+      setError(err.message || t('renewals.renewal_failed_generic'));
     } finally {
       setBusy(false);
     }
@@ -98,10 +100,9 @@ export default function RenewalsPage() {
             <ArrowLeft size={20} />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-white">Renewals</h1>
+            <h1 className="text-2xl font-bold text-white">{t('renewals.renewals_title')}</h1>
             <p className="text-sm text-slate-400">
-              Create a renewal inspection from an existing one — all racks,
-              bays, frames, and NCs are copied so you can re-walk the site.
+              {t('renewals.renewals_subtitle')}
             </p>
           </div>
         </div>
@@ -109,9 +110,9 @@ export default function RenewalsPage() {
         {sorted.length === 0 ? (
           <Card className="text-center py-12">
             <RefreshCw size={40} className="text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-400 mb-1">No inspections yet.</p>
+            <p className="text-slate-400 mb-1">{t('renewals.no_inspections_yet')}</p>
             <p className="text-slate-500 text-sm">
-              Create an inspection first, then come back here to renew it.
+              {t('renewals.create_first_hint')}
             </p>
           </Card>
         ) : (
@@ -120,25 +121,25 @@ export default function RenewalsPage() {
               <thead>
                 <tr className="border-b border-slate-700">
                   <th className="text-left text-sm font-medium text-slate-400 px-6 py-3">
-                    Customer
+                    {t('renewals.table_col_customer')}
                   </th>
                   <th className="text-left text-sm font-medium text-slate-400 px-6 py-3">
-                    Site
+                    {t('renewals.table_col_site')}
                   </th>
                   <th className="text-center text-sm font-medium text-slate-400 px-6 py-3">
-                    Areas
+                    {t('renewals.table_col_areas')}
                   </th>
                   <th className="text-center text-sm font-medium text-slate-400 px-6 py-3">
-                    Racks
+                    {t('renewals.table_col_racks')}
                   </th>
                   <th className="text-center text-sm font-medium text-slate-400 px-6 py-3">
-                    NCs
+                    {t('renewals.table_col_ncs')}
                   </th>
                   <th className="text-left text-sm font-medium text-slate-400 px-6 py-3">
-                    Created
+                    {t('renewals.table_col_created')}
                   </th>
                   <th className="text-right text-sm font-medium text-slate-400 px-6 py-3">
-                    Actions
+                    {t('renewals.table_col_actions')}
                   </th>
                 </tr>
               </thead>
@@ -155,7 +156,7 @@ export default function RenewalsPage() {
                           {ins.endCustomer || 'Unnamed'}
                           {ins.parentInspectionId && (
                             <span className="text-[10px] font-semibold uppercase tracking-wider text-cyan-300 bg-cyan-500/10 border border-cyan-500/30 px-1.5 py-0.5 rounded">
-                              Renewal
+                              {t('renewals.renewal_badge')}
                             </span>
                           )}
                         </div>
@@ -184,7 +185,7 @@ export default function RenewalsPage() {
                           onClick={() => handleRenew(ins)}
                           disabled={stats.areaCount === 0}
                         >
-                          Renew
+                          {t('renewals.renew_button')}
                         </Button>
                       </td>
                     </tr>
@@ -200,36 +201,30 @@ export default function RenewalsPage() {
       <Modal
         isOpen={!!pendingSource}
         onClose={() => (busy ? null : setPendingSource(null))}
-        title="Create Renewal Inspection"
+        title={t('renewals.modal_title')}
         size="sm"
       >
         {pendingSource && (
           <>
             <p className="text-slate-300 mb-4">
-              This will create a new inspection for{' '}
-              <span className="font-semibold text-white">
-                {pendingSource.endCustomer || 'this customer'}
-              </span>{' '}
-              copying everything from the original:
+              {t('renewals.modal_body', { customer: pendingSource.endCustomer || 'this customer' })}
             </p>
             <ul className="text-sm text-slate-300 space-y-1.5 mb-4">
               <li className="flex items-center gap-2">
                 <Check size={14} className="text-green-400" />
-                {pendingStats?.areaCount || 0} working area(s)
+                {t('renewals.modal_areas', { n: pendingStats?.areaCount || 0 })}
               </li>
               <li className="flex items-center gap-2">
                 <Check size={14} className="text-green-400" />
-                {pendingStats?.rackCount || 0} rack(s) with bays, frames, and
-                bay configuration
+                {t('renewals.modal_racks', { n: pendingStats?.rackCount || 0 })}
               </li>
               <li className="flex items-center gap-2">
                 <Check size={14} className="text-green-400" />
-                {pendingStats?.ncCount || 0} existing non-conformity record(s)
+                {t('renewals.modal_ncs', { n: pendingStats?.ncCount || 0 })}
               </li>
             </ul>
             <p className="text-xs text-slate-400 mb-6">
-              The original inspection stays untouched. You can edit or remove
-              any copied NC in the renewal as you re-walk the site.
+              {t('renewals.modal_disclaimer')}
             </p>
             {error && (
               <div className="flex items-start gap-2 p-3 rounded-lg border border-red-500/40 bg-red-500/10 text-red-200 text-sm mb-4">
@@ -243,14 +238,14 @@ export default function RenewalsPage() {
                 onClick={() => setPendingSource(null)}
                 disabled={busy}
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button
                 onClick={handleConfirm}
                 disabled={busy}
                 icon={RefreshCw}
               >
-                {busy ? 'Creating…' : 'Create Renewal'}
+                {busy ? t('renewals.creating_renewal') : t('renewals.create_renewal_button')}
               </Button>
             </div>
           </>

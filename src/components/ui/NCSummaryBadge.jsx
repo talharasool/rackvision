@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Compact inline badge showing NC severity breakdown.
@@ -8,6 +9,7 @@ import React from 'react';
  *   compact  - if true, shows only total with worst-severity color
  */
 export default function NCSummaryBadge({ ncs = [], compact = false }) {
+  const { t } = useTranslation();
   if (ncs.length === 0) return null;
 
   const counts = { red: 0, yellow: 0, green: 0 };
@@ -78,7 +80,7 @@ export default function NCSummaryBadge({ ncs = [], compact = false }) {
         ))}
       </span>
 
-      <span className="text-slate-400">Total: {total}</span>
+      <span className="text-slate-400">{t('nc.nc_summary_badge_total', { n: total })}</span>
     </span>
   );
 }

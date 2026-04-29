@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -20,6 +21,7 @@ import RackWizard from '../components/Wizard/RackWizard';
 import { getBayDescription } from '../utils/rackHelpers';
 
 export default function RackList() {
+  const { t } = useTranslation();
   const { inspectionId, areaId } = useParams();
   const navigate = useNavigate();
   const { inspections } = useInspectionStore();
@@ -38,8 +40,8 @@ export default function RackList() {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-slate-400 mb-4">Area not found.</p>
-          <Button onClick={() => navigate('/')}>Go Home</Button>
+          <p className="text-slate-400 mb-4">{t('rack_list.area_not_found')}</p>
+          <Button onClick={() => navigate('/')}>{t('common.go_home')}</Button>
         </div>
       </div>
     );
@@ -81,7 +83,7 @@ export default function RackList() {
             <div>
               <h1 className="text-2xl font-bold text-white">{area.name}</h1>
               <p className="text-sm text-slate-400">
-                {inspection.endCustomer} -- Rack Configuration
+                {inspection.endCustomer} -- {t('inspection.rack_configuration_subtitle')}
               </p>
             </div>
           </div>
@@ -95,10 +97,10 @@ export default function RackList() {
               }
               icon={Eye}
             >
-              View Layout
+              {t('rack_list.view_layout')}
             </Button>
             <Button onClick={() => setShowWizard(true)} icon={Plus}>
-              Create New Rack
+              {t('rack_list.create_new_rack')}
             </Button>
           </div>
         </div>
@@ -107,9 +109,9 @@ export default function RackList() {
         {areaRacks.length === 0 ? (
           <Card className="text-center py-12">
             <PackageOpen size={40} className="text-slate-600 mx-auto mb-4" />
-            <p className="text-slate-400">No racks in this area yet.</p>
+            <p className="text-slate-400">{t('rack_list.no_racks_in_area')}</p>
             <p className="text-slate-500 text-sm mt-1">
-              Click "Create New Rack" to add one.
+              {t('rack_list.no_racks_click_hint')}
             </p>
           </Card>
         ) : (
@@ -118,25 +120,25 @@ export default function RackList() {
               <thead>
                 <tr className="border-b border-slate-700">
                   <th className="text-left text-sm font-medium text-slate-400 px-6 py-3">
-                    Name
+                    {t('rack_list.table_col_name')}
                   </th>
                   <th className="text-left text-sm font-medium text-slate-400 px-6 py-3">
-                    Manufacturer
+                    {t('rack_list.table_col_manufacturer')}
                   </th>
                   <th className="text-center text-sm font-medium text-slate-400 px-6 py-3">
-                    Bays
+                    {t('rack_list.table_col_bays')}
                   </th>
                   <th className="text-center text-sm font-medium text-slate-400 px-6 py-3">
-                    Bay Description
+                    {t('rack_list.table_col_bay_description')}
                   </th>
                   <th className="text-center text-sm font-medium text-slate-400 px-6 py-3">
-                    Levels
+                    {t('rack_list.table_col_levels')}
                   </th>
                   <th className="text-center text-sm font-medium text-slate-400 px-6 py-3">
-                    NCs
+                    {t('rack_list.table_col_ncs')}
                   </th>
                   <th className="text-right text-sm font-medium text-slate-400 px-6 py-3">
-                    Actions
+                    {t('rack_list.table_col_actions')}
                   </th>
                 </tr>
               </thead>
@@ -147,7 +149,7 @@ export default function RackList() {
                     className="border-b border-slate-800 last:border-b-0 hover:bg-slate-800/50 transition-colors"
                   >
                     <td className="px-6 py-4 text-white font-medium">
-                      {rack.name || 'Unnamed Rack'}
+                      {rack.name || t('rack_list.unnamed_rack')}
                     </td>
                     <td className="px-6 py-4 text-slate-300">
                       {rack.manufacturer || '--'}
@@ -172,21 +174,21 @@ export default function RackList() {
                         <button
                           onClick={() => handleEditRack(rack)}
                           className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-700 rounded-lg transition-colors"
-                          title="Edit"
+                          title={t('rack_list.action_edit_title')}
                         >
                           <Pencil size={16} />
                         </button>
                         <button
                           onClick={() => handleDuplicate(rack.id)}
                           className="p-2 text-slate-400 hover:text-cyan-400 hover:bg-slate-700 rounded-lg transition-colors"
-                          title="Duplicate"
+                          title={t('rack_list.action_duplicate_title')}
                         >
                           <Copy size={16} />
                         </button>
                         <button
                           onClick={() => setDeleteTarget(rack.id)}
                           className="p-2 text-slate-400 hover:text-red-400 hover:bg-slate-700 rounded-lg transition-colors"
-                          title="Delete"
+                          title={t('rack_list.action_delete_title')}
                         >
                           <Trash2 size={16} />
                         </button>
@@ -197,7 +199,7 @@ export default function RackList() {
                             )
                           }
                           className="p-2 text-slate-400 hover:text-green-400 hover:bg-slate-700 rounded-lg transition-colors"
-                          title="View Layout"
+                          title={t('rack_list.action_view_layout_title')}
                         >
                           <Eye size={16} />
                         </button>
@@ -223,18 +225,18 @@ export default function RackList() {
       <Modal
         isOpen={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
-        title="Delete Rack"
+        title={t('rack_list.delete_rack_modal_title')}
         size="sm"
       >
         <p className="text-slate-300 mb-6">
-          Are you sure you want to delete this rack? This action cannot be undone.
+          {t('rack_list.delete_rack_confirmation')}
         </p>
         <div className="flex justify-end gap-3">
           <Button variant="secondary" onClick={() => setDeleteTarget(null)}>
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button variant="danger" onClick={handleDelete} icon={Trash2}>
-            Delete
+            {t('common.delete')}
           </Button>
         </div>
       </Modal>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
   ArrowRight,
@@ -25,41 +26,42 @@ const INITIAL_CLIENT = {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function validateStep1(data) {
+function validateStep1(data, t) {
   const errors = {};
 
   if (!data.endCustomer.trim()) {
-    errors.endCustomer = 'End customer name is required';
+    errors.endCustomer = t('inspection.error_end_customer_required');
   } else if (data.endCustomer.trim().length < 2) {
-    errors.endCustomer = 'Name must be at least 2 characters';
+    errors.endCustomer = t('inspection.error_name_too_short');
   }
 
   if (data.contactEmail && !EMAIL_REGEX.test(data.contactEmail)) {
-    errors.contactEmail = 'Please enter a valid email address';
+    errors.contactEmail = t('inspection.error_invalid_email');
   }
 
   if (data.contactPhone) {
     // Strip country code prefix and spaces/dashes, check remaining digits
     const digits = data.contactPhone.replace(/[\s\-+]/g, '');
     if (digits.length < 7) {
-      errors.contactPhone = 'Phone number must have at least 7 digits';
+      errors.contactPhone = t('inspection.error_phone_too_short');
     } else if (digits.length > 15) {
-      errors.contactPhone = 'Phone number is too long';
+      errors.contactPhone = t('inspection.error_phone_too_long');
     }
   }
 
   if (data.contactName && data.contactName.trim().length < 2) {
-    errors.contactName = 'Name must be at least 2 characters';
+    errors.contactName = t('inspection.error_name_too_short');
   }
 
   if (data.city && data.city.trim().length < 2) {
-    errors.city = 'City must be at least 2 characters';
+    errors.city = t('inspection.error_city_too_short');
   }
 
   return errors;
 }
 
 export default function NewInspection() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { createInspection, addWorkingArea } = useInspectionStore();
 
@@ -93,7 +95,7 @@ export default function NewInspection() {
   };
 
   const handleNextStep1 = () => {
-    const stepErrors = validateStep1(clientData);
+    const stepErrors = validateStep1(clientData, t);
     if (Object.keys(stepErrors).length > 0) {
       setErrors(stepErrors);
       return;
@@ -134,7 +136,7 @@ export default function NewInspection() {
           )}
         </div>
       ))}
-      <span className="ml-3 text-sm text-slate-400">Step {step} of 3</span>
+      <span className="ml-3 text-sm text-slate-400">{t('inspection.step_indicator', { current: step, total: 3 })}</span>
     </div>
   );
 
@@ -149,7 +151,7 @@ export default function NewInspection() {
           >
             <ArrowLeft size={20} />
           </button>
-          <h1 className="text-2xl font-bold text-white">New Inspection</h1>
+          <h1 className="text-2xl font-bold text-white">{t('inspection.new_inspection_title')}</h1>
         </div>
 
         {stepIndicator}
@@ -157,54 +159,54 @@ export default function NewInspection() {
         {/* Step 1 - Client Data */}
         {step === 1 && (
           <Card>
-            <h2 className="text-lg font-semibold text-white mb-6">Client Information</h2>
+            <h2 className="text-lg font-semibold text-white mb-6">{t('inspection.step_client_info_title')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input
-                label="Reseller Name"
+                label={t('inspection.reseller_name')}
                 value={clientData.reseller}
                 onChange={handleClientChange('reseller')}
-                placeholder="Reseller company"
+                placeholder={t('inspection.reseller_name_placeholder')}
               />
               <Input
-                label="End Customer"
+                label={t('inspection.end_customer')}
                 value={clientData.endCustomer}
                 onChange={handleClientChange('endCustomer')}
-                placeholder="End customer name"
+                placeholder={t('inspection.end_customer_placeholder')}
                 required
                 error={errors.endCustomer}
               />
               <Input
-                label="Site Address"
+                label={t('inspection.site_address')}
                 value={clientData.siteAddress}
                 onChange={handleClientChange('siteAddress')}
-                placeholder="Full site address"
+                placeholder={t('inspection.site_address_placeholder')}
                 className="sm:col-span-2"
               />
               <Input
-                label="City"
+                label={t('inspection.city')}
                 value={clientData.city}
                 onChange={handleClientChange('city')}
-                placeholder="City"
+                placeholder={t('inspection.city_placeholder')}
                 error={errors.city}
               />
               <Input
-                label="Contact Name"
+                label={t('inspection.contact_name')}
                 value={clientData.contactName}
                 onChange={handleClientChange('contactName')}
-                placeholder="Contact person"
+                placeholder={t('inspection.contact_name_placeholder')}
                 error={errors.contactName}
               />
               <PhoneInput
-                label="Phone"
+                label={t('inspection.phone_label')}
                 value={clientData.contactPhone}
                 onChange={handleClientChange('contactPhone')}
                 error={errors.contactPhone}
               />
               <Input
-                label="Email"
+                label={t('inspection.email')}
                 value={clientData.contactEmail}
                 onChange={handleClientChange('contactEmail')}
-                placeholder="email@example.com"
+                placeholder={t('inspection.email_placeholder')}
                 type="email"
                 error={errors.contactEmail}
               />
@@ -212,7 +214,7 @@ export default function NewInspection() {
 
             <div className="flex justify-end mt-6">
               <Button onClick={handleNextStep1} icon={ArrowRight}>
-                Next
+                {t('common.next')}
               </Button>
             </div>
           </Card>
@@ -221,27 +223,27 @@ export default function NewInspection() {
         {/* Step 2 - Working Areas */}
         {step === 2 && (
           <Card>
-            <h2 className="text-lg font-semibold text-white mb-6">Working Areas</h2>
+            <h2 className="text-lg font-semibold text-white mb-6">{t('inspection.step_working_areas_title')}</h2>
 
             {/* Add area form */}
             <div className="flex flex-col sm:flex-row gap-3 mb-6">
               <Input
-                label="Area Name"
+                label={t('inspection.area_name')}
                 value={areaName}
                 onChange={(e) => setAreaName(e.target.value)}
-                placeholder="e.g. Warehouse A"
+                placeholder={t('inspection.area_name_placeholder')}
                 className="flex-1"
               />
               <Input
-                label="Description"
+                label={t('inspection.area_description')}
                 value={areaDescription}
                 onChange={(e) => setAreaDescription(e.target.value)}
-                placeholder="Optional description"
+                placeholder={t('inspection.area_description_placeholder')}
                 className="flex-1"
               />
               <div className="flex items-end">
                 <Button onClick={handleAddArea} icon={Plus} disabled={!areaName.trim()}>
-                  Add
+                  {t('common.add')}
                 </Button>
               </div>
             </div>
@@ -249,7 +251,7 @@ export default function NewInspection() {
             {/* Area list */}
             {areas.length === 0 ? (
               <p className="text-slate-500 text-sm text-center py-6">
-                No working areas added yet. Add at least one area to continue.
+                {t('inspection.no_areas_yet')}
               </p>
             ) : (
               <div className="flex flex-col gap-2 mb-6">
@@ -279,10 +281,10 @@ export default function NewInspection() {
 
             <div className="flex justify-between mt-4">
               <Button variant="secondary" onClick={() => setStep(1)} icon={ArrowLeft}>
-                Back
+                {t('common.back')}
               </Button>
               <Button onClick={() => setStep(3)} icon={ArrowRight} disabled={areas.length === 0}>
-                Next
+                {t('common.next')}
               </Button>
             </div>
           </Card>
@@ -291,14 +293,14 @@ export default function NewInspection() {
         {/* Step 3 - Summary */}
         {step === 3 && (
           <Card>
-            <h2 className="text-lg font-semibold text-white mb-6">Summary</h2>
+            <h2 className="text-lg font-semibold text-white mb-6">{t('inspection.summary_title')}</h2>
 
             <div className="space-y-4 mb-6">
               <div className="bg-slate-800 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-slate-400 mb-2">Client</h3>
-                <p className="text-white">{clientData.endCustomer || 'N/A'}</p>
+                <h3 className="text-sm font-medium text-slate-400 mb-2">{t('inspection.summary_client_heading')}</h3>
+                <p className="text-white">{clientData.endCustomer || t('common.n_a')}</p>
                 {clientData.reseller && (
-                  <p className="text-slate-400 text-sm">Reseller: {clientData.reseller}</p>
+                  <p className="text-slate-400 text-sm">{t('inspection.summary_reseller_label', { name: clientData.reseller })}</p>
                 )}
                 {clientData.siteAddress && (
                   <p className="text-slate-400 text-sm">{clientData.siteAddress}</p>
@@ -309,8 +311,8 @@ export default function NewInspection() {
               </div>
 
               <div className="bg-slate-800 rounded-lg p-4">
-                <h3 className="text-sm font-medium text-slate-400 mb-2">Contact</h3>
-                <p className="text-white">{clientData.contactName || 'N/A'}</p>
+                <h3 className="text-sm font-medium text-slate-400 mb-2">{t('inspection.summary_contact_heading')}</h3>
+                <p className="text-white">{clientData.contactName || t('common.n_a')}</p>
                 {clientData.contactPhone && (
                   <p className="text-slate-400 text-sm">{clientData.contactPhone}</p>
                 )}
@@ -321,7 +323,7 @@ export default function NewInspection() {
 
               <div className="bg-slate-800 rounded-lg p-4">
                 <h3 className="text-sm font-medium text-slate-400 mb-2">
-                  Working Areas ({areas.length})
+                  {t('inspection.summary_working_areas_heading', { n: areas.length })}
                 </h3>
                 <ul className="space-y-1">
                   {areas.map((area) => (
@@ -338,10 +340,10 @@ export default function NewInspection() {
 
             <div className="flex justify-between">
               <Button variant="secondary" onClick={() => setStep(2)} icon={ArrowLeft}>
-                Back
+                {t('common.back')}
               </Button>
               <Button onClick={handleCreate} icon={Check}>
-                Create Inspection
+                {t('inspection.create_inspection')}
               </Button>
             </div>
           </Card>

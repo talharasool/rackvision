@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Plus, Pencil, Trash2, Copy, Search } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -27,6 +28,7 @@ const emptyForm = {
 };
 
 export default function BeamEditorPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { beams, addBeam, updateBeam, deleteBeam, duplicateBeam } = useBeamDatabaseStore();
   const { suppliers } = useSupplierStore();
@@ -91,31 +93,31 @@ export default function BeamEditorPage() {
     const thickness = Number(form.thickness);
 
     if (!form.supplierId) {
-      errs.supplierId = 'Supplier is required';
+      errs.supplierId = t('editors.error_supplier_required');
     }
 
     if (!form.length || length <= 0) {
-      errs.length = 'Length is required and must be > 0';
+      errs.length = t('editors.error_length_required');
     } else if (length > 10000) {
-      errs.length = 'Length cannot exceed 10000mm';
+      errs.length = t('editors.error_length_too_large');
     }
 
     if (!form.height || height <= 0) {
-      errs.height = 'Height is required and must be > 0';
+      errs.height = t('editors.error_height_required');
     } else if (height > 500) {
-      errs.height = 'Height cannot exceed 500mm';
+      errs.height = t('editors.error_height_too_large');
     }
 
     if (!form.depth || depth <= 0) {
-      errs.depth = 'Depth is required and must be > 0';
+      errs.depth = t('editors.error_depth_required');
     } else if (depth > 500) {
-      errs.depth = 'Depth cannot exceed 500mm';
+      errs.depth = t('editors.error_depth_too_large');
     }
 
     if (!form.thickness || thickness <= 0) {
-      errs.thickness = 'Thickness is required and must be > 0';
+      errs.thickness = t('editors.error_thickness_required');
     } else if (thickness > 50) {
-      errs.thickness = 'Thickness cannot exceed 50mm';
+      errs.thickness = t('editors.error_thickness_too_large');
     }
 
     return errs;
@@ -167,17 +169,17 @@ export default function BeamEditorPage() {
               variant="ghost"
               size="sm"
               onClick={() => (showForm ? resetForm() : navigate('/'))}
-              title={showForm ? 'Back to beam list' : 'Back to home'}
+              title={showForm ? t('editors.back_to_beam_list_title') : t('editors.back_to_home_title')}
             >
               <ArrowLeft size={18} />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-white">Beam Editor</h1>
-              <p className="text-sm text-slate-400">Manage beam database</p>
+              <h1 className="text-2xl font-bold text-white">{t('editors.beam_editor_title')}</h1>
+              <p className="text-sm text-slate-400">{t('editors.beam_editor_subtitle')}</p>
             </div>
           </div>
           {!showForm && (
-            <Button onClick={handleNew} icon={Plus}>New Beam</Button>
+            <Button onClick={handleNew} icon={Plus}>{t('editors.new_beam_button')}</Button>
           )}
         </div>
 
@@ -185,12 +187,12 @@ export default function BeamEditorPage() {
         {showForm && (
           <Card className="mb-6">
             <h2 className="text-lg font-semibold text-white mb-4">
-              {editingId ? 'Edit Beam' : 'New Beam'}
+              {editingId ? t('editors.edit_beam_form_title') : t('editors.new_beam_form_title')}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="sm:col-span-2">
                 <Input
-                  label="Beam Name"
+                  label={t('editors.beam_name_label')}
                   value={form.customName}
                   onChange={(e) => setField('customName', e.target.value)}
                   placeholder={generateBeamName({
@@ -201,30 +203,30 @@ export default function BeamEditorPage() {
                   })}
                 />
                 <p className="text-[10px] text-slate-500 mt-1">
-                  Leave blank to auto-generate from type, dimensions, and supplier
+                  {t('editors.beam_name_autogenerate_hint')}
                 </p>
               </div>
               <div className="sm:col-span-2">
-                <label className="block text-sm font-medium text-slate-300 mb-1">Description</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1">{t('editors.beam_description_label')}</label>
                 <textarea
                   value={form.description}
                   onChange={(e) => setField('description', e.target.value)}
-                  placeholder="Optional beam description or notes"
+                  placeholder={t('editors.beam_description_placeholder')}
                   rows={2}
                   className="w-full rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500 bg-slate-800 border border-slate-600 outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-y"
                 />
               </div>
               <Select
-                label="Supplier"
+                label={t('common.supplier')}
                 value={form.supplierId}
                 onChange={(e) => handleSupplierChange(e.target.value)}
                 options={supplierOptions}
-                placeholder="Select supplier"
+                placeholder={t('common.select_supplier_placeholder')}
                 required
                 error={formErrors.supplierId}
               />
               <Select
-                label="Beam Type"
+                label={t('editors.beam_type_label')}
                 value={form.beamType}
                 onChange={(e) => setField('beamType', e.target.value)}
                 options={BEAM_TYPES}
@@ -232,44 +234,44 @@ export default function BeamEditorPage() {
               />
 
               <Input
-                label="Length (mm)"
+                label={t('editors.length_mm_label')}
                 type="number"
                 value={form.length}
                 onChange={(e) => setField('length', e.target.value)}
-                placeholder="e.g. 2700"
+                placeholder={t('editors.length_mm_placeholder')}
                 required
                 min={1}
                 max={10000}
                 error={formErrors.length}
               />
               <Input
-                label="Height (mm)"
+                label={t('editors.height_mm_label')}
                 type="number"
                 value={form.height}
                 onChange={(e) => setField('height', e.target.value)}
-                placeholder="e.g. 50"
+                placeholder={t('editors.height_mm_placeholder')}
                 required
                 min={1}
                 max={500}
                 error={formErrors.height}
               />
               <Input
-                label="Depth (mm)"
+                label={t('editors.depth_mm_label')}
                 type="number"
                 value={form.depth}
                 onChange={(e) => setField('depth', e.target.value)}
-                placeholder="e.g. 40"
+                placeholder={t('editors.depth_mm_placeholder')}
                 required
                 min={1}
                 max={500}
                 error={formErrors.depth}
               />
               <Input
-                label="Thickness (mm)"
+                label={t('editors.thickness_mm_label')}
                 type="number"
                 value={form.thickness}
                 onChange={(e) => setField('thickness', e.target.value)}
-                placeholder="e.g. 1.5"
+                placeholder={t('editors.thickness_mm_placeholder')}
                 required
                 min={0.1}
                 max={50}
@@ -278,54 +280,54 @@ export default function BeamEditorPage() {
               />
 
               <Select
-                label="Finish"
+                label={t('editors.finish_label')}
                 value={form.finish}
                 onChange={(e) => setField('finish', e.target.value)}
                 options={FINISH_TYPES}
               />
               {form.finish === 'painted' && (
                 <Input
-                  label="Paint Color"
+                  label={t('editors.paint_color_label')}
                   value={form.finishColor}
                   onChange={(e) => setField('finishColor', e.target.value)}
-                  placeholder="e.g. RAL 5010 Blue"
+                  placeholder={t('editors.paint_color_placeholder_beam')}
                 />
               )}
 
               <div className="sm:col-span-2">
-                <p className="text-sm text-slate-400 mb-2">Optional Features / Accessories</p>
+                <p className="text-sm text-slate-400 mb-2">{t('editors.optional_features_label')}</p>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <Input
                     value={form.feature1}
                     onChange={(e) => setField('feature1', e.target.value)}
-                    placeholder="e.g. Shelf support angle"
+                    placeholder={t('editors.feature1_placeholder')}
                   />
                   <Input
                     value={form.feature2}
                     onChange={(e) => setField('feature2', e.target.value)}
-                    placeholder="e.g. Tie rod plate"
+                    placeholder={t('editors.feature2_placeholder')}
                   />
                   <Input
                     value={form.feature3}
                     onChange={(e) => setField('feature3', e.target.value)}
-                    placeholder="e.g. Bracing plate"
+                    placeholder={t('editors.feature3_placeholder')}
                   />
                 </div>
               </div>
 
               <Input
-                label="Supplier Code"
+                label={t('editors.supplier_code_label')}
                 value={form.supplierCode}
                 onChange={(e) => setField('supplierCode', e.target.value)}
-                placeholder="Optional"
+                placeholder={t('common.supplier_code_placeholder')}
               />
             </div>
 
             <div className="flex gap-3 mt-6">
               <Button onClick={handleSave}>
-                {editingId ? 'Update Beam' : 'Save Beam'}
+                {editingId ? t('editors.update_beam') : t('editors.save_beam')}
               </Button>
-              <Button variant="ghost" onClick={resetForm}>Cancel</Button>
+              <Button variant="ghost" onClick={resetForm}>{t('common.cancel')}</Button>
             </div>
           </Card>
         )}
@@ -337,20 +339,20 @@ export default function BeamEditorPage() {
               <Input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search beams..."
+                placeholder={t('editors.search_beams_placeholder')}
               />
             </div>
 
             <h2 className="text-lg font-semibold text-white mb-3">
-              Beams ({filteredBeams.length})
+              {t('editors.beams_list_heading', { n: filteredBeams.length })}
             </h2>
 
             {filteredBeams.length === 0 ? (
               <Card className="text-center py-8">
                 <p className="text-slate-500">
                   {beams.length === 0
-                    ? 'No beams in database. Create your first one.'
-                    : 'No beams match your search.'}
+                    ? t('editors.no_beams_db')
+                    : t('editors.no_beams_search')}
                 </p>
               </Card>
             ) : (
@@ -367,7 +369,7 @@ export default function BeamEditorPage() {
                           <span>{beam.length}×{beam.height}×{beam.depth} mm</span>
                           {beam.supplierName && <span>{beam.supplierName}</span>}
                           <span className="capitalize">{beam.finish}{beam.finishColor ? ` (${beam.finishColor})` : ''}</span>
-                          {beam.supplierCode && <span>Code: {beam.supplierCode}</span>}
+                          {beam.supplierCode && <span>{t('common.code_label')} {beam.supplierCode}</span>}
                         </div>
                       </div>
                       <div className="flex items-center gap-1">

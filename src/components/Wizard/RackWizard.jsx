@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Minus, Check, ExternalLink, AlertTriangle } from 'lucide-react';
 import Modal from '../ui/Modal';
@@ -41,6 +42,7 @@ const initialRackData = {
 };
 
 export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [rackData, setRackData] = useState(initialRackData);
@@ -274,30 +276,30 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
     <WizardStep
       stepNumber={1}
       totalSteps={TOTAL_STEPS}
-      title="Select Supplier"
-      description="Choose the rack supplier from your supplier database."
+      title={t('wizard.step1_title')}
+      description={t('wizard.step1_description')}
     >
       <div className="flex flex-col gap-4">
         {suppliers.length === 0 ? (
           <Card className="!p-4">
             <p className="text-sm text-slate-300 mb-3">
-              No suppliers in your database yet. Add one in the Supplier Editor first.
+              {t('wizard.no_suppliers_message')}
             </p>
             <Button
               size="sm"
               icon={ExternalLink}
               onClick={() => openEditor('/editors/suppliers')}
             >
-              Open Supplier Editor
+              {t('wizard.open_supplier_editor')}
             </Button>
           </Card>
         ) : (
           <>
             <Select
-              label="Supplier"
+              label={t('wizard.supplier_label')}
               value={rackData.supplierId}
               onChange={(e) => handleSupplierSelect(e.target.value)}
-              placeholder="Select a supplier..."
+              placeholder={t('wizard.supplier_placeholder')}
               required
               options={suppliers.map((s) => ({ value: s.id, label: s.name }))}
             />
@@ -307,7 +309,7 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
               onClick={() => openEditor('/editors/suppliers')}
             >
               <ExternalLink size={12} />
-              Manage suppliers
+              {t('wizard.manage_suppliers')}
             </button>
           </>
         )}
@@ -319,8 +321,8 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
     <WizardStep
       stepNumber={2}
       totalSteps={TOTAL_STEPS}
-      title="Number of Bays"
-      description="How many bays does this rack have?"
+      title={t('wizard.step2_title')}
+      description={t('wizard.step2_description')}
     >
       <div className="flex flex-col items-center gap-4">
         <div className="flex items-center gap-4">
@@ -359,7 +361,7 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
           }}
           className="w-32"
         />
-        <p className="text-xs text-slate-500">Between 1 and 50 bays</p>
+        <p className="text-xs text-slate-500">{t('wizard.bays_range_hint')}</p>
       </div>
     </WizardStep>
   );
@@ -368,15 +370,15 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
     <WizardStep
       stepNumber={3}
       totalSteps={TOTAL_STEPS}
-      title="Rack Name"
-      description="Give this rack a name for easy identification."
+      title={t('wizard.step3_title')}
+      description={t('wizard.step3_description')}
     >
       <div className="flex flex-col gap-4">
         <Input
-          label="Rack Name"
+          label={t('wizard.rack_name_label')}
           value={rackData.name}
           onChange={(e) => updateField('name', e.target.value)}
-          placeholder="Enter rack name..."
+          placeholder={t('wizard.rack_name_placeholder')}
           required
         />
         {suggestedName && rackData.name !== suggestedName && (
@@ -385,7 +387,7 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
             className="text-left text-sm text-blue-400 hover:text-blue-300 transition-colors"
             onClick={() => updateField('name', suggestedName)}
           >
-            Suggestion: <span className="font-medium">{suggestedName}</span>
+            {t('wizard.name_suggestion_prefix')}<span className="font-medium">{suggestedName}</span>
           </button>
         )}
       </div>
@@ -396,23 +398,23 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
     <WizardStep
       stepNumber={4}
       totalSteps={TOTAL_STEPS}
-      title="Bay Length (Beam Selection)"
-      description={`Pick a beam from ${rackData.supplierName || 'this supplier'}'s database.`}
+      title={t('wizard.step4_title')}
+      description={t('wizard.step4_description', { supplier: rackData.supplierName || t('common.supplier') })}
     >
       {filteredBeams.length === 0 ? (
         <Card className="!p-4">
           <p className="text-sm text-slate-300 mb-1">
-            No beams in the database for <span className="font-medium text-white">{rackData.supplierName}</span>.
+            {t('wizard.no_beams_for_supplier_title', { supplier: rackData.supplierName })}
           </p>
           <p className="text-xs text-slate-400 mb-3">
-            Add beams for this supplier in the Beam Editor, then come back to the wizard.
+            {t('wizard.no_beams_for_supplier_hint')}
           </p>
           <Button
             size="sm"
             icon={ExternalLink}
             onClick={() => openEditor('/editors/beams')}
           >
-            Open Beam Editor
+            {t('wizard.open_beam_editor')}
           </Button>
         </Card>
       ) : (
@@ -442,7 +444,7 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
                       <div>
                         <p className="text-sm font-medium text-white">{beam.name}</p>
                         <p className="text-xs text-slate-400">
-                          L {beam.length}mm · H {beam.height}mm · D {beam.depth}mm
+                          {t('wizard.beam_dims', { length: beam.length, height: beam.height, depth: beam.depth })}
                         </p>
                       </div>
                       {isSelected && (
@@ -464,38 +466,38 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
               className="flex items-center gap-2 p-3 rounded-lg border border-dashed border-slate-600 text-slate-400 hover:text-blue-400 hover:border-blue-500/50 transition-colors"
             >
               <Plus size={16} />
-              <span className="text-sm">New Beam</span>
+              <span className="text-sm">{t('wizard.new_beam_inline_label')}</span>
             </button>
           ) : (
             <div className="p-3 rounded-lg border border-blue-500/40 bg-blue-500/5 space-y-3">
-              <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Quick Add Beam</p>
+              <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">{t('wizard.quick_add_beam')}</p>
               <Input
-                label="Name (optional)"
+                label={t('wizard.beam_name_optional')}
                 value={newBeamData.customName}
                 onChange={(e) => setNewBeamData(p => ({ ...p, customName: e.target.value }))}
-                placeholder="e.g. Heavy Duty 2700"
+                placeholder={t('wizard.beam_name_placeholder')}
               />
               <div className="grid grid-cols-3 gap-2">
                 <Input
-                  label="Length (mm)"
+                  label={t('wizard.length_mm')}
                   type="number"
                   value={newBeamData.length}
                   onChange={(e) => setNewBeamData(p => ({ ...p, length: e.target.value }))}
-                  placeholder="2700"
+                  placeholder={t('wizard.length_placeholder')}
                 />
                 <Input
-                  label="Height (mm)"
+                  label={t('wizard.height_mm')}
                   type="number"
                   value={newBeamData.height}
                   onChange={(e) => setNewBeamData(p => ({ ...p, height: e.target.value }))}
-                  placeholder="100"
+                  placeholder={t('wizard.height_placeholder')}
                 />
                 <Input
-                  label="Depth (mm)"
+                  label={t('wizard.depth_mm')}
                   type="number"
                   value={newBeamData.depth}
                   onChange={(e) => setNewBeamData(p => ({ ...p, depth: e.target.value }))}
-                  placeholder="50"
+                  placeholder={t('wizard.depth_placeholder')}
                 />
               </div>
               <div className="flex gap-2">
@@ -524,10 +526,10 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
                     setNewBeamData({ customName: '', length: '', height: '', depth: '' });
                   }}
                 >
-                  Add & Select
+                  {t('wizard.add_and_select')}
                 </Button>
                 <Button size="sm" variant="secondary" onClick={() => setShowNewBeam(false)}>
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
               </div>
             </div>
@@ -541,13 +543,13 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
     <WizardStep
       stepNumber={5}
       totalSteps={TOTAL_STEPS}
-      title="Rack Elevations"
-      description="Configure the vertical layout of your rack levels."
+      title={t('wizard.step5_title')}
+      description={t('wizard.step5_description')}
     >
       <div className="flex flex-col gap-4">
         {/* Number of levels */}
         <div className="flex items-center gap-4">
-          <label className="text-sm text-slate-400 w-32">Number of Levels</label>
+          <label className="text-sm text-slate-400 w-32">{t('wizard.number_of_levels')}</label>
           <Button
             variant="secondary"
             size="sm"
@@ -569,7 +571,7 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
 
         {/* First elevation */}
         <Input
-          label="First Elevation Height (mm)"
+          label={t('wizard.first_elevation_height_mm')}
           type="number"
           value={rackData.firstElevation}
           onChange={(e) => updateField('firstElevation', parseInt(e.target.value, 10) || 0)}
@@ -578,7 +580,7 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
 
         {/* Spacing mode toggle */}
         <div className="flex items-center gap-3">
-          <label className="text-sm text-slate-400">Level Heights</label>
+          <label className="text-sm text-slate-400">{t('wizard.level_heights_label')}</label>
           <button
             type="button"
             onClick={() => updateField('useIndividualHeights', false)}
@@ -588,7 +590,7 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
                 : 'bg-slate-800 border-slate-600 text-slate-400'
             }`}
           >
-            Uniform Spacing
+            {t('wizard.uniform_spacing')}
           </button>
           <button
             type="button"
@@ -609,14 +611,14 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
                 : 'bg-slate-800 border-slate-600 text-slate-400'
             }`}
           >
-            Individual Heights
+            {t('wizard.individual_heights')}
           </button>
         </div>
 
         {/* Uniform spacing input */}
         {!rackData.useIndividualHeights && (
           <Input
-            label="Level Spacing (mm)"
+            label={t('wizard.level_spacing_mm')}
             type="number"
             value={rackData.levelSpacing}
             onChange={(e) => updateField('levelSpacing', parseInt(e.target.value, 10) || 0)}
@@ -630,7 +632,7 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
             {Array.from({ length: rackData.levels }, (_, i) => (
               <Input
                 key={i}
-                label={`Level ${i + 1} Height (mm)`}
+                label={t('wizard.level_n_height_mm', { n: i + 1 })}
                 type="number"
                 value={rackData.individualHeights[i] ?? ''}
                 onChange={(e) => {
@@ -651,44 +653,37 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
     <WizardStep
       stepNumber={6}
       totalSteps={TOTAL_STEPS}
-      title="Frame Selection"
-      description={`Pick a frame from ${rackData.supplierName || 'this supplier'}'s database.`}
+      title={t('wizard.step6_title')}
+      description={t('wizard.step6_description', { supplier: rackData.supplierName || t('common.supplier') })}
     >
       {filteredFrames.length === 0 ? (
         <Card className="!p-4">
           <p className="text-sm text-slate-300 mb-1">
-            No frames in the database for <span className="font-medium text-white">{rackData.supplierName}</span>.
+            {t('wizard.no_frames_for_supplier_title', { supplier: rackData.supplierName })}
           </p>
           <p className="text-xs text-slate-400 mb-3">
-            Add frames for this supplier in the Frame Editor, then come back to the wizard.
+            {t('wizard.no_frames_for_supplier_hint')}
           </p>
           <Button
             size="sm"
             icon={ExternalLink}
             onClick={() => openEditor('/editors/frames')}
           >
-            Open Frame Editor
+            {t('wizard.open_frame_editor')}
           </Button>
         </Card>
       ) : (
         <div className="flex flex-col gap-3">
           <p className="text-xs text-slate-400">
-            Highest beam elevation from step 5:{' '}
-            <span className="font-medium text-white">
-              {highestBeamElevation}mm
-            </span>
-            . Frames shorter than this are flagged as incompatible.
+            {t('wizard.highest_beam_elevation_note', { height: highestBeamElevation })}
           </p>
           {selectedFrameIncompatible && (
             <div className="flex items-start gap-2 p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-200 text-sm">
               <AlertTriangle size={16} className="mt-0.5 shrink-0" />
               <div>
-                <p className="font-medium">Frame may be too short.</p>
+                <p className="font-medium">{t('wizard.frame_incompatible_warning')}</p>
                 <p className="text-xs mt-0.5">
-                  Selected frame is{' '}
-                  {selectedFrame?.uprightHeight || selectedFrame?.height}mm tall
-                  but the highest beam sits at {highestBeamElevation}mm. Pick a
-                  taller frame or adjust elevations in step 5.
+                  {t('wizard.frame_incompatible_detail', { height: selectedFrame?.uprightHeight || selectedFrame?.height, elevation: highestBeamElevation })}
                 </p>
               </div>
             </div>
@@ -719,12 +714,12 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
                       {!compatible && (
                         <span className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-amber-300 bg-amber-500/15 border border-amber-500/40 px-1.5 py-0.5 rounded">
                           <AlertTriangle size={10} />
-                          Too short
+                          {t('wizard.frame_too_short_badge')}
                         </span>
                       )}
                     </div>
                     <p className="text-xs text-slate-400">
-                      Height: {frame.uprightHeight || frame.height}mm · Depth: {frame.depth}mm · Upright: {frame.uprightWidth}mm
+                      {t('wizard.frame_dims', { height: frame.uprightHeight || frame.height, depth: frame.depth, width: frame.uprightWidth })}
                     </p>
                   </div>
                   {isSelected && (
@@ -747,38 +742,38 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
                 className="flex items-center gap-2 p-3 rounded-lg border border-dashed border-slate-600 text-slate-400 hover:text-blue-400 hover:border-blue-500/50 transition-colors"
               >
                 <Plus size={16} />
-                <span className="text-sm">New Frame</span>
+                <span className="text-sm">{t('wizard.new_frame_inline_label')}</span>
               </button>
             ) : (
               <div className="p-3 rounded-lg border border-blue-500/40 bg-blue-500/5 space-y-3">
-                <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Quick Add Frame</p>
+                <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">{t('wizard.quick_add_frame')}</p>
                 <Input
-                  label="Name (optional)"
+                  label={t('wizard.frame_name_optional')}
                   value={newFrameData.customName}
                   onChange={(e) => setNewFrameData(p => ({ ...p, customName: e.target.value }))}
-                  placeholder="e.g. Standard 6m"
+                  placeholder={t('wizard.frame_name_placeholder')}
                 />
                 <div className="grid grid-cols-3 gap-2">
                   <Input
-                    label="Height (mm)"
+                    label={t('wizard.height_mm')}
                     type="number"
                     value={newFrameData.uprightHeight}
                     onChange={(e) => setNewFrameData(p => ({ ...p, uprightHeight: e.target.value }))}
-                    placeholder="6000"
+                    placeholder={t('wizard.frame_height_placeholder')}
                   />
                   <Input
-                    label="Depth (mm)"
+                    label={t('wizard.depth_mm')}
                     type="number"
                     value={newFrameData.depth}
                     onChange={(e) => setNewFrameData(p => ({ ...p, depth: e.target.value }))}
-                    placeholder="1000"
+                    placeholder={t('wizard.frame_depth_placeholder')}
                   />
                   <Input
-                    label="Upright W (mm)"
+                    label={t('wizard.upright_w_mm')}
                     type="number"
                     value={newFrameData.uprightWidth}
                     onChange={(e) => setNewFrameData(p => ({ ...p, uprightWidth: e.target.value }))}
-                    placeholder="100"
+                    placeholder={t('wizard.upright_w_placeholder')}
                   />
                 </div>
                 <div className="flex gap-2">
@@ -810,10 +805,10 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
                       setNewFrameData({ customName: '', uprightHeight: '', depth: '', uprightWidth: '' });
                     }}
                   >
-                    Add & Select
+                    {t('wizard.add_and_select')}
                   </Button>
                   <Button size="sm" variant="secondary" onClick={() => setShowNewFrame(false)}>
-                    Cancel
+                    {t('common.cancel')}
                   </Button>
                 </div>
               </div>
@@ -828,59 +823,59 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
     <WizardStep
       stepNumber={7}
       totalSteps={TOTAL_STEPS}
-      title="Summary"
-      description="Review your rack configuration before confirming."
+      title={t('wizard.step7_title')}
+      description={t('wizard.step7_description')}
     >
       <Card className="!p-4">
         <div className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
           <div>
-            <p className="text-slate-400">Supplier</p>
+            <p className="text-slate-400">{t('wizard.summary_supplier')}</p>
             <p className="text-white font-medium">
               {selectedSupplier?.name || rackData.supplierName || '-'}
             </p>
           </div>
           <div>
-            <p className="text-slate-400">Rack Name</p>
+            <p className="text-slate-400">{t('wizard.summary_rack_name')}</p>
             <p className="text-white font-medium">{rackData.name}</p>
           </div>
           <div>
-            <p className="text-slate-400">Number of Bays</p>
+            <p className="text-slate-400">{t('wizard.summary_number_of_bays')}</p>
             <p className="text-white font-medium">{rackData.numberOfBays}</p>
           </div>
           <div>
-            <p className="text-slate-400">Bay Length</p>
+            <p className="text-slate-400">{t('wizard.summary_bay_length')}</p>
             <p className="text-white font-medium">
               {selectedBeam ? `${selectedBeam.name} (${selectedBeam.length}mm)` : `${rackData.bayLength}mm`}
             </p>
           </div>
           <div>
-            <p className="text-slate-400">Beam Type</p>
+            <p className="text-slate-400">{t('wizard.summary_beam_type')}</p>
             <p className="text-white font-medium">
               {BEAM_TYPE_LABEL[rackData.beamType] || rackData.beamType || '-'}
             </p>
           </div>
           <div>
-            <p className="text-slate-400">Number of Levels</p>
+            <p className="text-slate-400">{t('wizard.summary_number_of_levels')}</p>
             <p className="text-white font-medium">{rackData.levels}</p>
           </div>
           <div>
-            <p className="text-slate-400">First Elevation</p>
+            <p className="text-slate-400">{t('wizard.summary_first_elevation')}</p>
             <p className="text-white font-medium">{rackData.firstElevation}mm</p>
           </div>
           <div>
-            <p className="text-slate-400">Level Spacing</p>
+            <p className="text-slate-400">{t('wizard.summary_level_spacing')}</p>
             <p className="text-white font-medium">
-              {rackData.useIndividualHeights ? 'Individual' : `${rackData.levelSpacing}mm`}
+              {rackData.useIndividualHeights ? t('wizard.summary_level_spacing_individual') : `${rackData.levelSpacing}mm`}
             </p>
           </div>
           <div>
-            <p className="text-slate-400">Frame</p>
+            <p className="text-slate-400">{t('wizard.summary_frame')}</p>
             <p className="text-white font-medium">
               {selectedFrame ? selectedFrame.name : '-'}
             </p>
           </div>
           <div>
-            <p className="text-slate-400">Frame Dimensions</p>
+            <p className="text-slate-400">{t('wizard.summary_frame_dimensions')}</p>
             <p className="text-white font-medium">
               {selectedFrame
                 ? `${selectedFrame.uprightHeight || selectedFrame.height}mm H x ${selectedFrame.depth}mm D`
@@ -893,10 +888,7 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
         <div className="mt-3 flex items-start gap-2 p-3 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-200 text-sm">
           <AlertTriangle size={16} className="mt-0.5 shrink-0" />
           <p className="text-xs">
-            Warning: selected frame (
-            {selectedFrame?.uprightHeight || selectedFrame?.height}mm) is
-            shorter than the highest beam elevation ({highestBeamElevation}mm).
-            You can still create the rack but the configuration is incompatible.
+            {t('wizard.summary_warning_frame_short', { height: selectedFrame?.uprightHeight || selectedFrame?.height, elevation: highestBeamElevation })}
           </p>
         </div>
       )}
@@ -922,7 +914,7 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={isEditing ? 'Edit Rack' : 'Create Rack'}
+      title={isEditing ? t('wizard.edit_rack_title') : t('wizard.create_rack_title')}
       size="lg"
     >
       <div className="flex flex-col gap-6">
@@ -935,12 +927,12 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
             onClick={goBack}
             disabled={currentStep === 1}
           >
-            Back
+            {t('common.back')}
           </Button>
 
           <div className="flex gap-2">
             <Button variant="secondary" onClick={onClose}>
-              Cancel
+              {t('common.cancel')}
             </Button>
 
             {currentStep < TOTAL_STEPS ? (
@@ -948,14 +940,14 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
                 onClick={goNext}
                 disabled={!isStepValid(currentStep)}
               >
-                Next
+                {t('common.next')}
               </Button>
             ) : (
               <Button
                 onClick={handleConfirm}
                 disabled={!isStepValid(currentStep)}
               >
-                {isEditing ? 'Update Rack' : 'Create Rack'}
+                {isEditing ? t('wizard.update_rack') : t('wizard.create_rack')}
               </Button>
             )}
           </div>

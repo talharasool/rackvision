@@ -1,13 +1,14 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Trash2, CheckCircle2, PlusCircle, Camera, X, ChevronDown } from 'lucide-react';
 import Button from '../ui/Button';
 import ncTypes from '../../data/ncTypes';
 import { getNCTypeName } from '../../utils/ncHelpers';
 
 const SEVERITY_CONFIG = {
-  green: { label: 'Green', color: 'bg-green-500', border: 'border-green-500', text: 'text-green-400', ring: 'ring-green-500/30' },
-  yellow: { label: 'Yellow', color: 'bg-yellow-500', border: 'border-yellow-500', text: 'text-yellow-400', ring: 'ring-yellow-500/30' },
-  red: { label: 'Red', color: 'bg-red-500', border: 'border-red-500', text: 'text-red-400', ring: 'ring-red-500/30' },
+  green: { labelKey: 'common.severity_green', color: 'bg-green-500', border: 'border-green-500', text: 'text-green-400', ring: 'ring-green-500/30' },
+  yellow: { labelKey: 'common.severity_yellow', color: 'bg-yellow-500', border: 'border-yellow-500', text: 'text-yellow-400', ring: 'ring-yellow-500/30' },
+  red: { labelKey: 'common.severity_red', color: 'bg-red-500', border: 'border-red-500', text: 'text-red-400', ring: 'ring-red-500/30' },
 };
 
 // Quick-access NC buttons for beams (most common issues)
@@ -15,22 +16,22 @@ const BEAM_QUICK_NCS = ['beam-damaged', 'beam-missing-safety-lock', 'beam-detach
 
 // Per-level elements (shown after level selection)
 const PER_LEVEL_ELEMENTS = [
-  { id: 'beam', label: 'Beam', ncCategory: 'beam' },
-  { id: 'palletSupportBar', label: 'Pallet Support Bar', ncCategory: 'palletSupportBar' },
-  { id: 'rearPalletStopBeam', label: 'Rear Pallet Stop Beam', ncCategory: 'rearPalletStopBeam' },
-  { id: 'deckingPanels', label: 'Decking Panels', ncCategory: 'deckingPanels' },
-  { id: 'pallet', label: 'Pallet', ncCategory: 'pallet' },
+  { id: 'beam', labelKey: 'bay.element_per_level_beam', ncCategory: 'beam' },
+  { id: 'palletSupportBar', labelKey: 'bay.element_per_level_pallet_support_bar', ncCategory: 'palletSupportBar' },
+  { id: 'rearPalletStopBeam', labelKey: 'bay.element_per_level_rear_pallet_stop_beam', ncCategory: 'rearPalletStopBeam' },
+  { id: 'deckingPanels', labelKey: 'bay.element_per_level_decking_panels', ncCategory: 'deckingPanels' },
+  { id: 'pallet', labelKey: 'bay.element_per_level_pallet', ncCategory: 'pallet' },
 ];
 
 // Bay/rack-level elements (no level selection needed)
 const BAY_LEVEL_ELEMENTS = [
-  { id: 'rearSafetyMesh', label: 'Rear Safety Mesh', ncCategory: 'rearSafetyMesh' },
-  { id: 'underpassProtection', label: 'Underpass Protection', ncCategory: 'underpassProtection' },
-  { id: 'horizontalBracing', label: 'Horizontal Bracing', ncCategory: 'horizontalBracing' },
-  { id: 'verticalBracing', label: 'Vertical Bracing', ncCategory: 'verticalBracing' },
-  { id: 'bay', label: 'Bay', ncCategory: 'bay' },
-  { id: 'aisle', label: 'Aisle', ncCategory: 'aisle' },
-  { id: 'entireRackingSystem', label: 'Entire Racking System', ncCategory: 'entireRackingSystem' },
+  { id: 'rearSafetyMesh', labelKey: 'bay.element_bay_rear_safety_mesh', ncCategory: 'rearSafetyMesh' },
+  { id: 'underpassProtection', labelKey: 'bay.element_bay_underpass_protection', ncCategory: 'underpassProtection' },
+  { id: 'horizontalBracing', labelKey: 'bay.element_bay_horizontal_bracing', ncCategory: 'horizontalBracing' },
+  { id: 'verticalBracing', labelKey: 'bay.element_bay_vertical_bracing', ncCategory: 'verticalBracing' },
+  { id: 'bay', labelKey: 'bay.element_bay_bay', ncCategory: 'bay' },
+  { id: 'aisle', labelKey: 'bay.element_bay_aisle', ncCategory: 'aisle' },
+  { id: 'entireRackingSystem', labelKey: 'bay.element_bay_entire_racking_system', ncCategory: 'entireRackingSystem' },
 ];
 
 export default function BayInspection({
@@ -45,6 +46,8 @@ export default function BayInspection({
   autoSelectLevel,
   onAutoSelectConsumed,
 }) {
+  const { t } = useTranslation();
+
   // Selection state
   const [inspectionMode, setInspectionMode] = useState('level');
   const [selectedLevel, setSelectedLevel] = useState(null);
@@ -224,10 +227,10 @@ export default function BayInspection({
   const getElementLabel = (elType, elId) => {
     if (elType === 'beam') {
       const level = elId?.replace(/\D/g, '') || '';
-      return `Beam L${level}`;
+      return t('bay.derived_beam_label', { level });
     }
-    if (elId === 'left-upright') return 'Left Upright';
-    if (elId === 'right-upright') return 'Right Upright';
+    if (elId === 'left-upright') return t('bay.derived_left_upright');
+    if (elId === 'right-upright') return t('bay.derived_right_upright');
     return elId;
   };
 
@@ -256,7 +259,7 @@ export default function BayInspection({
                 : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white'
             }`}
           >
-            Per Level
+            {t('bay.inspection_mode_per_level')}
           </button>
           <button
             onClick={() => { setInspectionMode('bay'); handleReset(); }}
@@ -266,7 +269,7 @@ export default function BayInspection({
                 : 'bg-slate-800/60 border-slate-700 text-slate-400 hover:border-slate-500 hover:text-white'
             }`}
           >
-            Bay / Rack Level
+            {t('bay.inspection_mode_bay_level')}
           </button>
         </div>
       </div>
@@ -275,7 +278,7 @@ export default function BayInspection({
       {inspectionMode === 'level' && (
         <div>
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-            {stepNum++}. Select Level
+            {t('bay.select_level_label', { n: stepNum++ })}
           </label>
           <div className="grid grid-cols-4 gap-2">
             {Array.from({ length: levels }, (_, i) => {
@@ -310,7 +313,7 @@ export default function BayInspection({
       {(inspectionMode === 'bay' || selectedLevel !== null) && (
         <div>
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-            {stepNum++}. Element
+            {t('bay.element_label_step', { n: stepNum++ })}
           </label>
           <div className="grid grid-cols-2 gap-2">
             {elementButtons.map((el) => {
@@ -329,7 +332,7 @@ export default function BayInspection({
                     }
                   `}
                 >
-                  {el.label}
+                  {t(el.labelKey)}
                 </button>
               );
             })}
@@ -341,7 +344,7 @@ export default function BayInspection({
       {elementType && (elementType === 'beam' || elementType === 'upright') && (
         <div>
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-            {stepNum++}. Face
+            {t('bay.face_step_label', { n: stepNum++ })}
           </label>
           <div className="grid grid-cols-2 gap-2">
             {['front', 'rear'].map((f) => {
@@ -360,7 +363,7 @@ export default function BayInspection({
                     }
                   `}
                 >
-                  {f}
+                  {f === 'front' ? t('common.face_front') : t('common.face_rear')}
                 </button>
               );
             })}
@@ -372,7 +375,7 @@ export default function BayInspection({
       {(face || (elementType && elementType !== 'beam' && elementType !== 'upright')) && (
         <div>
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-            {stepNum++}. Non-Conformity
+            {t('bay.nc_type_step_label', { n: stepNum++ })}
           </label>
           <div className="flex flex-col gap-2">
             {/* Quick NC buttons */}
@@ -406,7 +409,7 @@ export default function BayInspection({
                   onClick={() => setShowAllNCs(!showAllNCs)}
                   className="py-3 px-4 rounded-lg border border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-500 hover:text-white transition-all duration-150 flex items-center justify-between"
                 >
-                  <span className="text-sm font-medium">Other</span>
+                  <span className="text-sm font-medium">{t('common.other')}</span>
                   <ChevronDown
                     size={16}
                     className={`transition-transform duration-200 ${showAllNCs ? 'rotate-180' : ''}`}
@@ -452,7 +455,7 @@ export default function BayInspection({
       {selectedNCType && selectedNCData && (
         <div>
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-            {stepNum++}. Severity
+            {t('bay.severity_step_label', { n: stepNum++ })}
           </label>
           <div className="grid grid-cols-3 gap-2">
             {['green', 'yellow', 'red'].map((sev) => {
@@ -467,7 +470,7 @@ export default function BayInspection({
                     disabled
                     className="py-3 px-4 rounded-lg border border-slate-800 text-slate-600 text-sm font-medium opacity-40 cursor-not-allowed"
                   >
-                    {config.label}
+                    {t(config.labelKey)}
                   </button>
                 );
               }
@@ -488,7 +491,7 @@ export default function BayInspection({
                 >
                   <span className="flex items-center justify-center gap-2">
                     <span className={`w-3 h-3 rounded-full ${config.color}`} />
-                    {config.label}
+                    {t(config.labelKey)}
                   </span>
                 </button>
               );
@@ -501,7 +504,7 @@ export default function BayInspection({
       {severity && (
         <div>
           <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-            {stepNum++}. Photos (optional, max 3)
+            {t('bay.photos_step_label', { n: stepNum++ })}
           </label>
           <div className="flex gap-2 flex-wrap">
             {photos.map((photo, index) => (
@@ -528,7 +531,7 @@ export default function BayInspection({
                 className="w-20 h-20 rounded-lg border-2 border-dashed border-slate-600 flex flex-col items-center justify-center text-slate-500 hover:border-slate-400 hover:text-slate-300 transition-colors"
               >
                 <Camera size={20} />
-                <span className="text-[10px] mt-1">Add</span>
+                <span className="text-[10px] mt-1">{t('common.photo_add')}</span>
               </button>
             )}
           </div>
@@ -541,7 +544,7 @@ export default function BayInspection({
           {/* Quantity */}
           <div>
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-              {stepNum++}. Qty
+              {t('bay.qty_step_label', { n: stepNum++ })}
             </label>
             <input
               type="number"
@@ -560,12 +563,12 @@ export default function BayInspection({
           {/* Notes */}
           <div>
             <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 block">
-              Notes (optional)
+              {t('common.notes_optional')}
             </label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Observations..."
+              placeholder={t('common.observations_placeholder')}
               rows={2}
               className="
                 w-full rounded-lg px-3 py-2 text-sm text-white placeholder-slate-500
@@ -586,7 +589,7 @@ export default function BayInspection({
           className="w-full"
           size="lg"
         >
-          Record NC
+          {t('common.record_nc')}
         </Button>
       )}
 
@@ -594,11 +597,11 @@ export default function BayInspection({
       <div className="mt-2">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-white">
-            Recorded NCs
+            {t('common.recorded_ncs')}
           </h3>
           {ncs.length > 0 && (
             <span className="text-xs text-slate-400">
-              {ncs.length} item{ncs.length !== 1 ? 's' : ''}
+              {ncs.length === 1 ? t('common.items_count', { n: ncs.length }) : t('common.items_count_plural', { n: ncs.length })}
             </span>
           )}
         </div>
@@ -606,9 +609,9 @@ export default function BayInspection({
         {ncs.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-8 text-center">
             <CheckCircle2 size={28} className="text-slate-600 mb-2" />
-            <p className="text-sm text-slate-500">No NCs recorded for this bay</p>
+            <p className="text-sm text-slate-500">{t('bay.no_ncs_for_bay')}</p>
             <p className="text-xs text-slate-600 mt-1">
-              Use the form above to record non-conformities
+              {t('common.use_form_above')}
             </p>
           </div>
         ) : (
@@ -637,7 +640,7 @@ export default function BayInspection({
                       </p>
                       {nc.face && (
                         <span className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-slate-700 text-slate-300">
-                          {nc.face}
+                          {nc.face === 'front' ? t('common.face_front') : t('common.face_rear')}
                         </span>
                       )}
                       {(nc.quantity || 1) > 1 && (
@@ -647,7 +650,7 @@ export default function BayInspection({
                       )}
                       {photoCount > 0 && (
                         <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700 text-slate-300">
-                          {photoCount} photo{photoCount !== 1 ? 's' : ''}
+                          {t('bay.photos_count', { n: photoCount })}
                         </span>
                       )}
                     </div>
@@ -662,7 +665,7 @@ export default function BayInspection({
                   <button
                     onClick={() => onRemoveNC?.(nc.id)}
                     className="text-slate-500 hover:text-red-400 transition-colors p-1 shrink-0"
-                    title="Remove NC"
+                    title={t('common.remove_nc_title')}
                   >
                     <Trash2 size={14} />
                   </button>

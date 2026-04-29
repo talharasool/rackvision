@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { SCOPE_CATEGORIES } from '../../data/ncTypes';
 import { getNCTypeById } from '../../utils/ncHelpers';
 
@@ -10,12 +11,15 @@ import { getNCTypeById } from '../../utils/ncHelpers';
  *   ncs   - array of NC objects
  *   title - panel heading (default: 'NC Summary')
  */
-export default function NCSummaryPanel({ ncs = [], title = 'NC Summary' }) {
+export default function NCSummaryPanel({ ncs = [], title }) {
+  const { t } = useTranslation();
+  const panelTitle = title || t('nc.nc_summary_default_title');
+
   if (ncs.length === 0) {
     return (
       <div className="bg-slate-900 border border-slate-700 rounded-xl p-4">
-        <h3 className="text-sm font-semibold text-slate-300 mb-2">{title}</h3>
-        <p className="text-xs text-slate-500">No non-conformities recorded.</p>
+        <h3 className="text-sm font-semibold text-slate-300 mb-2">{panelTitle}</h3>
+        <p className="text-xs text-slate-500">{t('common.no_non_conformities_recorded')}</p>
       </div>
     );
   }
@@ -30,9 +34,9 @@ export default function NCSummaryPanel({ ncs = [], title = 'NC Summary' }) {
   const total = ncs.length;
 
   const severityRows = [
-    { key: 'red', label: 'Red', dotClass: 'bg-red-500', textClass: 'text-red-400', count: counts.red },
-    { key: 'yellow', label: 'Yellow', dotClass: 'bg-yellow-500', textClass: 'text-yellow-400', count: counts.yellow },
-    { key: 'green', label: 'Green', dotClass: 'bg-green-500', textClass: 'text-green-400', count: counts.green },
+    { key: 'red', label: t('common.severity_red'), dotClass: 'bg-red-500', textClass: 'text-red-400', count: counts.red },
+    { key: 'yellow', label: t('common.severity_yellow'), dotClass: 'bg-yellow-500', textClass: 'text-yellow-400', count: counts.yellow },
+    { key: 'green', label: t('common.severity_green'), dotClass: 'bg-green-500', textClass: 'text-green-400', count: counts.green },
   ];
 
   // Group by elementType, sort by count descending, take top 5
@@ -59,9 +63,9 @@ export default function NCSummaryPanel({ ncs = [], title = 'NC Summary' }) {
     <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-slate-300">{title}</h3>
+        <h3 className="text-sm font-semibold text-slate-300">{panelTitle}</h3>
         <span className="text-xs font-medium text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">
-          {total} NC{total !== 1 ? 's' : ''}
+          {t('nc.nc_panel_total_badge', { n: total })}
         </span>
       </div>
 
@@ -96,7 +100,7 @@ export default function NCSummaryPanel({ ncs = [], title = 'NC Summary' }) {
 
       {/* Scope category pills */}
       <div>
-        <h4 className="text-xs font-medium text-slate-400 mb-2">By Scope</h4>
+        <h4 className="text-xs font-medium text-slate-400 mb-2">{t('common.by_scope')}</h4>
         <div className="flex flex-wrap gap-2">
           {Object.entries(SCOPE_CATEGORIES).map(([key, cat]) => {
             const count = scopeCounts[key] || 0;
@@ -121,7 +125,7 @@ export default function NCSummaryPanel({ ncs = [], title = 'NC Summary' }) {
       {/* Top element types */}
       {topElements.length > 0 && (
         <div>
-          <h4 className="text-xs font-medium text-slate-400 mb-2">Top Element Types</h4>
+          <h4 className="text-xs font-medium text-slate-400 mb-2">{t('common.top_element_types')}</h4>
           <div className="space-y-1">
             {topElements.map(([elementType, count]) => (
               <div
@@ -130,7 +134,7 @@ export default function NCSummaryPanel({ ncs = [], title = 'NC Summary' }) {
               >
                 <span className="text-slate-300 capitalize">{elementType}</span>
                 <span className="text-slate-400">
-                  {count} NC{count !== 1 ? 's' : ''}
+                  {t('nc.nc_count', { n: count })}
                 </span>
               </div>
             ))}

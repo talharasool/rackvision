@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ClipboardPlus, RefreshCw, ChevronRight, Calendar, MapPin, Database, Columns3, Frame, Truck, Package, Upload, Trash2, User, Building, AlertTriangle } from 'lucide-react';
 import Card from '../components/ui/Card';
 import useInspectionStore from '../stores/inspectionStore';
@@ -11,6 +12,7 @@ export default function HomePage() {
   const { inspections, deleteInspection } = useInspectionStore();
   const { racks, deleteRack } = useRackStore();
   const { nonConformities, removeNC } = useNCStore();
+  const { t } = useTranslation();
   const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const recentInspections = [...inspections]
@@ -22,10 +24,10 @@ export default function HomePage() {
       {/* Branding */}
       <div className="text-center mb-12">
         <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent mb-3">
-          RackVision
+          {t('common.app_name')}
         </h1>
         <p className="text-slate-400 text-lg">
-          Warehouse Racking Inspection Platform
+          {t('home.tagline')}
         </p>
       </div>
 
@@ -39,8 +41,8 @@ export default function HomePage() {
           <div className="w-14 h-14 rounded-full bg-blue-600/20 flex items-center justify-center">
             <ClipboardPlus size={28} className="text-blue-400" />
           </div>
-          <span className="text-lg font-semibold text-white">New Inspection</span>
-          <span className="text-sm text-slate-400">Start a new racking inspection</span>
+          <span className="text-lg font-semibold text-white">{t('home.new_inspection')}</span>
+          <span className="text-sm text-slate-400">{t('home.new_inspection_subtitle')}</span>
         </Card>
 
         <Card
@@ -51,8 +53,8 @@ export default function HomePage() {
           <div className="w-14 h-14 rounded-full bg-cyan-600/20 flex items-center justify-center">
             <RefreshCw size={28} className="text-cyan-400" />
           </div>
-          <span className="text-lg font-semibold text-white">Renewals</span>
-          <span className="text-sm text-slate-400">Manage renewal inspections</span>
+          <span className="text-lg font-semibold text-white">{t('home.renewals')}</span>
+          <span className="text-sm text-slate-400">{t('home.renewals_subtitle')}</span>
         </Card>
       </div>
 
@@ -60,7 +62,7 @@ export default function HomePage() {
       <div className="w-full max-w-2xl mb-12">
         <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
           <Database size={18} className="text-slate-400" />
-          Database Editors
+          {t('home.database_editors')}
         </h2>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <Card
@@ -69,7 +71,7 @@ export default function HomePage() {
             className="flex flex-col items-center justify-center py-6 gap-2"
           >
             <Columns3 size={24} className="text-blue-400" />
-            <span className="text-sm font-medium text-white">Beams</span>
+            <span className="text-sm font-medium text-white">{t('home.beams')}</span>
           </Card>
           <Card
             hover
@@ -77,7 +79,7 @@ export default function HomePage() {
             className="flex flex-col items-center justify-center py-6 gap-2"
           >
             <Frame size={24} className="text-purple-400" />
-            <span className="text-sm font-medium text-white">Frames</span>
+            <span className="text-sm font-medium text-white">{t('home.frames')}</span>
           </Card>
           <Card
             hover
@@ -85,7 +87,7 @@ export default function HomePage() {
             className="flex flex-col items-center justify-center py-6 gap-2"
           >
             <Truck size={24} className="text-green-400" />
-            <span className="text-sm font-medium text-white">Suppliers</span>
+            <span className="text-sm font-medium text-white">{t('home.suppliers')}</span>
           </Card>
           <Card
             hover
@@ -93,25 +95,25 @@ export default function HomePage() {
             className="flex flex-col items-center justify-center py-6 gap-2"
           >
             <Package size={24} className="text-orange-400" />
-            <span className="text-sm font-medium text-white">Accessories</span>
+            <span className="text-sm font-medium text-white">{t('home.accessories')}</span>
           </Card>
           <Card
             className="flex flex-col items-center justify-center py-6 gap-2 opacity-40 cursor-not-allowed"
           >
             <Upload size={24} className="text-slate-500" />
-            <span className="text-sm font-medium text-slate-500">Import DB</span>
-            <span className="text-[10px] text-slate-600">Coming Soon</span>
+            <span className="text-sm font-medium text-slate-500">{t('home.import_db')}</span>
+            <span className="text-[10px] text-slate-600">{t('common.coming_soon')}</span>
           </Card>
         </div>
       </div>
 
       {/* Recent Inspections */}
       <div className="w-full max-w-2xl">
-        <h2 className="text-lg font-semibold text-white mb-4">Recent Inspections</h2>
+        <h2 className="text-lg font-semibold text-white mb-4">{t('home.recent_inspections')}</h2>
 
         {recentInspections.length === 0 ? (
           <Card className="text-center py-8">
-            <p className="text-slate-500">No inspections yet. Create your first one above.</p>
+            <p className="text-slate-500">{t('home.no_inspections_yet')}</p>
           </Card>
         ) : (
           <div className="flex flex-col gap-3">
@@ -126,7 +128,7 @@ export default function HomePage() {
               >
                 <div className="flex flex-col gap-1.5 min-w-0 flex-1">
                   <span className="text-white font-medium">
-                    {inspection.endCustomer || 'Untitled Inspection'}
+                    {inspection.endCustomer || t('home.untitled_inspection')}
                   </span>
                   {inspection.reseller && (
                     <span className="flex items-center gap-1 text-xs text-slate-500">
@@ -206,18 +208,18 @@ export default function HomePage() {
                   <AlertTriangle size={20} className="text-red-400" />
                 </div>
                 <div>
-                  <h3 className="text-base font-semibold text-white">Delete Inspection?</h3>
+                  <h3 className="text-base font-semibold text-white">{t('home.delete_inspection_title')}</h3>
                   <p className="text-xs text-slate-400">{deleteConfirm.name}</p>
                 </div>
               </div>
               <div className="bg-slate-800/60 rounded-lg p-3 mb-4 text-sm text-slate-300">
-                <p className="mb-2">This will permanently delete:</p>
+                <p className="mb-2">{t('home.delete_inspection_body')}</p>
                 <ul className="space-y-1 text-xs text-slate-400">
-                  <li>- {deleteConfirm.areaCount} working area{deleteConfirm.areaCount !== 1 ? 's' : ''}</li>
-                  <li>- {deleteConfirm.rackCount} rack{deleteConfirm.rackCount !== 1 ? 's' : ''}</li>
+                  <li>- {t('home.delete_working_areas', { n: deleteConfirm.areaCount })}</li>
+                  <li>- {t('home.delete_racks', { n: deleteConfirm.rackCount })}</li>
                   {deleteConfirm.ncCount > 0 && (
                     <li className="text-red-400 font-medium">
-                      - {deleteConfirm.ncCount} recorded NC{deleteConfirm.ncCount !== 1 ? 's' : ''}
+                      - {t('home.delete_ncs', { n: deleteConfirm.ncCount })}
                     </li>
                   )}
                 </ul>
@@ -227,7 +229,7 @@ export default function HomePage() {
                   onClick={() => setDeleteConfirm(null)}
                   className="flex-1 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium rounded-lg transition-colors"
                 >
-                  Cancel
+                  {t('common.cancel')}
                 </button>
                 <button
                   onClick={() => {
@@ -245,7 +247,7 @@ export default function HomePage() {
                   }}
                   className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
                 >
-                  Delete Everything
+                  {t('common.delete_everything')}
                 </button>
               </div>
             </div>

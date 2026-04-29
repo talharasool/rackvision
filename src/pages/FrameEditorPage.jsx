@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Settings, ClipboardCheck } from 'lucide-react';
 import Button from '../components/ui/Button';
@@ -16,6 +17,7 @@ export default function FrameEditorPage() {
   const { racks } = useRackStore();
   const { nonConformities, addNC, removeNC } = useNCStore();
 
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('config');
 
   const inspection = inspections.find((i) => i.id === inspectionId);
@@ -27,8 +29,8 @@ export default function FrameEditorPage() {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-slate-400 mb-4">Frame not found.</p>
-          <Button onClick={() => navigate('/')}>Go Home</Button>
+          <p className="text-slate-400 mb-4">{t('frame.frame_not_found')}</p>
+          <Button onClick={() => navigate('/')}>{t('common.go_home')}</Button>
         </div>
       </div>
     );
@@ -63,7 +65,7 @@ export default function FrameEditorPage() {
 
         {frameNCs.length > 0 && (
           <span className="bg-red-500/20 text-red-400 text-xs font-medium px-3 py-1 rounded-full">
-            {frameNCs.length} NC{frameNCs.length !== 1 && 's'}
+            {t('nc.nc_count', { n: frameNCs.length })}
           </span>
         )}
       </div>
@@ -96,7 +98,7 @@ export default function FrameEditorPage() {
               }`}
             >
               <Settings size={16} />
-              Configuration
+              {t('frame.tab_configuration')}
             </button>
             <button
               onClick={() => setActiveTab('inspection')}
@@ -107,7 +109,7 @@ export default function FrameEditorPage() {
               }`}
             >
               <ClipboardCheck size={16} />
-              Inspection
+              {t('frame.tab_inspection')}
             </button>
           </div>
 

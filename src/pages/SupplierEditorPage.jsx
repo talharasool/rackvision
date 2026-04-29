@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Plus, Pencil, Trash2, Palette } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
@@ -13,6 +14,7 @@ const PRESET_COLORS = [
 ];
 
 export default function SupplierEditorPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { suppliers, addSupplier, updateSupplier, deleteSupplier } = useSupplierStore();
 
@@ -30,7 +32,7 @@ export default function SupplierEditorPage() {
 
   const handleSave = () => {
     if (!name.trim()) {
-      setError('Supplier name is required');
+      setError(t('editors.error_supplier_name_required'));
       return;
     }
 
@@ -38,7 +40,7 @@ export default function SupplierEditorPage() {
       (s) => s.name.toLowerCase() === name.trim().toLowerCase() && s.id !== editingId
     );
     if (duplicate) {
-      setError('A supplier with this name already exists');
+      setError(t('editors.error_supplier_name_duplicate'));
       return;
     }
 
@@ -71,28 +73,28 @@ export default function SupplierEditorPage() {
             <ArrowLeft size={18} />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold text-white">Supplier Editor</h1>
-            <p className="text-sm text-slate-400">Manage suppliers and their layout colors</p>
+            <h1 className="text-2xl font-bold text-white">{t('editors.supplier_editor_title')}</h1>
+            <p className="text-sm text-slate-400">{t('editors.supplier_editor_subtitle')}</p>
           </div>
         </div>
 
         {/* Form */}
         <Card className="mb-6">
           <h2 className="text-lg font-semibold text-white mb-4">
-            {editingId ? 'Edit Supplier' : 'New Supplier'}
+            {editingId ? t('editors.edit_supplier_form_title') : t('editors.new_supplier_form_title')}
           </h2>
           <div className="flex flex-col gap-4">
             <Input
-              label="Supplier Name"
+              label={t('editors.supplier_name_label')}
               value={name}
               onChange={(e) => { setName(e.target.value); setError(''); }}
-              placeholder="e.g. Mecalux"
+              placeholder={t('editors.supplier_name_placeholder')}
               required
               error={error}
             />
 
             <div className="flex flex-col gap-1.5">
-              <label className="text-sm text-slate-400">Layout Color</label>
+              <label className="text-sm text-slate-400">{t('editors.layout_color_label')}</label>
               <div className="flex items-center gap-3">
                 <div
                   className="w-10 h-10 rounded-lg border-2 border-slate-600 shrink-0"
@@ -112,7 +114,7 @@ export default function SupplierEditorPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2 mt-1">
-                <label className="text-xs text-slate-500">Custom:</label>
+                <label className="text-xs text-slate-500">{t('editors.custom_color_label')}</label>
                 <input
                   type="color"
                   value={color}
@@ -124,10 +126,10 @@ export default function SupplierEditorPage() {
 
             <div className="flex gap-3 pt-2">
               <Button onClick={handleSave}>
-                {editingId ? 'Update' : 'Add Supplier'}
+                {editingId ? t('editors.update_supplier') : t('editors.add_supplier')}
               </Button>
               {editingId && (
-                <Button variant="ghost" onClick={resetForm}>Cancel</Button>
+                <Button variant="ghost" onClick={resetForm}>{t('common.cancel')}</Button>
               )}
             </div>
           </div>
@@ -135,11 +137,11 @@ export default function SupplierEditorPage() {
 
         {/* List */}
         <h2 className="text-lg font-semibold text-white mb-3">
-          Suppliers ({suppliers.length})
+          {t('editors.suppliers_list_heading', { n: suppliers.length })}
         </h2>
         {suppliers.length === 0 ? (
           <Card className="text-center py-8">
-            <p className="text-slate-500">No suppliers yet. Add your first one above.</p>
+            <p className="text-slate-500">{t('editors.no_suppliers_yet')}</p>
           </Card>
         ) : (
           <div className="flex flex-col gap-2">
