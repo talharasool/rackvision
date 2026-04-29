@@ -289,7 +289,8 @@
     "properties_distribute": "Distribuisci",
     "properties_distribute_h_title": "Distribuisci Orizzontalmente",
     "properties_distribute_v_title": "Distribuisci Verticalmente",
-    "properties_rotate_90": "Ruota 90\u00b0"
+    "properties_rotate_90": "Ruota 90\u00b0",
+    "mirror_back_to_back": "Specchio (Schiena a schiena)"
   },
 
   "bay": {

@@ -271,6 +271,52 @@ const useRackStore = create(
         return duplicate;
       },
 
+      mirrorRack: (id) => {
+        get()._pushHistory();
+        const rack = get().racks.find((r) => r.id === id);
+        if (!rack) return null;
+
+        const newRackId = generateId();
+        const { bays, frames } = generateBaysAndFrames(
+          rack.numberOfBays,
+          newRackId
+        );
+
+        // Deep-clone bay configs from the original rack
+        const clonedBays = bays.map((bay, i) => {
+          const originalBay = rack.bays[i];
+          if (originalBay?.bayConfig) {
+            return {
+              ...bay,
+              bayConfig: JSON.parse(JSON.stringify(originalBay.bayConfig)),
+            };
+          }
+          return bay;
+        });
+
+        // Position directly below (back-to-back touching): same X, Y offset by frame depth in px
+        const rackDepthPx = (rack.frameDepth || 1000) * 0.1;
+
+        const mirrored = {
+          ...JSON.parse(JSON.stringify(rack)),
+          id: newRackId,
+          name: `${rack.name} (Mirror)`,
+          frontSide: (rack.frontSide || 'top') === 'top' ? 'bottom' : 'top',
+          position: {
+            x: rack.position.x,
+            y: rack.position.y + rackDepthPx,
+          },
+          bays: clonedBays,
+          frames,
+        };
+
+        set((state) => ({
+          racks: [...state.racks, mirrored],
+        }));
+
+        return mirrored;
+      },
+
       setCurrentRack: (id) => {
         const rack = get().racks.find((r) => r.id === id) || null;
         set({ currentRack: rack });
