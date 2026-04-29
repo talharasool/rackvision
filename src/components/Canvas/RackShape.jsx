@@ -106,7 +106,8 @@ const RackShape = forwardRef(function RackShape(
           group.elementType,
           { bayWidth: 0, bayDepth: scaledFrameDepth, frameWidth: scaledUprightWidth },
           0,
-          1
+          1,
+          firstNC.face
         );
         const mx = hasCustomPos ? firstNC.markerX : xOffset + defaultPos.x;
         const my = hasCustomPos ? firstNC.markerY : defaultPos.y;

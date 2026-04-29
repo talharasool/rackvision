@@ -6,6 +6,7 @@ import {
   Pencil,
   Trash2,
   Copy,
+  FlipVertical,
   RotateCw,
   Download,
   AlertTriangle,
@@ -45,7 +46,7 @@ export default function LayoutEditor() {
   const { inspectionId, areaId } = useParams();
   const navigate = useNavigate();
   const { inspections } = useInspectionStore();
-  const { racks, updateRack, deleteRack, duplicateRack, undo, redo, canUndo, canRedo } =
+  const { racks, updateRack, deleteRack, duplicateRack, mirrorRack, undo, redo, canUndo, canRedo } =
     useRackStore();
   const { nonConformities, removeNC, updateNC } = useNCStore();
   const { suppliers } = useSupplierStore();
@@ -196,6 +197,14 @@ export default function LayoutEditor() {
         return;
       }
 
+      // Ctrl+M — mirror (back-to-back)
+      if (ctrl && e.key === 'm' && selectedRackIds.length === 1 && editMode) {
+        e.preventDefault();
+        const mirrored = mirrorRack(selectedRackIds[0]);
+        if (mirrored) setSelectedRackIds([mirrored.id]);
+        return;
+      }
+
       // Ctrl+Z — undo
       if (ctrl && !e.shiftKey && e.key === 'z') {
         e.preventDefault();
@@ -296,6 +305,7 @@ export default function LayoutEditor() {
     racks,
     deleteRack,
     duplicateRack,
+    mirrorRack,
     updateRack,
     undo,
     redo,
@@ -428,6 +438,11 @@ export default function LayoutEditor() {
       case 'duplicate': {
         const dup = duplicateRack(rackId);
         if (dup) setSelectedRackIds([dup.id]);
+        break;
+      }
+      case 'mirror': {
+        const mirrored = mirrorRack(rackId);
+        if (mirrored) setSelectedRackIds([mirrored.id]);
         break;
       }
       case 'delete': {
@@ -738,6 +753,13 @@ export default function LayoutEditor() {
                 >
                   <Copy size={14} />
                   {t('layout.duplicate')}
+                </button>
+                <button
+                  onClick={() => handleContextMenuAction('mirror')}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-slate-200 hover:bg-slate-800 rounded-lg transition-colors"
+                >
+                  <FlipVertical size={14} />
+                  {t('layout.mirror_back_to_back')}
                 </button>
                 <button
                   onClick={() => handleContextMenuAction('rotate')}

@@ -90,7 +90,8 @@ export default function BayShape({
             group.elementType,
             { bayWidth: width, bayDepth: depth, frameWidth: 0 },
             0,
-            1
+            1,
+            firstNC.face
           );
           const markerX = hasCustomPos ? firstNC.markerX : defaultPos.x;
           const markerY = hasCustomPos ? firstNC.markerY : defaultPos.y;

@@ -289,7 +289,8 @@
     "properties_distribute": "Distribute",
     "properties_distribute_h_title": "Distribute Horizontally",
     "properties_distribute_v_title": "Distribute Vertically",
-    "properties_rotate_90": "Rotate 90\u00b0"
+    "properties_rotate_90": "Rotate 90\u00b0",
+    "mirror_back_to_back": "Mirror (Back-to-back)"
   },
 
   "bay": {

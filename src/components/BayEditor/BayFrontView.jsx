@@ -21,6 +21,34 @@ const LABEL_COLOR = '#94a3b8';
 const DIM_COLOR = '#64748b';
 const NC_COLORS = { green: '#22c55e', yellow: '#eab308', red: '#ef4444' };
 
+const ACCESSORY_ABBREVIATIONS = {
+  'horizontal bracing': 'CV ORIZ.',
+  'horizontal_bracing': 'CV ORIZ.',
+  'mesh decking': 'PGR',
+  'decking panels': 'PGR',
+  'decking_panels': 'PGR',
+  'galvanized panels': 'PZ',
+  'galvanized_panels': 'PZ',
+  'pallet support bar': 'III COR.',
+  'pallet_support_bar': 'III COR.',
+  'third beam': 'III COR.',
+  'rear safety mesh': 'RETE POST.',
+  'rear_safety_mesh': 'RETE POST.',
+  'vertical bracing': 'CV VERT.',
+  'vertical_bracing': 'CV VERT.',
+  'underpass protection': 'PROT. SOTT.',
+  'underpass_protection': 'PROT. SOTT.',
+};
+
+function getAccessoryAbbreviation(accessory) {
+  const name = (accessory.name || accessory.category || '').toLowerCase();
+  for (const [pattern, abbr] of Object.entries(ACCESSORY_ABBREVIATIONS)) {
+    if (name.includes(pattern)) return abbr;
+  }
+  // Fallback: first 8 chars uppercase
+  return (accessory.name || accessory.category || '?').substring(0, 8).toUpperCase();
+}
+
 const SVG_PADDING = { top: 40, right: 80, bottom: 60, left: 60 };
 const SVG_WIDTH = 500;
 const SVG_HEIGHT = 460;
@@ -349,6 +377,39 @@ export default function BayFrontView({
               }
             </text>
           </g>
+        );
+      })}
+
+      {/* Accessory abbreviations per level */}
+      {beamPositions.map((beam, i) => {
+        const levelIdx = beam.level - 1;
+        const bc = bay?.bayConfig || {};
+        // Get accessories for this level
+        const levelAccessories = bc.levelAccessories?.[levelIdx] ||
+          (bc.accessories || []).filter(a => a.levelIndex === levelIdx);
+        if (!levelAccessories || levelAccessories.length === 0) return null;
+
+        // Get abbreviations (deduplicate)
+        const abbrs = [...new Set(levelAccessories.map(getAccessoryAbbreviation))];
+        const abbrText = abbrs.join(' + ');
+
+        // Position: centered between this beam and the one below (or floor)
+        const nextBeamY = i > 0 ? beamPositions[i - 1].y : floorY;
+        const midY = (beam.y + nextBeamY) / 2;
+
+        return (
+          <text
+            key={`acc-${beam.level}`}
+            x={beam.x + beam.width / 2}
+            y={midY}
+            textAnchor="middle"
+            fill="#94a3b8"
+            fontSize={7}
+            fontStyle="italic"
+            className="pointer-events-none select-none"
+          >
+            {abbrText}
+          </text>
         );
       })}
 
