@@ -46,9 +46,9 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
   const [rackData, setRackData] = useState(initialRackData);
   // Doc 5 §9: Inline beam/frame creation state
   const [showNewBeam, setShowNewBeam] = useState(false);
-  const [newBeamData, setNewBeamData] = useState({ length: '', height: '', depth: '' });
+  const [newBeamData, setNewBeamData] = useState({ customName: '', length: '', height: '', depth: '' });
   const [showNewFrame, setShowNewFrame] = useState(false);
-  const [newFrameData, setNewFrameData] = useState({ uprightHeight: '', depth: '', uprightWidth: '' });
+  const [newFrameData, setNewFrameData] = useState({ customName: '', uprightHeight: '', depth: '', uprightWidth: '' });
 
   const { createRack, updateRack } = useRackStore();
   const { suppliers } = useSupplierStore();
@@ -469,6 +469,12 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
           ) : (
             <div className="p-3 rounded-lg border border-blue-500/40 bg-blue-500/5 space-y-3">
               <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Quick Add Beam</p>
+              <Input
+                label="Name (optional)"
+                value={newBeamData.customName}
+                onChange={(e) => setNewBeamData(p => ({ ...p, customName: e.target.value }))}
+                placeholder="e.g. Heavy Duty 2700"
+              />
               <div className="grid grid-cols-3 gap-2">
                 <Input
                   label="Length (mm)"
@@ -500,13 +506,22 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
                     const beam = addBeam({
                       supplierId: rackData.supplierId,
                       supplierName: rackData.supplierName,
+                      customName: newBeamData.customName.trim(),
                       length: Number(newBeamData.length) || 0,
                       height: Number(newBeamData.height) || 0,
                       depth: Number(newBeamData.depth) || 0,
                     });
-                    if (beam) handleBeamSelect(beam.id);
+                    if (beam) {
+                      // Set directly — filteredBeams is stale this render
+                      setRackData(prev => ({
+                        ...prev,
+                        beamId: beam.id,
+                        bayLength: beam.length || 0,
+                        beamType: beam.beamType || '',
+                      }));
+                    }
                     setShowNewBeam(false);
-                    setNewBeamData({ length: '', height: '', depth: '' });
+                    setNewBeamData({ customName: '', length: '', height: '', depth: '' });
                   }}
                 >
                   Add & Select
@@ -737,6 +752,12 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
             ) : (
               <div className="p-3 rounded-lg border border-blue-500/40 bg-blue-500/5 space-y-3">
                 <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Quick Add Frame</p>
+                <Input
+                  label="Name (optional)"
+                  value={newFrameData.customName}
+                  onChange={(e) => setNewFrameData(p => ({ ...p, customName: e.target.value }))}
+                  placeholder="e.g. Standard 6m"
+                />
                 <div className="grid grid-cols-3 gap-2">
                   <Input
                     label="Height (mm)"
@@ -768,13 +789,25 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
                       const frame = addFrame({
                         supplierId: rackData.supplierId,
                         supplierName: rackData.supplierName,
+                        customName: newFrameData.customName.trim(),
                         uprightHeight: Number(newFrameData.uprightHeight) || 0,
                         depth: Number(newFrameData.depth) || 0,
                         uprightWidth: Number(newFrameData.uprightWidth) || 0,
                       });
-                      if (frame) handleFrameSelect(frame.id);
+                      if (frame) {
+                        // Set directly — filteredFrames is stale this render
+                        setRackData(prev => ({
+                          ...prev,
+                          frameId: frame.id,
+                          frameHeight: frame.uprightHeight || frame.height || 0,
+                          frameDepth: frame.depth || 0,
+                          uprightWidth: frame.uprightWidth || 0,
+                          uprightDepth: frame.uprightDepth || frame.uprightWidth || 0,
+                          braceType: frame.braceType || 'Z',
+                        }));
+                      }
                       setShowNewFrame(false);
-                      setNewFrameData({ uprightHeight: '', depth: '', uprightWidth: '' });
+                      setNewFrameData({ customName: '', uprightHeight: '', depth: '', uprightWidth: '' });
                     }}
                   >
                     Add & Select
