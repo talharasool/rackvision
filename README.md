@@ -91,6 +91,12 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
 
 ## Latest Changes
 
+### Doc 5 — Milestone B: Data Flow Fixes (v1.4.0)
+
+- **Per-bay width on 2D layout** — Each bay now renders at its own `customLength` on the canvas instead of using the rack-level default for all bays. Racks with mixed bay sizes (e.g. 1800mm + 2700mm + 3600mm) display correctly.
+- **Wizard data propagation** — Beam and frame selections made in the Rack Wizard now auto-populate every bay's `beamSelections` (all levels) and `leftFrameDbId`/`rightFrameDbId`. No more empty bay configs after wizard completion.
+- **Canvas position persistence** — Pan position is saved per working area and restored when re-entering the layout editor. Zoom level is also persisted.
+
 ### Doc 5 — Milestone A: Quick Fixes (v1.3.0)
 
 - **Home button** — RackVision logo in header is now clickable, navigates to home page from any screen
@@ -681,6 +687,7 @@ v{MAJOR}.{MINOR}.{PATCH}
 | **v1.1.0** | NC Alignment & Export | 2026-04 | Doc 2 NC types (22 categories), CSV/XLSX/ZIP export, severity badges |
 | **v1.2.0** | Accessories & Polish | 2026-04 | Per-level accessories, Doc 4 complete (16/16), pie-chart markers, feature flags |
 | **v1.2.1** | Safe Deletion & Fixes | 2026-04 | Safe rack deletion modal, Edit Properties fix, duplicate rack fix |
+| **v1.4.0** | Doc 5 Milestone B | 2026-04 | Per-bay width, wizard propagation, canvas position persistence |
 | **v1.3.0** | Doc 5 Milestone A | 2026-04 | Home button, Front/Rear frame labels, rack name repositioned |
 
 ### Pre-Release Checklist
