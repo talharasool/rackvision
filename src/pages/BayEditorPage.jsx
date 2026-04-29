@@ -26,6 +26,8 @@ export default function BayEditorPage() {
 
   const [activeTab, setActiveTab] = useState('config');
   const [showNCPanel, setShowNCPanel] = useState(false);
+  // Doc 5 §5: Track clicked level from SVG front view
+  const [clickedLevel, setClickedLevel] = useState(null);
 
   const inspection = inspections.find((i) => i.id === inspectionId);
   const rack = racks.find((r) => r.id === rackId);
@@ -166,6 +168,13 @@ export default function BayEditorPage() {
                   return;
                 }
               }
+              // Doc 5 §5: Clicking a beam auto-selects the level in inspection tab
+              if (elementType === 'beam') {
+                const match = elementId?.match(/beam-level-(\d+)/);
+                if (match) {
+                  setClickedLevel(parseInt(match[1], 10));
+                }
+              }
               setActiveTab('inspection');
             }}
           />
@@ -237,6 +246,8 @@ export default function BayEditorPage() {
                 ncs={bayNCs}
                 onAddNC={handleAddNC}
                 onRemoveNC={removeNC}
+                autoSelectLevel={clickedLevel}
+                onAutoSelectConsumed={() => setClickedLevel(null)}
               />
             )}
           </div>

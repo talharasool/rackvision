@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Trash2, CheckCircle2, PlusCircle, Camera, X, ChevronDown } from 'lucide-react';
 import Button from '../ui/Button';
 import ncTypes from '../../data/ncTypes';
@@ -42,6 +42,8 @@ export default function BayInspection({
   ncs = [],
   onAddNC,
   onRemoveNC,
+  autoSelectLevel,
+  onAutoSelectConsumed,
 }) {
   // Selection state
   const [inspectionMode, setInspectionMode] = useState('level');
@@ -57,6 +59,15 @@ export default function BayInspection({
   const [showAllNCs, setShowAllNCs] = useState(false);
 
   const fileInputRef = useRef(null);
+
+  // Doc 5 §5: Auto-select level when beam clicked in SVG front view
+  useEffect(() => {
+    if (autoSelectLevel != null) {
+      setInspectionMode('level');
+      handleSelectLevel(autoSelectLevel);
+      onAutoSelectConsumed?.();
+    }
+  }, [autoSelectLevel]);
 
   // Per-bay level count with rack-level fallback (Doc 1 §3.1.1 — bays edit independently)
   const levels = bay?.bayConfig?.levels ?? rack?.levels ?? bay?.levels ?? 3;

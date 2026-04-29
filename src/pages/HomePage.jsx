@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ClipboardPlus, RefreshCw, ChevronRight, Calendar, MapPin, Database, Columns3, Frame, Truck, Package, Upload } from 'lucide-react';
+import { ClipboardPlus, RefreshCw, ChevronRight, Calendar, MapPin, Database, Columns3, Frame, Truck, Package, Upload, Trash2, User, Building, AlertTriangle } from 'lucide-react';
 import Card from '../components/ui/Card';
 import useInspectionStore from '../stores/inspectionStore';
+import useRackStore from '../stores/rackStore';
+import useNCStore from '../stores/ncStore';
 
 export default function HomePage() {
   const navigate = useNavigate();
-  const { inspections } = useInspectionStore();
+  const { inspections, deleteInspection } = useInspectionStore();
+  const { racks, deleteRack } = useRackStore();
+  const { nonConformities, removeNC } = useNCStore();
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const recentInspections = [...inspections]
     .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
@@ -119,15 +124,27 @@ export default function HomePage() {
                 }}
                 className="flex items-center justify-between"
               >
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-1.5 min-w-0 flex-1">
                   <span className="text-white font-medium">
                     {inspection.endCustomer || 'Untitled Inspection'}
                   </span>
-                  <div className="flex items-center gap-4 text-sm text-slate-400">
+                  {inspection.reseller && (
+                    <span className="flex items-center gap-1 text-xs text-slate-500">
+                      <Building size={12} />
+                      {inspection.reseller}
+                    </span>
+                  )}
+                  <div className="flex items-center gap-3 text-sm text-slate-400 flex-wrap">
                     {inspection.city && (
                       <span className="flex items-center gap-1">
                         <MapPin size={14} />
                         {inspection.city}
+                      </span>
+                    )}
+                    {inspection.contactName && (
+                      <span className="flex items-center gap-1">
+                        <User size={14} />
+                        {inspection.contactName}
                       </span>
                     )}
                     <span className="flex items-center gap-1">
@@ -135,8 +152,13 @@ export default function HomePage() {
                       {new Date(inspection.createdAt).toLocaleDateString()}
                     </span>
                   </div>
+                  {inspection.siteAddress && (
+                    <span className="text-xs text-slate-500 truncate">
+                      {inspection.siteAddress}
+                    </span>
+                  )}
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 shrink-0">
                   <span
                     className={`text-xs px-2 py-1 rounded-full font-medium ${
                       inspection.status === 'draft'
@@ -148,6 +170,24 @@ export default function HomePage() {
                   >
                     {inspection.status}
                   </span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const areaIds = (inspection.workingAreas || []).map(a => a.id);
+                      const inspRacks = racks.filter(r => areaIds.includes(r.areaId));
+                      const inspNCs = nonConformities.filter(nc => inspRacks.some(r => r.id === nc.rackId));
+                      setDeleteConfirm({
+                        id: inspection.id,
+                        name: inspection.endCustomer || 'Untitled',
+                        areaCount: areaIds.length,
+                        rackCount: inspRacks.length,
+                        ncCount: inspNCs.length,
+                      });
+                    }}
+                    className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                   <ChevronRight size={18} className="text-slate-500" />
                 </div>
               </Card>
@@ -155,6 +195,63 @@ export default function HomePage() {
           </div>
         )}
       </div>
+      {/* Delete Inspection Confirmation Modal */}
+      {deleteConfirm && (
+        <>
+          <div className="fixed inset-0 z-[60] bg-black/60" onClick={() => setDeleteConfirm(null)} />
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <div className="bg-slate-900 border border-slate-600 rounded-2xl shadow-2xl p-5 max-w-sm w-full">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-full bg-red-500/15">
+                  <AlertTriangle size={20} className="text-red-400" />
+                </div>
+                <div>
+                  <h3 className="text-base font-semibold text-white">Delete Inspection?</h3>
+                  <p className="text-xs text-slate-400">{deleteConfirm.name}</p>
+                </div>
+              </div>
+              <div className="bg-slate-800/60 rounded-lg p-3 mb-4 text-sm text-slate-300">
+                <p className="mb-2">This will permanently delete:</p>
+                <ul className="space-y-1 text-xs text-slate-400">
+                  <li>- {deleteConfirm.areaCount} working area{deleteConfirm.areaCount !== 1 ? 's' : ''}</li>
+                  <li>- {deleteConfirm.rackCount} rack{deleteConfirm.rackCount !== 1 ? 's' : ''}</li>
+                  {deleteConfirm.ncCount > 0 && (
+                    <li className="text-red-400 font-medium">
+                      - {deleteConfirm.ncCount} recorded NC{deleteConfirm.ncCount !== 1 ? 's' : ''}
+                    </li>
+                  )}
+                </ul>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setDeleteConfirm(null)}
+                  className="flex-1 px-4 py-2.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-sm font-medium rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    const areaIds = (inspections.find(i => i.id === deleteConfirm.id)?.workingAreas || []).map(a => a.id);
+                    const inspRacks = racks.filter(r => areaIds.includes(r.areaId));
+                    // Delete NCs for these racks
+                    nonConformities
+                      .filter(nc => inspRacks.some(r => r.id === nc.rackId))
+                      .forEach(nc => removeNC(nc.id));
+                    // Delete racks
+                    inspRacks.forEach(r => deleteRack(r.id));
+                    // Delete inspection
+                    deleteInspection(deleteConfirm.id);
+                    setDeleteConfirm(null);
+                  }}
+                  className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-500 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                  Delete Everything
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

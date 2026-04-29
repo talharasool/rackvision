@@ -44,11 +44,16 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [rackData, setRackData] = useState(initialRackData);
+  // Doc 5 §9: Inline beam/frame creation state
+  const [showNewBeam, setShowNewBeam] = useState(false);
+  const [newBeamData, setNewBeamData] = useState({ customName: '', length: '', height: '', depth: '' });
+  const [showNewFrame, setShowNewFrame] = useState(false);
+  const [newFrameData, setNewFrameData] = useState({ customName: '', uprightHeight: '', depth: '', uprightWidth: '' });
 
   const { createRack, updateRack } = useRackStore();
   const { suppliers } = useSupplierStore();
-  const { beams, getFilteredBeams } = useBeamDatabaseStore();
-  const { frames, getFilteredFrames } = useFrameDatabaseStore();
+  const { beams, getFilteredBeams, addBeam } = useBeamDatabaseStore();
+  const { frames, getFilteredFrames, addFrame } = useFrameDatabaseStore();
 
   const isEditing = !!editRack;
 
@@ -451,6 +456,82 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
               </div>
             </div>
           ))}
+
+          {/* Doc 5 §9: Quick-add new beam inline */}
+          {!showNewBeam ? (
+            <button
+              onClick={() => setShowNewBeam(true)}
+              className="flex items-center gap-2 p-3 rounded-lg border border-dashed border-slate-600 text-slate-400 hover:text-blue-400 hover:border-blue-500/50 transition-colors"
+            >
+              <Plus size={16} />
+              <span className="text-sm">New Beam</span>
+            </button>
+          ) : (
+            <div className="p-3 rounded-lg border border-blue-500/40 bg-blue-500/5 space-y-3">
+              <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Quick Add Beam</p>
+              <Input
+                label="Name (optional)"
+                value={newBeamData.customName}
+                onChange={(e) => setNewBeamData(p => ({ ...p, customName: e.target.value }))}
+                placeholder="e.g. Heavy Duty 2700"
+              />
+              <div className="grid grid-cols-3 gap-2">
+                <Input
+                  label="Length (mm)"
+                  type="number"
+                  value={newBeamData.length}
+                  onChange={(e) => setNewBeamData(p => ({ ...p, length: e.target.value }))}
+                  placeholder="2700"
+                />
+                <Input
+                  label="Height (mm)"
+                  type="number"
+                  value={newBeamData.height}
+                  onChange={(e) => setNewBeamData(p => ({ ...p, height: e.target.value }))}
+                  placeholder="100"
+                />
+                <Input
+                  label="Depth (mm)"
+                  type="number"
+                  value={newBeamData.depth}
+                  onChange={(e) => setNewBeamData(p => ({ ...p, depth: e.target.value }))}
+                  placeholder="50"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  disabled={!newBeamData.length}
+                  onClick={() => {
+                    const beam = addBeam({
+                      supplierId: rackData.supplierId,
+                      supplierName: rackData.supplierName,
+                      customName: newBeamData.customName.trim(),
+                      length: Number(newBeamData.length) || 0,
+                      height: Number(newBeamData.height) || 0,
+                      depth: Number(newBeamData.depth) || 0,
+                    });
+                    if (beam) {
+                      // Set directly — filteredBeams is stale this render
+                      setRackData(prev => ({
+                        ...prev,
+                        beamId: beam.id,
+                        bayLength: beam.length || 0,
+                        beamType: beam.beamType || '',
+                      }));
+                    }
+                    setShowNewBeam(false);
+                    setNewBeamData({ customName: '', length: '', height: '', depth: '' });
+                  }}
+                >
+                  Add & Select
+                </Button>
+                <Button size="sm" variant="secondary" onClick={() => setShowNewBeam(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </WizardStep>
@@ -658,6 +739,85 @@ export default function RackWizard({ isOpen, onClose, areaId, editRack }) {
                 </div>
               );
             })}
+
+            {/* Doc 5 §9: Quick-add new frame inline */}
+            {!showNewFrame ? (
+              <button
+                onClick={() => setShowNewFrame(true)}
+                className="flex items-center gap-2 p-3 rounded-lg border border-dashed border-slate-600 text-slate-400 hover:text-blue-400 hover:border-blue-500/50 transition-colors"
+              >
+                <Plus size={16} />
+                <span className="text-sm">New Frame</span>
+              </button>
+            ) : (
+              <div className="p-3 rounded-lg border border-blue-500/40 bg-blue-500/5 space-y-3">
+                <p className="text-xs font-semibold text-blue-400 uppercase tracking-wider">Quick Add Frame</p>
+                <Input
+                  label="Name (optional)"
+                  value={newFrameData.customName}
+                  onChange={(e) => setNewFrameData(p => ({ ...p, customName: e.target.value }))}
+                  placeholder="e.g. Standard 6m"
+                />
+                <div className="grid grid-cols-3 gap-2">
+                  <Input
+                    label="Height (mm)"
+                    type="number"
+                    value={newFrameData.uprightHeight}
+                    onChange={(e) => setNewFrameData(p => ({ ...p, uprightHeight: e.target.value }))}
+                    placeholder="6000"
+                  />
+                  <Input
+                    label="Depth (mm)"
+                    type="number"
+                    value={newFrameData.depth}
+                    onChange={(e) => setNewFrameData(p => ({ ...p, depth: e.target.value }))}
+                    placeholder="1000"
+                  />
+                  <Input
+                    label="Upright W (mm)"
+                    type="number"
+                    value={newFrameData.uprightWidth}
+                    onChange={(e) => setNewFrameData(p => ({ ...p, uprightWidth: e.target.value }))}
+                    placeholder="100"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    disabled={!newFrameData.uprightHeight}
+                    onClick={() => {
+                      const frame = addFrame({
+                        supplierId: rackData.supplierId,
+                        supplierName: rackData.supplierName,
+                        customName: newFrameData.customName.trim(),
+                        uprightHeight: Number(newFrameData.uprightHeight) || 0,
+                        depth: Number(newFrameData.depth) || 0,
+                        uprightWidth: Number(newFrameData.uprightWidth) || 0,
+                      });
+                      if (frame) {
+                        // Set directly — filteredFrames is stale this render
+                        setRackData(prev => ({
+                          ...prev,
+                          frameId: frame.id,
+                          frameHeight: frame.uprightHeight || frame.height || 0,
+                          frameDepth: frame.depth || 0,
+                          uprightWidth: frame.uprightWidth || 0,
+                          uprightDepth: frame.uprightDepth || frame.uprightWidth || 0,
+                          braceType: frame.braceType || 'Z',
+                        }));
+                      }
+                      setShowNewFrame(false);
+                      setNewFrameData({ customName: '', uprightHeight: '', depth: '', uprightWidth: '' });
+                    }}
+                  >
+                    Add & Select
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => setShowNewFrame(false)}>
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
