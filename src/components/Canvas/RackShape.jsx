@@ -215,16 +215,29 @@ const RackShape = forwardRef(function RackShape(
       )}
 
       {/* Rack name label — Doc 5 §12: centered over the last end frame.
-          Positioned at the bottom of the rack below the last frame number,
-          with enough width to be readable even for long names. */}
+          Placed on the opposite side from the frame numbers so both are visible. */}
+      <Rect
+        x={totalWidth - scaledUprightWidth - 20}
+        y={
+          frontSide === 'top'
+            ? scaledFrameDepth + 2
+            : -20 * labelFontSize
+        }
+        width={scaledUprightWidth + 40}
+        height={16 * labelFontSize}
+        fill="#0f172a"
+        cornerRadius={3}
+        opacity={0.85}
+        listening={false}
+      />
       <Text
-        x={totalWidth - scaledUprightWidth / 2 - 30}
+        x={totalWidth - scaledUprightWidth - 20}
         y={
           frontSide === 'top'
             ? scaledFrameDepth + 4
-            : -16 * labelFontSize
+            : -18 * labelFontSize
         }
-        width={60}
+        width={scaledUprightWidth + 40}
         text={name || 'Rack'}
         fontSize={12 * labelFontSize}
         fontStyle="bold"
