@@ -159,6 +159,30 @@ const useRackStore = create(
         rack.bays = bays;
         rack.frames = frames;
 
+        // Doc 5 §8: Propagate wizard beam/frame selection to each bay config
+        const wizardBeamId = rackData.beamId || '';
+        const wizardFrameId = rackData.frameId || '';
+        const levels = rack.levels || 3;
+
+        if (wizardBeamId || wizardFrameId) {
+          rack.bays = rack.bays.map((bay) => {
+            const config = { ...bay.bayConfig };
+            // Pre-fill beam selection for all levels
+            if (wizardBeamId && config.beamSelections.length === 0) {
+              config.beamSelections = Array.from({ length: levels }, () => ({
+                beamId: wizardBeamId,
+                beamDbId: wizardBeamId,
+              }));
+            }
+            // Pre-fill frame selection
+            if (wizardFrameId) {
+              if (!config.leftFrameDbId) config.leftFrameDbId = wizardFrameId;
+              if (!config.rightFrameDbId) config.rightFrameDbId = wizardFrameId;
+            }
+            return { ...bay, bayConfig: config };
+          });
+        }
+
         set((state) => ({
           racks: [...state.racks, rack],
           currentRack: rack,

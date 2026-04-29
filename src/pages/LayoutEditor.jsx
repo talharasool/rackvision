@@ -63,6 +63,9 @@ export default function LayoutEditor() {
     } catch { /* ignore */ }
   };
 
+  // Doc 5 §11: Restore canvas pan position per area
+  const savedCanvasPos = prefs.canvasPositions?.[areaId] || null;
+
   const [editMode, setEditMode] = useState(false);
   const [scale, setScale] = useState(prefs.scale ?? 1);
   const [markerScale, setMarkerScale] = useState(prefs.markerScale ?? 1);
@@ -311,7 +314,7 @@ export default function LayoutEditor() {
   const handleZoomIn = () => setScale((prev) => Math.min(prev + 0.1, 3));
   const handleZoomOut = () => setScale((prev) => Math.max(prev - 0.1, 0.3));
   const handleResetZoom = () => setScale(1);
-  const handleScaleChange = (newScale) => setScale(newScale);
+  const handleScaleChange = (newScale) => { setScale(newScale); persistPref('scale', newScale); };
   const handleMarkerScaleUp = () =>
     setMarkerScale((prev) => { const v = Math.min(prev + 0.25, 3); persistPref('markerScale', v); return v; });
   const handleMarkerScaleDown = () =>
@@ -320,6 +323,16 @@ export default function LayoutEditor() {
     setLabelFontSize((prev) => { const v = Math.min(prev + 0.25, 3); persistPref('labelFontSize', v); return v; });
   const handleLabelFontSizeDown = () =>
     setLabelFontSize((prev) => { const v = Math.max(prev - 0.25, 0.5); persistPref('labelFontSize', v); return v; });
+
+  // Doc 5 §11: Persist canvas position per area
+  const handleStagePosChange = useCallback((pos) => {
+    try {
+      const current = JSON.parse(localStorage.getItem('rackvision-editor-prefs') || '{}');
+      if (!current.canvasPositions) current.canvasPositions = {};
+      current.canvasPositions[areaId] = pos;
+      localStorage.setItem('rackvision-editor-prefs', JSON.stringify(current));
+    } catch { /* ignore */ }
+  }, [areaId]);
 
   const handleBayClick = (rackId, bayId) => {
     // In edit+select mode, clicking a bay selects the rack instead of navigating
@@ -660,6 +673,8 @@ export default function LayoutEditor() {
           onTransformEnd={handleTransformEnd}
           snapSize={snapSize}
           onContextMenu={handleContextMenu}
+          initialStagePos={savedCanvasPos}
+          onStagePosChange={handleStagePosChange}
         />
 
         {/* Properties Panel */}

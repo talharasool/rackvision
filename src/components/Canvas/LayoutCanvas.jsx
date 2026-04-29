@@ -37,6 +37,8 @@ function LayoutCanvas({
   onTransformEnd,
   snapSize = 0,
   onContextMenu,
+  initialStagePos,
+  onStagePosChange,
 }, forwardedRef) {
   const containerRef = useRef(null);
   const stageRef = useRef(null);
@@ -51,7 +53,7 @@ function LayoutCanvas({
     []
   );
   const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [stagePos, setStagePos] = useState({ x: 0, y: 0 });
+  const [stagePos, setStagePos] = useState(initialStagePos || { x: 0, y: 0 });
 
   // Selection box state
   const [selectionBox, setSelectionBox] = useState(null);
@@ -142,15 +144,18 @@ function LayoutCanvas({
       };
 
       setStagePos(newPos);
+      onStagePosChange?.(newPos);
       onScaleChange?.(newScale);
     },
-    [scale, stagePos, onScaleChange]
+    [scale, stagePos, onScaleChange, onStagePosChange]
   );
 
   const handleDragEnd = (e) => {
     // Stage panning
     if (e.target === stageRef.current) {
-      setStagePos({ x: e.target.x(), y: e.target.y() });
+      const newPos = { x: e.target.x(), y: e.target.y() };
+      setStagePos(newPos);
+      onStagePosChange?.(newPos);
     }
   };
 

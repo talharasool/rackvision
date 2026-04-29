@@ -45,13 +45,18 @@ const RackShape = forwardRef(function RackShape(
     frontSide = 'top',
   } = rack;
 
-  const scaledBayLength = bayLength * MM_TO_PX;
   const scaledFrameDepth = frameDepth * MM_TO_PX;
   const scaledUprightWidth = uprightWidth * MM_TO_PX;
 
-  // Total rack width = all frames + all bays
+  // Doc 5 §3: Per-bay width — each bay may have a customLength override
+  const scaledBayWidths = bays.map(
+    (bay) => (bay.bayConfig?.customLength || bayLength) * MM_TO_PX
+  );
+
+  // Total rack width = all frames + sum of individual bay widths
   const totalWidth =
-    frames.length * scaledUprightWidth + bays.length * scaledBayLength;
+    frames.length * scaledUprightWidth +
+    scaledBayWidths.reduce((sum, w) => sum + w, 0);
 
   // Build NC lookup by bayId and frameId
   const ncByBay = {};
@@ -129,12 +134,13 @@ const RackShape = forwardRef(function RackShape(
     // Bay after this frame (if there's a matching bay)
     if (i < bays.length) {
       const bay = bays[i];
+      const bayWidth = scaledBayWidths[i];
       elements.push(
         <BayShape
           key={`bay-${bay.id}`}
           x={xOffset}
           y={0}
-          width={scaledBayLength}
+          width={bayWidth}
           depth={scaledFrameDepth}
           bayIndex={bay.index + 1}
           isSelected={false}
@@ -149,7 +155,7 @@ const RackShape = forwardRef(function RackShape(
           onClick={() => onBayClick?.(id, bay.id)}
         />
       );
-      xOffset += scaledBayLength;
+      xOffset += bayWidth;
     }
   }
 
