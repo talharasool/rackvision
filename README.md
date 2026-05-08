@@ -732,6 +732,8 @@ RackVision follows **Semantic Versioning** (SemVer) for all releases, similar to
 v{MAJOR}.{MINOR}.{PATCH}
 ```
 
+> **Commit policy:** Do not add `Co-Authored-By` or any AI tool attribution lines to commits. All commits must be authored solely by the team.
+
 
 | Part      | When to bump                                                 | Example         |
 | --------- | ------------------------------------------------------------ | --------------- |
