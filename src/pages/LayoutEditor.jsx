@@ -585,7 +585,7 @@ export default function LayoutEditor() {
       const csv = rowsToCSV(rows);
       downloadFile(csv, `${baseName}.csv`);
     } else if (format === 'xlsx') {
-      downloadXLSX(rows, `${baseName}.xlsx`);
+      downloadXLSX(rows, `${baseName}.xlsx`, inspection);
     } else if (format === 'zip') {
       // Collect photos from NCs relevant to this area
       const areaRackIds = new Set(areaRacks.map((r) => r.id));
@@ -596,7 +596,7 @@ export default function LayoutEditor() {
           ncId: nc.id,
           photos: Array.isArray(nc.photos) ? nc.photos : nc.photo ? [nc.photo] : [],
         }));
-      downloadZIPBundle(rows, photos, `${baseName}.zip`);
+      downloadZIPBundle(rows, photos, `${baseName}.zip`, inspection);
     }
   };
 

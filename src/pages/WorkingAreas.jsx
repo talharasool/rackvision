@@ -68,7 +68,7 @@ export default function WorkingAreas() {
       const csv = rowsToCSV(rows);
       downloadFile(csv, `${baseName}.csv`);
     } else if (format === 'xlsx') {
-      downloadXLSX(rows, `${baseName}.xlsx`);
+      downloadXLSX(rows, `${baseName}.xlsx`, inspection);
     } else if (format === 'zip') {
       const allNCs = nonConformities.filter((nc) =>
         allAreaRacks.some((r) => r.id === nc.rackId)
@@ -79,7 +79,7 @@ export default function WorkingAreas() {
           ncId: nc.id,
           photos: Array.isArray(nc.photos) ? nc.photos : nc.photo ? [nc.photo] : [],
         }));
-      downloadZIPBundle(rows, photos, `${baseName}.zip`);
+      downloadZIPBundle(rows, photos, `${baseName}.zip`, inspection);
     }
   };
 

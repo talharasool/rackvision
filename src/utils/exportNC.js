@@ -424,16 +424,78 @@ const COL_WIDTHS = [
   { wch: 30 },  // Note
 ];
 
-function buildXLSXBuffer(rows) {
-  const ws = XLSX.utils.json_to_sheet(rows, { header: HEADERS });
-  ws['!cols'] = COL_WIDTHS;
+/**
+ * Build an XLSX buffer matching the Allegato B template exactly:
+ *   Row 1 : ELENCO ANOMALIE  (merged A1:M1)
+ *   Row 2 : Data: [date]  ...  Cliente: [client]
+ *   Row 3 : Italian column headers
+ *   Row 4+: data rows
+ */
+function buildXLSXBuffer(rows, inspection) {
   const wb = XLSX.utils.book_new();
+  const ws = {};
+  const COLS = 'ABCDEFGHIJKLM';
+
+  // ── Row 1: title ────────────────────────────────────────────────────────
+  ws['A1'] = { v: 'ELENCO ANOMALIE', t: 's' };
+
+  // ── Row 2: date + client ─────────────────────────────────────────────────
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('it-IT'); // DD/MM/YYYY
+  const clientName = inspection?.endCustomer || inspection?.reseller || '';
+  ws['A2'] = { v: 'Data:', t: 's' };
+  ws['E2'] = { v: dateStr, t: 's' };
+  ws['J2'] = { v: `Cliente: ${clientName}`, t: 's' };
+
+  // ── Row 3: Italian column headers (exact Allegato B ITA labels) ──────────
+  const ITA_HEADERS = [
+    'Lotto', 'Forn.', 'Scaff.', 'Rif.', 'Liv.', 'Pos.', 'Q.tà',
+    'elemento danneggiato', 'Foto NC.', 'descr.', 'anomalia', 'danno', 'Note',
+  ];
+  ITA_HEADERS.forEach((h, i) => {
+    ws[`${COLS[i]}3`] = { v: h, t: 's' };
+  });
+
+  // ── Row 4+: data ─────────────────────────────────────────────────────────
+  // Map our row object keys → column letters
+  const KEY_TO_COL = {
+    'Warehouse':    'A',
+    'Supplier':     'B',
+    'Rack Name':    'C',
+    'Rif.':         'D',
+    'Liv.':         'E',
+    'Pos.':         'F',
+    'Q.tà':         'G',
+    'Damaged item': 'H',
+    'Photo NC.':    'I',
+    'Description':  'J',
+    'Anomaly':      'K',
+    'Lv. Damage':   'L',
+    'Note':         'M',
+  };
+
+  rows.forEach((row, idx) => {
+    const r = idx + 4;
+    Object.entries(KEY_TO_COL).forEach(([key, col]) => {
+      const val = row[key];
+      const isNum = key === 'Q.tà';
+      ws[`${col}${r}`] = { v: val ?? '', t: isNum ? 'n' : 's' };
+    });
+  });
+
+  const lastRow = Math.max(rows.length + 3, 4);
+  ws['!ref'] = `A1:M${lastRow}`;
+
+  // Merge A1:M1 for the title row
+  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 12 } }];
+  ws['!cols'] = COL_WIDTHS;
+
   XLSX.utils.book_append_sheet(wb, ws, 'Elenco Anomalie');
   return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
 }
 
-export function downloadXLSX(rows, filename) {
-  const buf = buildXLSXBuffer(rows);
+export function downloadXLSX(rows, filename, inspection) {
+  const buf = buildXLSXBuffer(rows, inspection);
   const blob = new Blob([buf], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
@@ -460,9 +522,9 @@ function getExtensionFromDataUri(dataUri) {
   return 'jpg';
 }
 
-export async function downloadZIPBundle(rows, photos, filename) {
+export async function downloadZIPBundle(rows, photos, filename, inspection) {
   const zip = new JSZip();
-  const xlsxBuf = buildXLSXBuffer(rows);
+  const xlsxBuf = buildXLSXBuffer(rows, inspection);
   zip.file('ispezione.xlsx', xlsxBuf);
   const photosFolder = zip.folder('foto');
   if (Array.isArray(photos)) {
