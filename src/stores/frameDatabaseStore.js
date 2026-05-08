@@ -43,6 +43,7 @@ const useFrameDatabaseStore = create(
           uprightDepth: data.uprightDepth || data.uprightWidth || 0,
           // Doc 4 §4e: brace pattern — Z, D, K, X. Defaults to Z.
           braceType: data.braceType || 'Z',
+          structureType: data.structureType || 'standard',
           height: data.uprightHeight || 0,
           depth: data.depth || 0,
           finish: data.finish || 'painted',
@@ -114,6 +115,12 @@ const useFrameDatabaseStore = create(
     { name: 'rackvision-frame-database' }
   )
 );
+
+export const FRAME_STRUCTURE_TYPES = [
+  { value: 'standard', label: 'Standard' },
+  { value: 'end', label: 'End Frame (Spalla di testata)' },
+  { value: 'underpass', label: 'Underpass Frame' },
+];
 
 export { FRAME_TYPES, generateFrameName };
 export default useFrameDatabaseStore;
