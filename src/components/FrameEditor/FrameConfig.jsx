@@ -1,9 +1,11 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Link, Package, Info, Ruler } from 'lucide-react';
 import Card from '../ui/Card';
 import Button from '../ui/Button';
 
 export default function FrameConfig({ rack, frame, frameIndex, onUpdate }) {
+  const { t } = useTranslation();
   const fIndex = frameIndex ?? frame?.index ?? 0;
   const frameHeight = frame?.height || rack?.frameHeight || 0;
   const frameDepth = frame?.depth || rack?.frameDepth || 0;
@@ -24,37 +26,37 @@ export default function FrameConfig({ rack, frame, frameIndex, onUpdate }) {
       <Card className="!p-4">
         <div className="flex items-center gap-2 mb-3">
           <Info size={14} className="text-blue-400" />
-          <h3 className="text-sm font-semibold text-white">Frame Information</h3>
+          <h3 className="text-sm font-semibold text-white">{t('frame.frame_info_title')}</h3>
         </div>
         <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
           <div>
-            <p className="text-slate-400">Frame Number</p>
+            <p className="text-slate-400">{t('frame.frame_number')}</p>
             <p className="text-white font-medium">{fIndex + 1}</p>
           </div>
           <div>
-            <p className="text-slate-400">Rack</p>
+            <p className="text-slate-400">{t('frame.rack_label')}</p>
             <p className="text-white font-medium">{rack?.name || '-'}</p>
           </div>
           <div>
-            <p className="text-slate-400">Height</p>
+            <p className="text-slate-400">{t('frame.height_label')}</p>
             <p className="text-white font-medium">{frameHeight} mm</p>
           </div>
           <div>
-            <p className="text-slate-400">Depth</p>
+            <p className="text-slate-400">{t('frame.depth_label')}</p>
             <p className="text-white font-medium">{frameDepth} mm</p>
           </div>
           <div>
-            <p className="text-slate-400">Upright Width</p>
+            <p className="text-slate-400">{t('frame.upright_width_label')}</p>
             <p className="text-white font-medium">{uprightWidth} mm</p>
           </div>
           <div>
-            <p className="text-slate-400">Position</p>
+            <p className="text-slate-400">{t('frame.position_label')}</p>
             <p className="text-white font-medium">
               {fIndex === 0
-                ? 'First (Left End)'
+                ? t('frame.position_first')
                 : fIndex === (rack?.frames?.length || 1) - 1
-                  ? 'Last (Right End)'
-                  : `Interior (#${fIndex + 1})`}
+                  ? t('frame.position_last')
+                  : t('frame.position_interior', { n: fIndex + 1 })}
             </p>
           </div>
         </div>
@@ -64,15 +66,15 @@ export default function FrameConfig({ rack, frame, frameIndex, onUpdate }) {
       <Card className="!p-4">
         <div className="flex items-center gap-2 mb-3">
           <Ruler size={14} className="text-blue-400" />
-          <h3 className="text-sm font-semibold text-white">Frame Type</h3>
+          <h3 className="text-sm font-semibold text-white">{t('frame.frame_type_section_title')}</h3>
         </div>
         <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
           <div>
-            <p className="text-slate-400">Model</p>
+            <p className="text-slate-400">{t('frame.model_label')}</p>
             <p className="text-white font-medium">{frameModel}</p>
           </div>
           <div>
-            <p className="text-slate-400">Manufacturer</p>
+            <p className="text-slate-400">{t('frame.manufacturer_label')}</p>
             <p className="text-white font-medium">
               {frame?.manufacturer || rack?.manufacturer || '-'}
             </p>
@@ -82,18 +84,18 @@ export default function FrameConfig({ rack, frame, frameIndex, onUpdate }) {
 
       {/* Capacity */}
       <Card className="!p-4">
-        <h3 className="text-sm font-semibold text-white mb-3">Capacity</h3>
+        <h3 className="text-sm font-semibold text-white mb-3">{t('frame.capacity_section_title')}</h3>
         <div className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
           <div>
-            <p className="text-slate-400">Rated Capacity</p>
+            <p className="text-slate-400">{t('frame.rated_capacity')}</p>
             <p className="text-white font-medium">
-              {capacity > 0 ? `${capacity.toLocaleString()} kg` : '-'}
+              {capacity > 0 ? t('frame.capacity_kg', { n: capacity.toLocaleString() }) : '-'}
             </p>
           </div>
           <div>
-            <p className="text-slate-400">Status</p>
+            <p className="text-slate-400">{t('frame.status_label')}</p>
             <p className="text-emerald-400 font-medium">
-              {capacity > 0 ? 'Within limits' : 'Not specified'}
+              {capacity > 0 ? t('frame.status_within_limits') : t('frame.status_not_specified')}
             </p>
           </div>
         </div>
@@ -103,40 +105,40 @@ export default function FrameConfig({ rack, frame, frameIndex, onUpdate }) {
       <Card className="!p-4">
         <div className="flex items-center gap-2 mb-3">
           <Link size={14} className="text-blue-400" />
-          <h3 className="text-sm font-semibold text-white">Connected Bays</h3>
+          <h3 className="text-sm font-semibold text-white">{t('frame.connected_bays_title')}</h3>
         </div>
         <div className="grid grid-cols-2 gap-4">
           {/* Left bay */}
           <div className="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-800/70 border border-slate-700">
             <span className="text-xs text-slate-400 uppercase tracking-wider">
-              Left Bay
+              {t('frame.left_bay')}
             </span>
             {leftBay ? (
               <>
                 <p className="text-sm text-white font-medium">
                   {leftBay.name || `Bay ${leftBayIndex + 1}`}
                 </p>
-                <p className="text-xs text-slate-500">Index: {leftBayIndex}</p>
+                <p className="text-xs text-slate-500">{t('frame.bay_index_label', { n: leftBayIndex })}</p>
               </>
             ) : (
-              <p className="text-xs text-slate-500 italic">None (end frame)</p>
+              <p className="text-xs text-slate-500 italic">{t('frame.none_end_frame')}</p>
             )}
           </div>
 
           {/* Right bay */}
           <div className="flex flex-col gap-1.5 p-3 rounded-lg bg-slate-800/70 border border-slate-700">
             <span className="text-xs text-slate-400 uppercase tracking-wider">
-              Right Bay
+              {t('frame.right_bay')}
             </span>
             {rightBay ? (
               <>
                 <p className="text-sm text-white font-medium">
                   {rightBay.name || `Bay ${rightBayIndex + 1}`}
                 </p>
-                <p className="text-xs text-slate-500">Index: {rightBayIndex}</p>
+                <p className="text-xs text-slate-500">{t('frame.bay_index_label', { n: rightBayIndex })}</p>
               </>
             ) : (
-              <p className="text-xs text-slate-500 italic">None (end frame)</p>
+              <p className="text-xs text-slate-500 italic">{t('frame.none_end_frame')}</p>
             )}
           </div>
         </div>
@@ -145,16 +147,16 @@ export default function FrameConfig({ rack, frame, frameIndex, onUpdate }) {
       {/* Accessories */}
       <Card className="!p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-white">Accessories</h3>
+          <h3 className="text-sm font-semibold text-white">{t('frame.accessories_title')}</h3>
           <Button variant="ghost" size="sm" icon={Package}>
-            Add
+            {t('common.add')}
           </Button>
         </div>
         <div className="flex flex-col items-center justify-center py-6 text-center">
           <Package size={28} className="text-slate-600 mb-2" />
-          <p className="text-sm text-slate-500">No accessories added</p>
+          <p className="text-sm text-slate-500">{t('frame.no_accessories_added')}</p>
           <p className="text-xs text-slate-600 mt-1">
-            Column guards, frame protectors, and other accessories can be added here.
+            {t('frame.accessories_hint')}
           </p>
         </div>
       </Card>

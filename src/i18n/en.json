@@ -63,7 +63,9 @@
     "export_csv": "Export CSV",
     "export_xlsx": "Export XLSX",
     "export_zip_with_photos": "Export ZIP (with photos)",
-    "optional_description_placeholder": "Optional description or notes"
+    "optional_description_placeholder": "Optional description or notes",
+    "back_to_home": "Back to Home",
+    "dashboard": "Dashboard"
   },
 
   "home": {
@@ -435,7 +437,12 @@
     "derived_cross_member_n": "Cross Member {{n}}",
     "derived_upright_front": "Upright (Front)",
     "derived_upright_rear": "Upright (Rear)",
-    "derived_upright": "Upright"
+    "derived_upright": "Upright",
+    "label_front": "FRONT",
+    "label_rear": "REAR",
+    "front_elevation": "Front Elevation",
+    "frame_n": "Frame {{n}}",
+    "no_frame_data": "No frame data available"
   },
 
   "nc": {

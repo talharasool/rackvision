@@ -1,13 +1,16 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { NavLink } from 'react-router-dom';
 import { Home, Map, ArrowLeft } from 'lucide-react';
 
-const navItems = [
-  { to: 'dashboard', label: 'Dashboard', icon: Home },
-  { to: 'areas', label: 'Working Areas', icon: Map },
-];
-
 export default function Sidebar({ inspectionId, currentArea }) {
+  const { t } = useTranslation();
+
+  const navItems = [
+    { to: 'dashboard', label: t('common.dashboard'), icon: Home },
+    { to: 'areas', label: t('inspection.working_areas_page_title'), icon: Map },
+  ];
+
   return (
     <aside className="w-64 bg-slate-900 h-full border-r border-slate-800 flex flex-col">
       {/* Navigation links */}
@@ -37,7 +40,7 @@ export default function Sidebar({ inspectionId, currentArea }) {
           className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors duration-150"
         >
           <ArrowLeft size={18} />
-          Back to Home
+          {t('common.back_to_home')}
         </NavLink>
       </div>
     </aside>

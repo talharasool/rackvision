@@ -63,7 +63,9 @@
     "export_csv": "Esporta CSV",
     "export_xlsx": "Esporta XLSX",
     "export_zip_with_photos": "Esporta ZIP (con foto)",
-    "optional_description_placeholder": "Descrizione o note facoltative"
+    "optional_description_placeholder": "Descrizione o note facoltative",
+    "back_to_home": "Torna alla Home",
+    "dashboard": "Dashboard"
   },
 
   "home": {
@@ -435,7 +437,12 @@
     "derived_cross_member_n": "Traverso {{n}}",
     "derived_upright_front": "Montante (Anteriore)",
     "derived_upright_rear": "Montante (Posteriore)",
-    "derived_upright": "Montante"
+    "derived_upright": "Montante",
+    "label_front": "ANT",
+    "label_rear": "POST",
+    "front_elevation": "Vista Frontale",
+    "frame_n": "Spalla {{n}}",
+    "no_frame_data": "Nessun dato spalla disponibile"
   },
 
   "nc": {
