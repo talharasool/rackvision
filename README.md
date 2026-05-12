@@ -91,6 +91,27 @@ Warehouse Racking Inspection Platform — a web application for conducting, mana
 
 ## Latest Changes
 
+### Full Italian i18n Completion (v1.8.0)
+
+Completed Italian/English localization across all remaining components. The language toggle now works across the entire app with zero hardcoded English strings remaining in the UI.
+
+**Components localized:**
+
+- **FrameConfig** — All 16 panel labels (Informazioni Spalla, Tipo Spalla, Portata, Campate Collegate, Posizione, etc.) now use `t('frame.*')` keys
+- **FrameView** — SVG upright labels translate to `ANT` / `POST` in Italian; Frame label, "Front Elevation" subtitle, and empty-state message all translated
+- **CanvasToolbar** — Toolbar subtitle, Select/Pan tooltips, Editing/Locked toggle, Undo/Redo tooltips, marker/label size controls, Snap dropdown options, Export NCs and Layout PDF buttons
+- **Sidebar** — Dashboard and Working Areas nav labels, Back to Home footer link
+
+**New i18n keys added** (both `en.json` and `it.json`):
+- `frame.label_front` / `frame.label_rear` — "FRONT"/"REAR" → "ANT"/"POST"
+- `frame.front_elevation` — "Front Elevation" → "Vista Frontale"
+- `frame.frame_n` — "Frame {{n}}" → "Spalla {{n}}"
+- `frame.no_frame_data` — "No frame data available" → "Nessun dato spalla disponibile"
+- `common.back_to_home` — "Back to Home" → "Torna alla Home"
+- `common.dashboard` — "Dashboard" (same in both)
+
+---
+
 ### Doc 5 — Milestone C: UX Improvements (v1.5.0)
 
 - **Level auto-select from SVG** — Clicking a beam (e.g. L2) on the bay front view SVG auto-switches to the Inspection tab with that level pre-selected and element buttons shown
@@ -217,7 +238,7 @@ The 2D layout editor has been upgraded to a full interactive canvas editor with 
 
 ## Progress Overview
 
-**Overall completion: ~98% of Milestone 1-2 scope (SOW). $4,500 scope fully delivered. Only Italian i18n remains from client meeting points.**
+**Overall completion: 100% of Milestone 1-2 scope (SOW). $4,500 scope fully delivered. All client meeting points complete including Italian i18n.**
 
 
 | Document / Area                                  | Coverage | Status                                                                                                                                 |
@@ -227,8 +248,8 @@ The 2D layout editor has been upgraded to a full interactive canvas editor with 
 | Doc 3: App Analysis (first client review)        | ~95%     | Sections 1-4 complete. Accessories Editor done (DB + CRUD). Import DB deferred by client                                               |
 | Doc 4: Gagliardi Feedback (second client review) | **100%** | 16/16 items shipped                                                                                                                    |
 | SOW Milestone 1                                  | **100%** | Wizard, layout, editors, databases all complete                                                                                        |
-| SOW Milestone 2                                  | **~95%** | Bay/frame config, inspection, export, per-level accessories done. Pending: Italian language                                            |
-| Client Meeting Points (April 2026)               | **~90%** | 22/23 points done. Pending: Italian i18n                                                                                               |
+| SOW Milestone 2                                  | **100%** | Bay/frame config, inspection, export, per-level accessories, Italian i18n — all done                                                   |
+| Client Meeting Points (April 2026)               | **100%** | All 23 points done including Italian i18n (v1.8.0)                                                                                     |
 
 
 ---
@@ -681,7 +702,7 @@ Glossary, MVP purpose, data structure definitions. Used as reference throughout 
 | 10  | **Frame compatibility check** | Low      | Doc 1 Ch 2: Warn if frame height < highest beam elevation |
 | 11  | **Rack wizard summary step**  | Low      | Doc 1 Ch 2: Show summary before creation confirmation     |
 | 12  | **Bay description field**     | Low      | Doc 1 Ch 3: Synthetic format "3x2700+1x1800+1x2700"       |
-| 13  | **Italian language (i18n)**   | High     | Only remaining client meeting point                       |
+| 13  | **Italian language (i18n)**   | ~~High~~ | **DONE (v1.8.0)** — All components fully localized        |
 | 14  | **Performance pass**          | Medium   | Virtual scrolling, memo optimization, lazy loading        |
 
 
@@ -747,14 +768,15 @@ v{MAJOR}.{MINOR}.{PATCH}
 
 | Version    | Tag                   | Date    | Highlights                                                                      |
 | ---------- | --------------------- | ------- | ------------------------------------------------------------------------------- |
-| **v1.0.0** | Initial Release       | 2026-04 | Phases 1-4: inspections, racks, 2D layout, bay/frame editors                    |
-| **v1.1.0** | NC Alignment & Export | 2026-04 | Doc 2 NC types (22 categories), CSV/XLSX/ZIP export, severity badges            |
-| **v1.2.0** | Accessories & Polish  | 2026-04 | Per-level accessories, Doc 4 complete (16/16), pie-chart markers, feature flags |
-| **v1.2.1** | Safe Deletion & Fixes | 2026-04 | Safe rack deletion modal, Edit Properties fix, duplicate rack fix               |
+| **v1.8.0** | Full Italian i18n     | 2026-05 | Complete Italian/English localization across all remaining components           |
 | **v1.7.0** | Allegato B Export     | 2026-05 | Dual-sheet XLSX (ITA/ENG), color-coded danno, End Frame element, Italian headers |
 | **v1.5.0** | Doc 5 Milestone C     | 2026-04 | Level auto-select, wizard inline beam/frame, inspection delete                  |
 | **v1.4.0** | Doc 5 Milestone B     | 2026-04 | Per-bay width, wizard propagation, canvas position persistence                  |
 | **v1.3.0** | Doc 5 Milestone A     | 2026-04 | Home button, Front/Rear frame labels, rack name repositioned                    |
+| **v1.2.1** | Safe Deletion & Fixes | 2026-04 | Safe rack deletion modal, Edit Properties fix, duplicate rack fix               |
+| **v1.2.0** | Accessories & Polish  | 2026-04 | Per-level accessories, Doc 4 complete (16/16), pie-chart markers, feature flags |
+| **v1.1.0** | NC Alignment & Export | 2026-04 | Doc 2 NC types (22 categories), CSV/XLSX/ZIP export, severity badges            |
+| **v1.0.0** | Initial Release       | 2026-04 | Phases 1-4: inspections, racks, 2D layout, bay/frame editors                    |
 
 
 ### Pre-Release Checklist
