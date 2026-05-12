@@ -51,12 +51,10 @@ export default function FrameShape({
         onTap={onClick}
         hitStrokeWidth={4}
       />
-      {/* Frame number — Doc 4 §2.1c: appears on the rack's front side.
-          'bottom' = below the frame rect, 'top' = above it. The side where
-          numbers appear IS the front side by definition. */}
+      {/* Frame number — appears on the opposite side of the front face */}
       <Text
         x={-width}
-        y={frontSide === 'top' ? -14 * labelFontSize : depth + 4}
+        y={frontSide === 'top' ? depth + 4 : -14 * labelFontSize}
         width={width * 3}
         wrap="none"
         text={`${frameIndex}`}

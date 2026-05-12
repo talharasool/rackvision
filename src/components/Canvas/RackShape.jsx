@@ -221,19 +221,16 @@ const RackShape = forwardRef(function RackShape(
         />
       )}
 
-      {/* Rack name label — Doc 5 §12: centered inside the last (end) frame, rotated vertically */}
+      {/* Rack name label — horizontal, to the right of the last frame, vertically centered */}
       <Text
-        x={totalWidth - scaledUprightWidth / 2}
-        y={scaledFrameDepth / 2}
+        x={totalWidth + 6}
+        y={0}
+        height={scaledFrameDepth}
         text={name || 'Rack'}
-        fontSize={Math.min(14 * labelFontSize, scaledUprightWidth * 0.8)}
+        fontSize={12 * labelFontSize}
         fontStyle="bold"
         fill="#e2e8f0"
-        align="center"
         verticalAlign="middle"
-        rotation={-90}
-        offsetX={0}
-        offsetY={0}
         listening={false}
       />
 
