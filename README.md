@@ -751,6 +751,7 @@ v{MAJOR}.{MINOR}.{PATCH}
 | **v1.1.0** | NC Alignment & Export | 2026-04 | Doc 2 NC types (22 categories), CSV/XLSX/ZIP export, severity badges            |
 | **v1.2.0** | Accessories & Polish  | 2026-04 | Per-level accessories, Doc 4 complete (16/16), pie-chart markers, feature flags |
 | **v1.2.1** | Safe Deletion & Fixes | 2026-04 | Safe rack deletion modal, Edit Properties fix, duplicate rack fix               |
+| **v1.7.0** | Allegato B Export     | 2026-05 | Dual-sheet XLSX (ITA/ENG), color-coded danno, End Frame element, Italian headers |
 | **v1.5.0** | Doc 5 Milestone C     | 2026-04 | Level auto-select, wizard inline beam/frame, inspection delete                  |
 | **v1.4.0** | Doc 5 Milestone B     | 2026-04 | Per-bay width, wizard propagation, canvas position persistence                  |
 | **v1.3.0** | Doc 5 Milestone A     | 2026-04 | Home button, Front/Rear frame labels, rack name repositioned                    |
