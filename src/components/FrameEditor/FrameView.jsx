@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import SVGPieMarker from '../ui/SVGPieMarker';
 import { groupNCsByElement } from '../../utils/ncGrouping';
 
@@ -28,6 +29,7 @@ export default function FrameView({
   ncs = [],
   onElementClick,
 }) {
+  const { t } = useTranslation();
   const [hoveredElement, setHoveredElement] = useState(null);
 
   const layout = useMemo(() => {
@@ -165,7 +167,7 @@ export default function FrameView({
   if (!layout) {
     return (
       <div className="text-slate-500 text-sm text-center py-8">
-        No frame data available
+        {t('frame.no_frame_data')}
       </div>
     );
   }
@@ -394,7 +396,7 @@ export default function FrameView({
         fontWeight="700"
         className="pointer-events-none select-none"
       >
-        FRONT
+        {t('frame.label_front')}
       </text>
       <text
         x={rightUprightX + uprightPxW / 2}
@@ -405,7 +407,7 @@ export default function FrameView({
         fontWeight="700"
         className="pointer-events-none select-none"
       >
-        REAR
+        {t('frame.label_rear')}
       </text>
 
       {/* NC markers - grouped by element as pie charts */}
@@ -599,7 +601,7 @@ export default function FrameView({
         fontSize={10}
         fontWeight="600"
       >
-        Frame {(frameIndex ?? 0) + 1}
+        {t('frame.frame_n', { n: (frameIndex ?? 0) + 1 })}
       </text>
       <text
         x={SVG_WIDTH - SVG_PADDING.right + 12}
@@ -608,7 +610,7 @@ export default function FrameView({
         fill="#64748b"
         fontSize={8}
       >
-        Front Elevation
+        {t('frame.front_elevation')}
       </text>
     </svg>
   );
