@@ -43,7 +43,7 @@ export default function WorkingAreas() {
     }
   }, [showExportMenu]);
 
-  const handleExportAllNCs = (format = 'csv') => {
+  const handleExportAllNCs = async (format = 'csv') => {
     setShowExportMenu(false);
     if (!inspection) return;
     const allAreas = inspection.workingAreas || [];
@@ -64,22 +64,27 @@ export default function WorkingAreas() {
     const customerSlug = (inspection.endCustomer || 'inspection').replace(/\s+/g, '-');
     const baseName = `${customerSlug}-All-NCs-${date}`;
 
-    if (format === 'csv') {
-      const csv = rowsToCSV(rows);
-      downloadFile(csv, `${baseName}.csv`);
-    } else if (format === 'xlsx') {
-      downloadXLSX(rows, `${baseName}.xlsx`, inspection);
-    } else if (format === 'zip') {
-      const allNCs = nonConformities.filter((nc) =>
-        allAreaRacks.some((r) => r.id === nc.rackId)
-      );
-      const photos = allNCs
-        .filter((nc) => (Array.isArray(nc.photos) && nc.photos.length > 0) || nc.photo)
-        .map((nc) => ({
-          ncId: nc.id,
-          photos: Array.isArray(nc.photos) ? nc.photos : nc.photo ? [nc.photo] : [],
-        }));
-      downloadZIPBundle(rows, photos, `${baseName}.zip`, inspection);
+    try {
+      if (format === 'csv') {
+        const csv = rowsToCSV(rows);
+        downloadFile(csv, `${baseName}.csv`);
+      } else if (format === 'xlsx') {
+        await downloadXLSX(rows, `${baseName}.xlsx`, inspection);
+      } else if (format === 'zip') {
+        const allNCs = nonConformities.filter((nc) =>
+          allAreaRacks.some((r) => r.id === nc.rackId)
+        );
+        const photos = allNCs
+          .filter((nc) => (Array.isArray(nc.photos) && nc.photos.length > 0) || nc.photo)
+          .map((nc) => ({
+            ncId: nc.id,
+            photos: Array.isArray(nc.photos) ? nc.photos : nc.photo ? [nc.photo] : [],
+          }));
+        await downloadZIPBundle(rows, photos, `${baseName}.zip`, inspection);
+      }
+    } catch (err) {
+      console.error('Export failed:', err);
+      alert(`Export failed: ${err.message || err}`);
     }
   };
 
@@ -142,8 +147,7 @@ export default function WorkingAreas() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {import.meta.env.DEV && (
-              <div className="relative" ref={exportMenuRef}>
+            <div className="relative" ref={exportMenuRef}>
                 <Button
                   variant="secondary"
                   onClick={() => setShowExportMenu((v) => !v)}
@@ -175,7 +179,6 @@ export default function WorkingAreas() {
                   </div>
                 )}
               </div>
-            )}
             <Button onClick={() => setShowForm(!showForm)} icon={Plus}>
               {t('inspection.add_working_area')}
             </Button>

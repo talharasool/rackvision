@@ -71,6 +71,12 @@ const ncTypes = {
     { id: 'frame-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
   ]),
 
+  endFrame: withScope([
+    { id: 'endframe-verticality', name: 'Verticality out of tolerance', severities: ['green', 'yellow', 'red'] },
+    { id: 'endframe-too-low', name: 'Too low - Missing lateral protection', severities: ['yellow', 'red'] },
+    { id: 'endframe-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },
+  ]),
+
   brace: withScope([
     { id: 'brace-damaged', name: 'Damaged', severities: ['green', 'yellow', 'red'] },
     { id: 'brace-other', name: 'Other (see notes)', severities: ['green', 'yellow', 'red'] },

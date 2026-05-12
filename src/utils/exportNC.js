@@ -14,30 +14,31 @@ const ELEMENT_ITALIAN_NAMES = {
   crossMember: 'Traversino',
   horizontalBracing: 'cv_orizz',
   verticalBracing: 'cv_vert',
-  frontImpactGuard: 'Paracolpo frontale',
-  cornerImpactGuard: 'Paracolpo angolo',
-  leftMiddleImpactGuard: 'Paracolpo mezzo sx',
-  rightMiddleImpactGuard: 'Paracolpo mezzo dx',
-  guardrail: 'Guard rail',
+  frontImpactGuard: 'Paracolpo_frontale',
+  cornerImpactGuard: 'Paracolpo_angolo',
+  leftMiddleImpactGuard: 'Paracolpo_mezzo_sx',
+  rightMiddleImpactGuard: 'Paracolpo_mezzo_dx',
+  guardrail: 'Guard_rail',
   palletSupportBar: 'Rompitratta',
-  rearPalletStopBeam: 'Trave batt. post.',
-  beamImpactGuard: 'Trave paracolpo',
-  underpassProtection: 'Prot. sottopasso',
-  rearSafetyMesh: 'Rete post.',
+  rearPalletStopBeam: 'Trave_batt_post',
+  beamImpactGuard: 'Trave_paracolpo',
+  underpassProtection: 'Prot_sottopasso',
+  rearSafetyMesh: 'Rete_post',
   deckingPanels: 'Pianetti',
   pallet: 'Pallet',
-  palletOnGround: 'Pallet a terra',
-  entireRackingSystem: 'Intera scaffalatura',
+  palletOnGround: 'Pallet_a_terra',
+  entireRackingSystem: 'Intera_scaffalatura',
   neon: 'Neon',
   shelf: 'Mensola',
   aisle: 'Corridoio',
-  closedLocation: 'Locazione chiusa',
+  closedLocation: 'Locazione_chiusa',
   levelNC: 'Livello',
   bay: 'Campata',
   basePlate: 'Basetta',
   loadSign: 'Tabella di portata',
   topTieBeam: 'Trave di sommità',
   footplate: 'Piedino',
+  endFrame: 'Spalla_di_testata',
 };
 
 // Italian NC type names per Allegato B — Elenchi sheet
@@ -49,13 +50,13 @@ const NC_ITALIAN_NAMES = {
   'beam-missing': 'Mancante/i',
   'beam-wrong-section': 'Sezione sbagliata (inferiore)',
   'beam-different-sections': 'Sezioni diverse tra anteriore e posteriore',
-  'beam-corrosion': 'Corroso/presenza di ruggine',
-  'beam-detached': 'Sganciato/i o parz. sganciato/i',
+  'beam-corrosion': 'Corroso / presenza di ruggine',
+  'beam-detached': 'Sganciato/i o parz. Sganciato/i',
   'beam-other': 'Altro (vedi note)',
   // upright
   'upright-damaged': 'Danneggiato/i',
   'upright-missing-anchor-bolt': 'Tassello/i mancante/i o tranciato/i',
-  'upright-corrosion': 'Corroso/presenza di ruggine',
+  'upright-corrosion': 'Corroso / presenza di ruggine',
   'upright-damaged-foot-plate': 'Piedino danneggiato',
   'upright-twisted': 'Ruotato/i',
   'upright-verticality': 'Verticalità fuori tolleranza',
@@ -110,12 +111,12 @@ const NC_ITALIAN_NAMES = {
   // rear pallet stop beam
   'rearpalletstopbeam-damaged': 'Danneggiato/i',
   'rearpalletstopbeam-missing': 'Mancante/i',
-  'rearpalletstopbeam-detached': 'Sganciato/i o parz. sganciato/i',
+  'rearpalletstopbeam-detached': 'Sganciato/i o parz. Sganciato/i',
   'rearpalletstopbeam-other': 'Altro (vedi note)',
   // beam impact guard
   'beamimpactguard-damaged': 'Danneggiato/i',
   'beamimpactguard-missing': 'Mancante/i',
-  'beamimpactguard-detached': 'Sganciato/i o parz. sganciato/i',
+  'beamimpactguard-detached': 'Sganciato/i o parz. Sganciato/i',
   'beamimpactguard-other': 'Altro (vedi note)',
   // underpass protection
   'underpassprotection-missing': 'Mancante/i',
@@ -123,7 +124,7 @@ const NC_ITALIAN_NAMES = {
   // rear safety mesh
   'rearsafetymesh-damaged': 'Danneggiato/i',
   'rearsafetymesh-missing': 'Mancante/i',
-  'rearsafetymesh-detached': 'Sganciato/i o parz. sganciato/i',
+  'rearsafetymesh-detached': 'Sganciato/i o parz. Sganciato/i',
   'rearsafetymesh-insufficient-coverage': "Non copre 2/3 dell'ultimo pallet",
   'rearsafetymesh-other': 'Altro (vedi note)',
   // decking panels
@@ -134,7 +135,7 @@ const NC_ITALIAN_NAMES = {
   'pallet-damaged': 'Danneggiato/i',
   'pallet-to-be-repositioned': 'Da riposizionare',
   'pallet-improperly-supported': 'Appoggiato male (2 rompitratta)',
-  'pallet-800x800': 'Formato 800x800',
+  'pallet-800x800': 'formato 800x800',
   'pallet-not-strapped': 'Non reggiato/i bene',
   'pallet-forked-wrong-side': 'Pallet inforcati 800 anziché 1200',
   'pallet-other': 'Altro (vedi note)',
@@ -143,21 +144,21 @@ const NC_ITALIAN_NAMES = {
   'palletonground-other': 'Altro (vedi note)',
   // entire racking system
   'entirerackingsystem-dismantled': 'Verrà smontata a breve',
-  'entirerackingsystem-not-inspectable': 'Non ispezionabile',
+  'entirerackingsystem-not-inspectable': 'Non Ispezionabile',
   'entirerackingsystem-missing-safety-lock': 'Antisgancio mancante/i (100%)',
   'entirerackingsystem-missing-anchor-bolt': 'Tassello/i mancante/i (100%)',
   'entirerackingsystem-h-frame': 'Struttura ad H',
   'entirerackingsystem-other': 'Altro (vedi note)',
   // neon
   'neon-missing': 'Mancante/i',
-  'neon-off': 'Spento/non funzionante',
+  'neon-off': 'Spento / non funzionante',
   'neon-damaged': 'Danneggiato/i',
   'neon-other': 'Altro (vedi note)',
   // shelf
   'shelf-damaged': 'Danneggiato/i',
   'shelf-missing': 'Mancante/i',
   // aisle / closed location / level NC
-  'aisle-obstructed': 'Chiuso/ostruito/non accessibile',
+  'aisle-obstructed': 'Chiuso / ostruito / non accessibile',
   'aisle-other': 'Altro (vedi note)',
   'closedlocation-damaged': 'Danneggiato/i',
   'closedlocation-other': 'Altro (vedi note)',
@@ -181,20 +182,24 @@ const NC_ITALIAN_NAMES = {
   'baseplate-missing': 'Mancante/i',
   'baseplate-damaged': 'Danneggiato/i',
   'baseplate-not-fixed': 'Non fissata a terra',
-  'baseplate-corrosion': 'Corroso/presenza di ruggine',
+  'baseplate-corrosion': 'Corroso / presenza di ruggine',
   'baseplate-wrong-type': 'Tipo errato',
   'baseplate-shim-missing': 'Spessore mancante/errato',
   // top tie beam
   'toptie-missing': 'Mancante/i',
   'toptie-damaged': 'Danneggiato/i',
-  'toptie-loose': 'Sganciato/i o parz. sganciato/i',
-  'toptie-corrosion': 'Corroso/presenza di ruggine',
+  'toptie-loose': 'Sganciato/i o parz. Sganciato/i',
+  'toptie-corrosion': 'Corroso / presenza di ruggine',
   'toptie-wrong-type': 'Tipo errato',
   // footplate
   'footplate-missing': 'Mancante/i',
   'footplate-damaged': 'Danneggiato/i',
   'footplate-not-fixed': 'Non fissata a terra',
-  'footplate-corrosion': 'Corroso/presenza di ruggine',
+  'footplate-corrosion': 'Corroso / presenza di ruggine',
+  // end frame
+  'endframe-verticality': 'Verticalità fuori tolleranza',
+  'endframe-too-low': 'Troppo bassa - Manca protezione laterale',
+  'endframe-other': 'Altro (vedi note)',
 };
 
 /**
@@ -302,6 +307,14 @@ function getPhotoList(nc) {
 }
 
 /**
+ * Format face value: front→ant, rear→post per Allegato B.
+ */
+function formatFace(face) {
+  if (!face) return '';
+  return { front: 'ant', rear: 'post' }[face.toLowerCase()] || face;
+}
+
+/**
  * Format severity as v/g/r (verde/giallo/rosso) per Allegato B.
  */
 function formatDamage(severity) {
@@ -342,7 +355,7 @@ export function buildExportRows({ inspection, areas, racks, nonConformities }) {
       'Rack Name': rack?.name || '',
       'Rif.': getReference(nc, rack),
       'Liv.': extractLevel(nc.elementId, isFrameNC),
-      'Pos.': nc.face ? nc.face.toUpperCase() : '',
+      'Pos.': formatFace(nc.face),
       'Q.tà': nc.quantity || 1,
       'Damaged item': getItalianElementName(nc.elementType),
       'Photo NC.': getPhotoList(nc),
@@ -368,29 +381,29 @@ function escapeCSVField(value) {
 }
 
 /**
- * Column order per Allegato B.
+ * Column mapping: Italian header labels → internal row keys.
  */
-const HEADERS = [
-  'Warehouse',
-  'Supplier',
-  'Rack Name',
-  'Rif.',
-  'Liv.',
-  'Pos.',
-  'Q.tà',
-  'Damaged item',
-  'Photo NC.',
-  'Description',
-  'Anomaly',
-  'Lv. Damage',
-  'Note',
+const COLUMN_MAP = [
+  { ita: 'Lotto', key: 'Warehouse' },
+  { ita: 'Forn.', key: 'Supplier' },
+  { ita: 'Scaff.', key: 'Rack Name' },
+  { ita: 'Rif.', key: 'Rif.' },
+  { ita: 'Liv.', key: 'Liv.' },
+  { ita: 'Pos.', key: 'Pos.' },
+  { ita: 'Q.tà', key: 'Q.tà' },
+  { ita: 'elemento danneggiato', key: 'Damaged item' },
+  { ita: 'Foto NC.', key: 'Photo NC.' },
+  { ita: 'descr.', key: 'Description' },
+  { ita: 'anomalia', key: 'Anomaly' },
+  { ita: 'danno', key: 'Lv. Damage' },
+  { ita: 'Note', key: 'Note' },
 ];
 
 export function rowsToCSV(rows) {
   if (!rows || rows.length === 0) return '';
-  const lines = [HEADERS.map(escapeCSVField).join(',')];
+  const lines = [COLUMN_MAP.map((c) => escapeCSVField(c.ita)).join(',')];
   rows.forEach((row) => {
-    const line = HEADERS.map((h) => escapeCSVField(row[h])).join(',');
+    const line = COLUMN_MAP.map((c) => escapeCSVField(row[c.key])).join(',');
     lines.push(line);
   });
   return lines.join('\r\n');
@@ -425,39 +438,128 @@ const COL_WIDTHS = [
 ];
 
 /**
- * Build an XLSX buffer matching the Allegato B template exactly:
- *   Row 1 : ELENCO ANOMALIE  (merged A1:M1)
- *   Row 2 : Data: [date]  ...  Cliente: [client]
- *   Row 3 : Italian column headers
- *   Row 4+: data rows
+ * Inject fonts, fills, and cellXfs into styles.xml for direct cell styling.
+ * Returns { stylesXml, baseIndex } where baseIndex is the first new xf index.
+ *
+ * Style indices (relative to baseIndex):
+ *   +0 = bold (title row)
+ *   +1 = yellow fill (date row)
+ *   +2 = gray fill + bold (header row)
+ *   +3 = green fill (v — verde)
+ *   +4 = yellow fill (g — giallo)
+ *   +5 = red fill (r — rosso)
  */
-function buildXLSXBuffer(rows, inspection) {
-  const wb = XLSX.utils.book_new();
-  const ws = {};
-  const COLS = 'ABCDEFGHIJKLM';
+function injectAllStyles(stylesXml) {
+  // 1. Add bold font
+  stylesXml = stylesXml.replace(
+    /<\/fonts>/,
+    '<font><b/><sz val="12"/><name val="Calibri"/></font></fonts>'
+  );
+  stylesXml = stylesXml.replace(
+    /<fonts count="(\d+)">/,
+    (_, c) => `<fonts count="${parseInt(c) + 1}">`
+  );
 
-  // ── Row 1: title ────────────────────────────────────────────────────────
-  ws['A1'] = { v: 'ELENCO ANOMALIE', t: 's' };
+  // 2. Add fills: yellow(2), gray(3), green(4), red(5)
+  const fills =
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFFFFF00"/><bgColor indexed="64"/></patternFill></fill>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFD9D9D9"/><bgColor indexed="64"/></patternFill></fill>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FF00FF00"/><bgColor indexed="64"/></patternFill></fill>' +
+    '<fill><patternFill patternType="solid"><fgColor rgb="FFFF0000"/><bgColor indexed="64"/></patternFill></fill>';
+  stylesXml = stylesXml.replace(/<\/fills>/, fills + '</fills>');
+  stylesXml = stylesXml.replace(
+    /<fills count="(\d+)">/,
+    (_, c) => `<fills count="${parseInt(c) + 4}">`
+  );
 
-  // ── Row 2: date + client ─────────────────────────────────────────────────
-  const today = new Date();
-  const dateStr = today.toLocaleDateString('it-IT'); // DD/MM/YYYY
-  const clientName = inspection?.endCustomer || inspection?.reseller || '';
-  ws['A2'] = { v: 'Data:', t: 's' };
-  ws['E2'] = { v: dateStr, t: 's' };
-  ws['J2'] = { v: `Cliente: ${clientName}`, t: 's' };
+  // 3. Add cellXfs entries
+  const baseIndex = parseInt((stylesXml.match(/<cellXfs count="(\d+)">/) || ['', '1'])[1]);
+  const boldFont = 1;
+  const xfs =
+    `<xf numFmtId="0" fontId="${boldFont}" fillId="0" borderId="0" xfId="0" applyFont="1"/>` +
+    `<xf numFmtId="0" fontId="0" fillId="2" borderId="0" xfId="0" applyFill="1"/>` +
+    `<xf numFmtId="0" fontId="${boldFont}" fillId="3" borderId="0" xfId="0" applyFont="1" applyFill="1"/>` +
+    `<xf numFmtId="0" fontId="0" fillId="4" borderId="0" xfId="0" applyFill="1"/>` +
+    `<xf numFmtId="0" fontId="0" fillId="2" borderId="0" xfId="0" applyFill="1"/>` +
+    `<xf numFmtId="0" fontId="0" fillId="5" borderId="0" xfId="0" applyFill="1"/>`;
+  stylesXml = stylesXml.replace(/<\/cellXfs>/, xfs + '</cellXfs>');
+  stylesXml = stylesXml.replace(
+    /<cellXfs count="(\d+)">/,
+    (_, c) => `<cellXfs count="${parseInt(c) + 6}">`
+  );
 
-  // ── Row 3: Italian column headers (exact Allegato B ITA labels) ──────────
-  const ITA_HEADERS = [
-    'Lotto', 'Forn.', 'Scaff.', 'Rif.', 'Liv.', 'Pos.', 'Q.tà',
-    'elemento danneggiato', 'Foto NC.', 'descr.', 'anomalia', 'danno', 'Note',
-  ];
-  ITA_HEADERS.forEach((h, i) => {
-    ws[`${COLS[i]}3`] = { v: h, t: 's' };
+  return { stylesXml, baseIndex };
+}
+
+/**
+ * Apply direct cell styles to sheet XML:
+ *   - Row 1 (title): bold
+ *   - Row 2 (date/client): yellow fill
+ *   - Row 3 (headers): gray + bold
+ *   - Column L rows 4+: green/yellow/red fill (cell value cleared — color IS the data)
+ */
+function applySheetStyles(sheetXml, rows, baseIndex) {
+  const S_BOLD = baseIndex;
+  const S_YELLOW = baseIndex + 1;
+  const S_GRAY_BOLD = baseIndex + 2;
+  const S_GREEN = baseIndex + 3;
+  const S_YELLOW_DMG = baseIndex + 4;
+  const S_RED = baseIndex + 5;
+
+  // Helper: set style on a cell, handling existing s="" attribute
+  function setStyle(xml, cellRef, styleId) {
+    return xml.replace(
+      new RegExp(`(<c r="${cellRef}")([^>]*)`),
+      (_, prefix, rest) => {
+        rest = rest.replace(/ s="\d+"/, '');
+        return `${prefix} s="${styleId}"${rest}`;
+      }
+    );
+  }
+
+  // Row 1: bold title
+  sheetXml = setStyle(sheetXml, 'A1', S_BOLD);
+
+  // Row 2: yellow fill on date/client cells
+  ['A2', 'E2', 'J2'].forEach((ref) => {
+    sheetXml = setStyle(sheetXml, ref, S_YELLOW);
   });
 
-  // ── Row 4+: data ─────────────────────────────────────────────────────────
-  // Map our row object keys → column letters
+  // Row 3: gray + bold on all header cells
+  'ABCDEFGHIJKLM'.split('').forEach((col) => {
+    sheetXml = setStyle(sheetXml, `${col}3`, S_GRAY_BOLD);
+  });
+
+  // Column L data rows: replace with colored empty cell
+  sheetXml = sheetXml.replace(
+    /<c r="L(\d+)"[^>]*(?:>.*?<\/c>|\/>)/g,
+    (match, rowNum) => {
+      const row = parseInt(rowNum);
+      if (row < 4) return match;
+      const idx = row - 4;
+      if (idx >= rows.length) return match;
+      const dmg = rows[idx]['Lv. Damage'];
+      if (dmg === 'v') return `<c r="L${row}" s="${S_GREEN}"/>`;
+      if (dmg === 'g') return `<c r="L${row}" s="${S_YELLOW_DMG}"/>`;
+      if (dmg === 'r') return `<c r="L${row}" s="${S_RED}"/>`;
+      return match;
+    }
+  );
+
+  return sheetXml;
+}
+
+/**
+ * Build an XLSX buffer matching the Allegato B template exactly:
+ *   Sheet 1 "Generale ITA": Italian headers
+ *   Sheet 2 "Generale ENG": English headers
+ *   Both sheets: Row 1 bold title, Row 2 yellow date row, Row 3 gray headers, Row 4+ data
+ *   Column L (danno): colored cell fills (green/yellow/red) — no text
+ */
+async function buildXLSXBuffer(rows, inspection) {
+  const wb = XLSX.utils.book_new();
+  const COLS = 'ABCDEFGHIJKLM';
+
   const KEY_TO_COL = {
     'Warehouse':    'A',
     'Supplier':     'B',
@@ -474,28 +576,78 @@ function buildXLSXBuffer(rows, inspection) {
     'Note':         'M',
   };
 
-  rows.forEach((row, idx) => {
-    const r = idx + 4;
-    Object.entries(KEY_TO_COL).forEach(([key, col]) => {
-      const val = row[key];
-      const isNum = key === 'Q.tà';
-      ws[`${col}${r}`] = { v: val ?? '', t: isNum ? 'n' : 's' };
+  function buildSheet(titleText, row2DateLabel, row2ClientPrefix, headerRow) {
+    const ws = {};
+    // Row 1
+    ws['A1'] = { v: titleText, t: 's' };
+    // Row 2
+    const today = new Date();
+    const dateStr = today.toLocaleDateString('it-IT');
+    const clientName = inspection?.endCustomer || inspection?.reseller || '';
+    ws['A2'] = { v: row2DateLabel, t: 's' };
+    ws['E2'] = { v: dateStr, t: 's' };
+    ws['J2'] = { v: `${row2ClientPrefix} ${clientName}`, t: 's' };
+    // Row 3 headers
+    headerRow.forEach((h, i) => { ws[`${COLS[i]}3`] = { v: h, t: 's' }; });
+    // Row 4+ data
+    rows.forEach((row, idx) => {
+      const r = idx + 4;
+      Object.entries(KEY_TO_COL).forEach(([key, col]) => {
+        const val = row[key];
+        ws[`${col}${r}`] = { v: val ?? '', t: key === 'Q.tà' ? 'n' : 's' };
+      });
     });
-  });
+    const lastRow = Math.max(rows.length + 3, 4);
+    ws['!ref'] = `A1:M${lastRow}`;
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: 8 } },   // A1:I1
+      { s: { r: 0, c: 9 }, e: { r: 0, c: 11 } },  // J1:L1
+      { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } },   // A2:D2
+      { s: { r: 1, c: 4 }, e: { r: 1, c: 8 } },   // E2:I2
+      { s: { r: 1, c: 9 }, e: { r: 1, c: 11 } },  // J2:L2
+    ];
+    ws['!cols'] = COL_WIDTHS;
+    return ws;
+  }
 
-  const lastRow = Math.max(rows.length + 3, 4);
-  ws['!ref'] = `A1:M${lastRow}`;
+  const ITA_HEADERS = [
+    'Lotto', 'Forn.', 'Scaff.', 'Rif.', 'Liv.', 'Pos.', 'Q.tà',
+    'elemento danneggiato', 'Foto NC.', 'descr.', 'anomalia', 'danno', 'Note',
+  ];
+  const ENG_HEADERS = [
+    'Warehouse', 'Supplier', 'Rack Name', 'Rif.', 'Liv.', 'Pos.', 'Q.tà',
+    'damaged item', 'Photo NC.', 'description', 'anomaly', 'lv. damage', 'Note',
+  ];
 
-  // Merge A1:M1 for the title row
-  ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: 12 } }];
-  ws['!cols'] = COL_WIDTHS;
+  const wsITA = buildSheet('ELENCO ANOMALIE', 'Data:', 'Cliente:', ITA_HEADERS);
+  const wsENG = buildSheet('NON CONFORMITY LIST', 'DATE', 'Client:', ENG_HEADERS);
 
-  XLSX.utils.book_append_sheet(wb, ws, 'Elenco Anomalie');
-  return XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  XLSX.utils.book_append_sheet(wb, wsITA, 'Generale ITA');
+  XLSX.utils.book_append_sheet(wb, wsENG, 'Generale ENG');
+
+  // Write base xlsx
+  const rawArray = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+
+  // Post-process via JSZip: inject styles + apply to cells
+  const zip = await JSZip.loadAsync(rawArray);
+
+  // Inject fonts, fills, cellXfs into styles.xml
+  const rawStyles = await zip.file('xl/styles.xml').async('text');
+  const { stylesXml, baseIndex } = injectAllStyles(rawStyles);
+  zip.file('xl/styles.xml', stylesXml);
+
+  // Apply cell styles to both sheets
+  const sheet1Xml = await zip.file('xl/worksheets/sheet1.xml').async('text');
+  zip.file('xl/worksheets/sheet1.xml', applySheetStyles(sheet1Xml, rows, baseIndex));
+
+  const sheet2Xml = await zip.file('xl/worksheets/sheet2.xml').async('text');
+  zip.file('xl/worksheets/sheet2.xml', applySheetStyles(sheet2Xml, rows, baseIndex));
+
+  return zip.generateAsync({ type: 'uint8array' });
 }
 
-export function downloadXLSX(rows, filename, inspection) {
-  const buf = buildXLSXBuffer(rows, inspection);
+export async function downloadXLSX(rows, filename, inspection) {
+  const buf = await buildXLSXBuffer(rows, inspection);
   const blob = new Blob([buf], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
@@ -524,7 +676,7 @@ function getExtensionFromDataUri(dataUri) {
 
 export async function downloadZIPBundle(rows, photos, filename, inspection) {
   const zip = new JSZip();
-  const xlsxBuf = buildXLSXBuffer(rows, inspection);
+  const xlsxBuf = await buildXLSXBuffer(rows, inspection);
   zip.file('ispezione.xlsx', xlsxBuf);
   const photosFolder = zip.folder('foto');
   if (Array.isArray(photos)) {

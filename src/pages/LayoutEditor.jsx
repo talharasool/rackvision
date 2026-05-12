@@ -564,7 +564,7 @@ export default function LayoutEditor() {
 
   const [showExportMenu, setShowExportMenu] = useState(false);
 
-  const handleExportNCs = (format = 'csv') => {
+  const handleExportNCs = async (format = 'csv') => {
     setShowExportMenu(false);
     const rows = buildExportRows({
       inspection,
@@ -581,22 +581,27 @@ export default function LayoutEditor() {
     const areaSlug = (area.name || 'area').replace(/\s+/g, '-');
     const baseName = `${customerSlug}-${areaSlug}-NCs-${date}`;
 
-    if (format === 'csv') {
-      const csv = rowsToCSV(rows);
-      downloadFile(csv, `${baseName}.csv`);
-    } else if (format === 'xlsx') {
-      downloadXLSX(rows, `${baseName}.xlsx`, inspection);
-    } else if (format === 'zip') {
-      // Collect photos from NCs relevant to this area
-      const areaRackIds = new Set(areaRacks.map((r) => r.id));
-      const areaNCs = nonConformities.filter((nc) => areaRackIds.has(nc.rackId));
-      const photos = areaNCs
-        .filter((nc) => (Array.isArray(nc.photos) && nc.photos.length > 0) || nc.photo)
-        .map((nc) => ({
-          ncId: nc.id,
-          photos: Array.isArray(nc.photos) ? nc.photos : nc.photo ? [nc.photo] : [],
-        }));
-      downloadZIPBundle(rows, photos, `${baseName}.zip`, inspection);
+    try {
+      if (format === 'csv') {
+        const csv = rowsToCSV(rows);
+        downloadFile(csv, `${baseName}.csv`);
+      } else if (format === 'xlsx') {
+        await downloadXLSX(rows, `${baseName}.xlsx`, inspection);
+      } else if (format === 'zip') {
+        // Collect photos from NCs relevant to this area
+        const areaRackIds = new Set(areaRacks.map((r) => r.id));
+        const areaNCs = nonConformities.filter((nc) => areaRackIds.has(nc.rackId));
+        const photos = areaNCs
+          .filter((nc) => (Array.isArray(nc.photos) && nc.photos.length > 0) || nc.photo)
+          .map((nc) => ({
+            ncId: nc.id,
+            photos: Array.isArray(nc.photos) ? nc.photos : nc.photo ? [nc.photo] : [],
+          }));
+        await downloadZIPBundle(rows, photos, `${baseName}.zip`, inspection);
+      }
+    } catch (err) {
+      console.error('Export failed:', err);
+      alert(`Export failed: ${err.message || err}`);
     }
   };
 

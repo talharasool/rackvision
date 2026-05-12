@@ -20,6 +20,7 @@ const FRAME_ELEMENTS = [
   { id: 'crossMember', label: 'Cross Member', ncCategory: 'brace', numbered: true },
   { id: 'loadSign', label: 'Load Sign', ncCategory: 'loadSign', numbered: false },
   { id: 'guardrail', label: 'Protections (Guard Rail)', ncCategory: 'guardrail', numbered: false },
+  { id: 'endFrame', label: 'End Frame (Spalla di testata)', ncCategory: 'endFrame', numbered: false },
 ];
 
 // Upright area elements
@@ -241,6 +242,7 @@ export default function FrameInspection({
       if (elId?.includes('rear')) return 'Upright (Rear)';
       return 'Upright';
     }
+    if (elType === 'endFrame') return 'End Frame';
     // Look up from element lists
     const all = [...FRAME_ELEMENTS, ...UPRIGHT_ELEMENTS];
     const found = all.find((e) => e.id === elType);

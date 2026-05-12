@@ -34,6 +34,7 @@ export function computeMarkerPosition(elementType, geometry, ncIndex, ncCount, f
 
     case 'upright':
     case 'frame':
+    case 'endFrame':
       if (face === 'rear') {
         return { x: frameWidth / 2, y: bayDepth + 10 + ncIndex * 12 };
       }

@@ -291,7 +291,7 @@ export default function CanvasToolbar({
             Layout PDF
           </button>
         )}
-        {import.meta.env.DEV && <ExportDropdown onExportNCs={onExportNCs} />}
+        <ExportDropdown onExportNCs={onExportNCs} />
       </div>
     </div>
   );
